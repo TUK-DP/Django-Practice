@@ -4,7 +4,7 @@ from config.basemodel import BaseModel
 
 
 # Create your models here.
-class Users(BaseModel):
+class User(BaseModel):
     username = models.CharField(max_length=20, unique=True)
     email = models.EmailField(max_length=100, unique=True)
 
