@@ -1,3 +1,5 @@
+import json
+
 from django.forms import model_to_dict
 from django.http import HttpResponse
 from django.core.handlers.wsgi import WSGIRequest
@@ -25,10 +27,13 @@ def findAll(request: WSGIRequest) -> HttpResponse:
 
 def save(request: WSGIRequest) -> HttpResponse:
     if request.method == "POST":
-        username = request.POST.get("username")
-        email = request.POST.get("email")
+        body = json.loads(request.body)
 
-        newUser = User(username=username, email=email).save()
+        username = body["username"]
+        email = body["email"]
+
+        newUser = User(username=username, email=email)
+        newUser = User.objects.create(username=newUser.username, email=newUser.email)
 
         to_dict = model_to_dict(newUser)
 
