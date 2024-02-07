@@ -1,0 +1,13 @@
+### GET request with a header
+GET http://localhost:8000/diary/
+Accept: application/json
+
+### POST request with a header
+POST http://localhost:8000/diary/
+Content-Type: application/json
+
+{
+  "userId" : "1",
+  "title": "My first diary",
+  "content": "I'm so happy today!"
+}
