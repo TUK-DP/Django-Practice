@@ -1,8 +1,7 @@
-from django.urls import path
-from diary import views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import DiaryView
 
 urlpatterns = [
-    path('', views.findAll),
-    path('save', views.save),
+    path('', DiaryView.as_view()),
 ]
-# users/ 요청이 오면 view.py의 index함수를 실행!

@@ -1,8 +1,7 @@
 from django.urls import path
-from users import views
+
+from .views import UserView
 
 urlpatterns = [
-    path('', views.findAll),
-    path('save', views.save),
+    path('', UserView.as_view()),
 ]
-# users/ 요청이 오면 view.py의 index함수를 실행!
