@@ -1,0 +1,8 @@
+### POST request with a header
+POST http://localhost:8000/users/
+Content-Type: application/json
+
+{
+    "username": "user2",
+    "email": "twoone142@tukorea.ac.kr"
+}
