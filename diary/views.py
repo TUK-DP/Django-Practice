@@ -1,37 +1,30 @@
-import json
-
 from django.core.handlers.wsgi import WSGIRequest
-from django.forms import model_to_dict
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.parsers import JSONParser
+from rest_framework.views import APIView
 
 from diary.models import Diary
+from diary.serializers import DiarySerializer, DiaryCreateRequest
 from users.models import User
 
 
-def findAll(request: WSGIRequest) -> HttpResponse:
-    if request.method == "GET":
-        objects_all = Diary.objects.all()
+class DiaryView(APIView):
+    def get(self, request: WSGIRequest) -> HttpResponse:
+        findDiaries = Diary.objects.all()
+        serializer = DiarySerializer(findDiaries, many=True)
+        return JsonResponse(serializer.data, safe=False)
 
-        l = list(map(model_to_dict, objects_all))
+    @csrf_exempt
+    def post(self, request: WSGIRequest) -> HttpResponse:
+        data = JSONParser().parse(request)
+        request = DiaryCreateRequest(data=data)
+        is_valid = request.is_valid()
+        print(request.data)
+        if is_valid:
+            findUser = User.objects.get(pk=request.data["userId"])
+            newDiary = request.to_diary(findUser)
 
-        return HttpResponse(l)
-
-
-def save(request: WSGIRequest) -> HttpResponse:
-    if request.method == "POST":
-        # Post Body에 있는 userId로 User 조회
-
-        body = json.loads(request.body)
-
-        userId = body["userId"]
-
-        print(body)
-        findUser = User.objects.get_queryset().get(id=userId)
-
-        print(model_to_dict(findUser))
-
-        diary = Diary(title=body["title"], content=body["content"], user=findUser)
-        newDiary = Diary.objects.create(title=diary.title, content=diary.content, user=diary.user)
-        print(newDiary)
-
-        return HttpResponse(model_to_dict(newDiary))
+            return JsonResponse(newDiary.data, status=201)
+        else:
+            return JsonResponse(DiarySerializer(data=data).errors, status=400)

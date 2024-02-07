@@ -1,40 +1,24 @@
-import json
-
-from django.forms import model_to_dict
-from django.http import HttpResponse
 from django.core.handlers.wsgi import WSGIRequest
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.parsers import JSONParser
+from rest_framework.views import APIView
 
 from users.models import User
+from users.serializers import UserSerializer, UserCreateRequest
 
 
-def index(request: WSGIRequest):
-    return HttpResponse("Users Index Page")
+class UserView(APIView):
+    def get(self, request: WSGIRequest) -> HttpResponse:
+        findUsers = User.objects.all()
+        serializer = UserSerializer(findUsers, many=True)
+        return JsonResponse(serializer.data, safe=False)
 
-
-def findAll(request: WSGIRequest) -> HttpResponse:
-    # Users.objects.all() => select * from users
-    objects_all = User.objects.all()
-
-    # Convert QuerySet to List
-    l = list(map(model_to_dict, objects_all))
-
-    print(l)
-
-    if request.method == "GET":
-        return HttpResponse(l)
-
-
-def save(request: WSGIRequest) -> HttpResponse:
-    if request.method == "POST":
-        body = json.loads(request.body)
-
-        username = body["username"]
-        email = body["email"]
-
-        newUser = User(username=username, email=email)
-        newUser = User.objects.create(username=newUser.username, email=newUser.email)
-
-        to_dict = model_to_dict(newUser)
-
-        return HttpResponse(to_dict)
+    @csrf_exempt
+    def post(self, request: WSGIRequest) -> HttpResponse:
+        data = JSONParser().parse(request)
+        request = UserCreateRequest(data=data)
+        if request.is_valid():
+            newUser = request.to_user()
+            return JsonResponse(newUser.data, status=201)
+        return JsonResponse(request.errors, status=400)
