@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from users.models import User
-from users.serializers import UserSerializer, UserCreateRequest, SigninResponse
+from users.serializers import UserSerializer, UserCreateRequest, SigninResponse, LoginResponse, LoginRequest
 
 from drf_yasg.utils import swagger_auto_schema
 
@@ -40,10 +40,10 @@ class SigninView(APIView):
             password = serializer.validated_data.get('password')
 
             if User.objects.filter(username=username).exists():
-                return Response({'isSucces' : 'False'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'message' : '이미 가입된 사용자입니다.'}, status=status.HTTP_400_BAD_REQUEST)
             
             if User.objects.filter(email=email).exists():
-                return Response({'isSucces' : 'False'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'message' : '이미 사용 중인 이메일입니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
             serializer.save()
 
@@ -55,3 +55,25 @@ class SigninView(APIView):
             return Response({'isSucces' : 'True', 'result' : result}, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class LoginView(APIView):
+    @swagger_auto_schema(operation_description="로그인", request_body=LoginRequest, responses={"200":LoginResponse})
+    def post(self, request):
+        serializer = LoginRequest(data=request.data)
+        result = []
+
+        if not serializer.is_valid():
+            return Response({'message': '아이디와 비밀번호를 모두 입력해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        username = serializer.validated_data.get('username')
+        password = serializer.validated_data.get('password')
+
+        if User.objects.filter(username=username, password=password).exists():
+            result.append({
+                'username' : username,
+                'password' : password
+                })
+                    
+            return Response({'isSucces' : 'True', 'result' : result}, status=status.HTTP_201_CREATED)
+            
+        return Response({'message' : '아이디나 비밀번호를 다시 확인해주세요.'}, status=status.HTTP_400_BAD_REQUEST)

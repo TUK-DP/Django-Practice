@@ -11,7 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
 class UserCreateRequest(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', 'email']
+        fields = ['username', 'email', 'password']
 
     def to_user(self) -> UserSerializer:
         newUser = UserSerializer(data=self.data)
@@ -19,6 +19,14 @@ class UserCreateRequest(serializers.ModelSerializer):
         newUser.save()
         return newUser
 
+class LoginRequest(serializers.Serializer):
+    username = serializers.CharField(max_length=20)
+    password = serializers.CharField(max_length=128)
+
 class SigninResponse(serializers.Serializer):
     isSuccess = serializers.BooleanField()
-    newUser = UserSerializer(source='*')
+    result = UserSerializer(source='*')
+
+class LoginResponse(serializers.Serializer):
+    isSuccess = serializers.BooleanField()
+    result = UserSerializer(source='*')
