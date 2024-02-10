@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from users.models import User
-from users.serializers import UserSerializer, UserCreateRequest, SigninResponse, LoginResponse, LoginRequest
+from users.serializers import UserSerializer, UserCreateRequest, SigninResponse, LoginResponse, LoginRequest, DeleteRequest
 
 from drf_yasg.utils import swagger_auto_schema
 
@@ -39,11 +39,8 @@ class SigninView(APIView):
             email = serializer.validated_data.get('email')
             password = serializer.validated_data.get('password')
 
-            if User.objects.filter(username=username).exists():
-                return Response({'message' : '이미 가입된 사용자입니다.'}, status=status.HTTP_400_BAD_REQUEST)
-            
-            if User.objects.filter(email=email).exists():
-                return Response({'message' : '이미 사용 중인 이메일입니다.'}, status=status.HTTP_400_BAD_REQUEST)
+            if(username == None or email == None or password == None):
+                return Response({'message': '모든 값이 입력되지 않았습니다'}, status=status.HTTP_400_BAD_REQUEST)
 
             serializer.save()
 
@@ -56,6 +53,7 @@ class SigninView(APIView):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+
 class LoginView(APIView):
     @swagger_auto_schema(operation_description="로그인", request_body=LoginRequest, responses={"200":LoginResponse})
     def post(self, request):
@@ -77,3 +75,20 @@ class LoginView(APIView):
             return Response({'isSucces' : 'True', 'result' : result}, status=status.HTTP_201_CREATED)
             
         return Response({'message' : '아이디나 비밀번호를 다시 확인해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DeleteView(APIView):
+    @swagger_auto_schema(operation_description="유저 삭제", request_body=DeleteRequest, responses={"200": '삭제 완료'})
+    def delete(self, request):
+        serializer = DeleteRequest(data=request.data)
+
+        if serializer.is_valid():
+            username = serializer.validated_data.get('username')
+
+            if User.objects.filter(username=username).exists():
+                delete_user = User.objects.get(username=username)
+                delete_user.delete()
+                return Response({'message' : '삭제되었습니다.'}, status=status.HTTP_200_OK)
+            
+        return Response({'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+
