@@ -106,13 +106,22 @@ class UpdateView(APIView):
 
             try:
                 updateuser = User.objects.get(id=id)
+
+                if(updateuser.username != username):
+                    if User.objects.filter(username=username).exists():
+                        return Response({'message': '중복된 아이디입니다.'}, status=status.HTTP_400_BAD_REQUEST)
                 updateuser.username = username
+
+                if(updateuser.email != email):
+                    if User.objects.filter(email=email).exists():
+                        return Response({'message': '중복된 이메일입니다.'}, status=status.HTTP_400_BAD_REQUEST)
                 updateuser.email = email
+
                 updateuser.password = password
+
                 updateuser.save()
 
                 result = []
-            
                 result.append({
                 'username' : username,
                 'email' : email,
