@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from users.models import User
-from users.serializers import UserSerializer, UserCreateRequest, SigninResponse, LoginResponse, LoginRequest, DeleteRequest
+from users.serializers import UserSerializer, UserCreateRequest, UserResponse, LoginResponse, LoginRequest, DeleteRequest
 
 from drf_yasg.utils import swagger_auto_schema
 
@@ -29,7 +29,7 @@ class UserView(APIView):
         
 
 class SigninView(APIView):
-    @swagger_auto_schema(operation_description="회원가입", request_body=UserSerializer, responses={"201":SigninResponse})
+    @swagger_auto_schema(operation_description="회원가입", request_body=UserSerializer, responses={"201":UserResponse})
     def post(self, request):
         serializer = UserSerializer(data=request.data)
         result = []
@@ -55,7 +55,7 @@ class SigninView(APIView):
     
 
 class LoginView(APIView):
-    @swagger_auto_schema(operation_description="로그인", request_body=LoginRequest, responses={"200":LoginResponse})
+    @swagger_auto_schema(operation_description="로그인", request_body=LoginRequest, responses={"200":UserResponse})
     def post(self, request):
         serializer = LoginRequest(data=request.data)
         result = []
@@ -91,4 +91,3 @@ class DeleteView(APIView):
                 return Response({'message' : '삭제되었습니다.'}, status=status.HTTP_200_OK)
             
         return Response({'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
-

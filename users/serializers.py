@@ -26,10 +26,6 @@ class LoginRequest(serializers.Serializer):
 class DeleteRequest(serializers.Serializer):
     username = serializers.CharField(max_length=20)
 
-class SigninResponse(serializers.Serializer):
-    isSuccess = serializers.BooleanField()
-    result = UserSerializer(source='*')
-
-class LoginResponse(serializers.Serializer):
+class UserResponse(serializers.Serializer):
     isSuccess = serializers.BooleanField()
     result = UserSerializer(source='*')
