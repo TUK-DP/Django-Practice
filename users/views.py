@@ -35,17 +35,17 @@ class SigninView(APIView):
         result = []
 
         if serializer.is_valid():
+            nickname = serializer.validated_data.get('nickname')
             username = serializer.validated_data.get('username')
             email = serializer.validated_data.get('email')
             password = serializer.validated_data.get('password')
 
-            if(username == None or email == None or password == None):
-                return Response({'message': '모든 값이 입력되지 않았습니다'}, status=status.HTTP_400_BAD_REQUEST)
-
             serializer.save()
 
             result.append({
+                'nickname' : nickname,
                 'username' : username,
+                'email' : email,
                 'password' : password
             })
 
@@ -63,12 +63,12 @@ class LoginView(APIView):
         if not serializer.is_valid():
             return Response({'message': '아이디와 비밀번호를 모두 입력해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        username = serializer.validated_data.get('username')
+        nickname = serializer.validated_data.get('nickname')
         password = serializer.validated_data.get('password')
 
-        if User.objects.filter(username=username, password=password).exists():
+        if User.objects.filter(nickname=nickname, password=password).exists():
             result.append({
-                'username' : username,
+                'nickname' : nickname,
                 'password' : password
                 })
                     
@@ -83,10 +83,10 @@ class DeleteView(APIView):
         serializer = DeleteRequest(data=request.data)
 
         if serializer.is_valid():
-            username = serializer.validated_data.get('username')
+            nickname = serializer.validated_data.get('nickname')
 
-            if User.objects.filter(username=username).exists():
-                delete_user = User.objects.get(username=username)
+            if User.objects.filter(nickname=nickname).exists():
+                delete_user = User.objects.get(nickname=nickname)
                 delete_user.delete()
                 return Response({'message' : '삭제되었습니다.'}, status=status.HTTP_200_OK)
             
@@ -100,6 +100,7 @@ class UpdateView(APIView):
 
         if serializer.is_valid():
             id = serializer.validated_data.get('id')
+            nickname = serializer.validated_data.get('nickname')
             username = serializer.validated_data.get('username')
             email = serializer.validated_data.get('email')
             password = serializer.validated_data.get('password')
@@ -107,22 +108,24 @@ class UpdateView(APIView):
             try:
                 updateuser = User.objects.get(id=id)
 
-                if(updateuser.username != username):
-                    if User.objects.filter(username=username).exists():
+                if(updateuser.nickname != nickname):
+                    if User.objects.filter(nickname=nickname).exists():
                         return Response({'message': '중복된 아이디입니다.'}, status=status.HTTP_400_BAD_REQUEST)
-                updateuser.username = username
+                updateuser.nickname = nickname
 
                 if(updateuser.email != email):
                     if User.objects.filter(email=email).exists():
                         return Response({'message': '중복된 이메일입니다.'}, status=status.HTTP_400_BAD_REQUEST)
                 updateuser.email = email
 
+                updateuser.username = username
                 updateuser.password = password
 
                 updateuser.save()
 
                 result = []
                 result.append({
+                'nickname' : nickname,
                 'username' : username,
                 'email' : email,
                 'password' : password
