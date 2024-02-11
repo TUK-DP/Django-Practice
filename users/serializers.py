@@ -19,12 +19,22 @@ class UserCreateRequest(serializers.ModelSerializer):
         newUser.save()
         return newUser
 
+
 class LoginRequest(serializers.Serializer):
     username = serializers.CharField(max_length=20)
     password = serializers.CharField(max_length=128)
 
+
 class DeleteRequest(serializers.Serializer):
     username = serializers.CharField(max_length=20)
+
+
+class UpdateResquest(serializers.Serializer):
+    id = serializers.IntegerField()
+    username = serializers.CharField(max_length=20)
+    email = serializers.EmailField(max_length=100)
+    password = serializers.CharField(max_length=128)
+
 
 class UserResponse(serializers.Serializer):
     isSuccess = serializers.BooleanField()
