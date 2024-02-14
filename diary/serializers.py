@@ -25,3 +25,8 @@ class DiaryCreateRequest(serializers.ModelSerializer):
         newDiary.is_valid()
         newDiary.save(user=user)
         return newDiary
+
+class WriteRequest(serializers.Serializer):
+    userId = serializers.IntegerField()
+    title = serializers.CharField(max_length=100)
+    content = serializers.CharField()
