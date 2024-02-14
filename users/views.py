@@ -28,7 +28,7 @@ class UserView(APIView):
         return JsonResponse(request.errors, status=400)
         
 
-class SigninView(APIView):
+class SignupView(APIView):
     @swagger_auto_schema(operation_description="회원가입", request_body=UserSerializer, responses={"201":UserResponse})
     def post(self, request):
         serializer = UserSerializer(data=request.data)
@@ -49,12 +49,12 @@ class SigninView(APIView):
                 'password' : password
             })
 
-            return Response({'isSucces' : 'True', 'result' : result}, status=status.HTTP_201_CREATED)
+            return Response({'isSuccess' : 'True', 'result' : result}, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-class LoginView(APIView):
+class SigninView(APIView):
     @swagger_auto_schema(operation_description="로그인", request_body=LoginRequest, responses={"200":UserResponse})
     def post(self, request):
         serializer = LoginRequest(data=request.data)
@@ -72,7 +72,7 @@ class LoginView(APIView):
                 'password' : password
                 })
                     
-            return Response({'isSucces' : 'True', 'result' : result}, status=status.HTTP_201_CREATED)
+            return Response({'isSuccess' : 'True', 'result' : result}, status=status.HTTP_201_CREATED)
             
         return Response({'message' : '아이디나 비밀번호를 다시 확인해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -131,7 +131,7 @@ class UpdateView(APIView):
                 'password' : password
                 })
 
-                return Response({'isSucces' : 'True', 'result' : result}, status=status.HTTP_200_OK)
+                return Response({'isSuccess' : 'True', 'result' : result}, status=status.HTTP_200_OK)
             except User.DoesNotExist:
                 return Response({'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
             
