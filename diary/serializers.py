@@ -30,3 +30,18 @@ class WriteRequest(serializers.Serializer):
     userId = serializers.IntegerField()
     title = serializers.CharField(max_length=100)
     content = serializers.CharField()
+
+    class Meta:
+        model = Diary
+        fields = '__all__'
+
+    def create(self, validated_data):
+        user_id = validated_data.pop('userId')
+        try:
+            user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("유저가 존재하지 않습니다.")
+        
+        validated_data['user'] = user
+        return Diary.objects.create(**validated_data)
+        

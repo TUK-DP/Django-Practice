@@ -43,8 +43,10 @@ class WriteView(APIView):
             userId = serializer.validated_data.get('userId')
             title = serializer.validated_data.get('title')
             content = serializer.validated_data.get('content')
+            
+            user = User.objects.get(id=userId)
 
-            if User.objects.filter(id=userId).exists():
+            if user is not None:
                 serializer.save()
 
                 result.append({
