@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from diary.models import Diary
-from diary.serializers import DiarySerializer, DiaryCreateRequest, WriteRequest
+from diary.serializers import DiarySerializer, DiaryCreateRequest, WriteRequest, GetDiaryRequest
 from users.models import User
 
 from drf_yasg.utils import swagger_auto_schema
@@ -58,5 +58,23 @@ class WriteView(APIView):
                 return Response({'isSuccess' : True, 'result' : result}, status=status.HTTP_201_CREATED)
 
             return Response({'isSuccess' : False, 'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class GetDiarybyUserView(APIView):
+    @swagger_auto_schema(operation_description="유저의 일기 조회", query_serializer=GetDiaryRequest, responses={"200":DiarySerializer})
+    def get(self, request):
+        serializer = GetDiaryRequest(data=request.query_params)
+
+        if serializer.is_valid():
+            userId = serializer.validated_data.get('userId')
+            try:
+                user = User.objects.get(id=userId)
+                diaries = Diary.objects.filter(user=user)
+                serializer = DiarySerializer(diaries, many=True)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except User.DoesNotExist:
+                return Response({'isSuccess' : False, 'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
