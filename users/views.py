@@ -88,7 +88,7 @@ class DeleteView(APIView):
             if User.objects.filter(nickname=nickname).exists():
                 delete_user = User.objects.get(nickname=nickname)
                 delete_user.delete()
-                return JsonResponse({'isSuccess' : False, 'message' : '삭제되었습니다.'}, status=status.HTTP_200_OK)
+                return JsonResponse({'isSuccess' : True, 'message' : '삭제되었습니다.'}, status=status.HTTP_200_OK)
             
         return JsonResponse({'isSuccess' : False, 'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
     
