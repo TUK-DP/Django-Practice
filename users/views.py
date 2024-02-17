@@ -49,9 +49,9 @@ class SignupView(APIView):
                 'password' : password
             })
 
-            return Response({'isSuccess' : 'True', 'result' : result}, status=status.HTTP_201_CREATED)
+            return JsonResponse({'isSuccess' : True, 'result' : result}, status=status.HTTP_201_CREATED)
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({'isSuccess' : False, 'message' : '입력하지 않은 정보가 있습니다.'}, status=status.HTTP_400_BAD_REQUEST)
     
 
 class SigninView(APIView):
@@ -61,7 +61,7 @@ class SigninView(APIView):
         result = []
 
         if not serializer.is_valid():
-            return Response({'message': '아이디와 비밀번호를 모두 입력해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({'isSuccess' : False, 'message': '아이디와 비밀번호를 모두 입력해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
 
         nickname = serializer.validated_data.get('nickname')
         password = serializer.validated_data.get('password')
@@ -72,9 +72,9 @@ class SigninView(APIView):
                 'password' : password
                 })
                     
-            return Response({'isSuccess' : 'True', 'result' : result}, status=status.HTTP_201_CREATED)
+            return JsonResponse({'isSuccess' : True, 'result' : result}, status=status.HTTP_201_CREATED)
             
-        return Response({'message' : '아이디나 비밀번호를 다시 확인해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({'isSuccess' : False, 'message' : '아이디나 비밀번호를 다시 확인해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class DeleteView(APIView):
@@ -88,9 +88,9 @@ class DeleteView(APIView):
             if User.objects.filter(nickname=nickname).exists():
                 delete_user = User.objects.get(nickname=nickname)
                 delete_user.delete()
-                return Response({'message' : '삭제되었습니다.'}, status=status.HTTP_200_OK)
+                return JsonResponse({'isSuccess' : False, 'message' : '삭제되었습니다.'}, status=status.HTTP_200_OK)
             
-        return Response({'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({'isSuccess' : False, 'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
     
 
 class UpdateView(APIView):
@@ -110,12 +110,12 @@ class UpdateView(APIView):
 
                 if(updateuser.nickname != nickname):
                     if User.objects.filter(nickname=nickname).exists():
-                        return Response({'message': '중복된 아이디입니다.'}, status=status.HTTP_400_BAD_REQUEST)
+                        return JsonResponse({'isSuccess' : False, 'message': '중복된 아이디입니다.'}, status=status.HTTP_400_BAD_REQUEST)
                 updateuser.nickname = nickname
 
                 if(updateuser.email != email):
                     if User.objects.filter(email=email).exists():
-                        return Response({'message': '중복된 이메일입니다.'}, status=status.HTTP_400_BAD_REQUEST)
+                        return JsonResponse({'isSuccess' : False, 'message': '중복된 이메일입니다.'}, status=status.HTTP_400_BAD_REQUEST)
                 updateuser.email = email
 
                 updateuser.username = username
@@ -125,15 +125,15 @@ class UpdateView(APIView):
 
                 result = []
                 result.append({
-                'nickname' : nickname,
-                'username' : username,
-                'email' : email,
-                'password' : password
-                })
+                    'nickname' : nickname,
+                    'username' : username,
+                    'email' : email,
+                    'password' : password
+                    })
 
-                return Response({'isSuccess' : 'True', 'result' : result}, status=status.HTTP_200_OK)
+                return JsonResponse({'isSuccess' : True, 'result' : result}, status=status.HTTP_200_OK)
             except User.DoesNotExist:
-                return Response({'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+                return JsonResponse({'isSuccess' : False, 'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
             
-        return Response({'message' : '입력한 값을 다시 확인해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({'isSuccess' : False, 'message' : '입력한 값을 다시 확인해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
 
