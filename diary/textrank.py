@@ -10,7 +10,7 @@ import numpy as np
 
 # 텍스트 데이터 가져오는 함수
 def get_text(diary):
-    sentences = diary.split('\n')
+    sentences = diary.split('.')
     return sentences
 
 # =============================================
