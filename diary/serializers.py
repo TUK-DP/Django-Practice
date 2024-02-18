@@ -45,5 +45,8 @@ class WriteRequest(serializers.Serializer):
         validated_data['user'] = user
         return Diary.objects.create(**validated_data)
 
+class GetUserRequest(serializers.Serializer):
+    userId = serializers.IntegerField()
+
 class GetDiaryRequest(serializers.Serializer):
-    userId = serializers.IntegerField()    
+    diaryId = serializers.IntegerField()
