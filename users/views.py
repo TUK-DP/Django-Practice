@@ -34,7 +34,6 @@ class SignupView(APIView):
     @swagger_auto_schema(operation_description="회원가입", request_body=UserSerializer, responses={"201":UserResponse})
     def post(self, request):
         serializer = UserSerializer(data=request.data)
-        result = []
 
         if serializer.is_valid():
             nickname = serializer.validated_data.get('nickname')
@@ -55,7 +54,6 @@ class SigninView(APIView):
     @swagger_auto_schema(operation_description="로그인", request_body=LoginRequest, responses={"200":UserResponse})
     def post(self, request):
         serializer = LoginRequest(data=request.data)
-        result = []
 
         if not serializer.is_valid():
             return JsonResponse({'isSuccess' : False, 'message': '아이디와 비밀번호를 모두 입력해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -63,12 +61,12 @@ class SigninView(APIView):
         nickname = serializer.validated_data.get('nickname')
         password = serializer.validated_data.get('password')
 
-        if User.objects.filter(nickname=nickname, password=password).exists():
-            user_json = UserSerializer(User.objects.get(nickname=nickname))
-
+        try:
+            user = User.objects.get(nickname=nickname, password=password)
+            user_json = UserSerializer(user)
             return JsonResponse({'isSuccess' : True, 'result' : user_json.data}, status=status.HTTP_201_CREATED)
-            
-        return JsonResponse({'isSuccess' : False, 'message' : '아이디나 비밀번호를 다시 확인해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:          
+            return JsonResponse({'isSuccess' : False, 'message' : '아이디나 비밀번호를 다시 확인해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class DeleteView(APIView):
