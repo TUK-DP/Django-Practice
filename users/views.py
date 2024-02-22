@@ -11,6 +11,8 @@ from users.serializers import UserSerializer, UserCreateRequest, UserResponse, L
 
 from drf_yasg.utils import swagger_auto_schema
 
+import json
+
 
 class UserView(APIView):
     def get(self, request: WSGIRequest) -> HttpResponse:
@@ -42,14 +44,9 @@ class SignupView(APIView):
 
             serializer.save()
 
-            result.append({
-                'nickname' : nickname,
-                'username' : username,
-                'email' : email,
-                'password' : password
-            })
+            user_json = UserSerializer(User.objects.get(nickname=nickname))
 
-            return JsonResponse({'isSuccess' : True, 'result' : result}, status=status.HTTP_201_CREATED)
+            return JsonResponse({'isSuccess' : True, 'result' : user_json.data}, status=status.HTTP_201_CREATED)
         
         return JsonResponse({'isSuccess' : False, 'message' : '입력하지 않은 정보가 있습니다.'}, status=status.HTTP_400_BAD_REQUEST)
     
@@ -67,12 +64,9 @@ class SigninView(APIView):
         password = serializer.validated_data.get('password')
 
         if User.objects.filter(nickname=nickname, password=password).exists():
-            result.append({
-                'nickname' : nickname,
-                'password' : password
-                })
-                    
-            return JsonResponse({'isSuccess' : True, 'result' : result}, status=status.HTTP_201_CREATED)
+            user_json = UserSerializer(User.objects.get(nickname=nickname))
+
+            return JsonResponse({'isSuccess' : True, 'result' : user_json.data}, status=status.HTTP_201_CREATED)
             
         return JsonResponse({'isSuccess' : False, 'message' : '아이디나 비밀번호를 다시 확인해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -123,15 +117,9 @@ class UpdateView(APIView):
 
                 updateuser.save()
 
-                result = []
-                result.append({
-                    'nickname' : nickname,
-                    'username' : username,
-                    'email' : email,
-                    'password' : password
-                    })
+                user_json = UserSerializer(updateuser)
 
-                return JsonResponse({'isSuccess' : True, 'result' : result}, status=status.HTTP_200_OK)
+                return JsonResponse({'isSuccess' : True, 'result' : user_json.data}, status=status.HTTP_200_OK)
             except User.DoesNotExist:
                 return JsonResponse({'isSuccess' : False, 'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
             
