@@ -15,3 +15,13 @@ class Diary(BaseModel):
     # __str__ 메서드는 자바의 toString()과 같은 역할을 한다.
     def __str__(self):
         return self.title
+
+class Sentences(BaseModel):
+    sentence = models.TextField()
+
+    diary = models.ForeignKey('diary.Diary', on_delete=models.CASCADE)
+
+class Keyword(BaseModel):
+    keyword = models.CharField(max_length=50)
+
+    sentence = models.ForeignKey('diary.Sentences', on_delete=models.CASCADE)
