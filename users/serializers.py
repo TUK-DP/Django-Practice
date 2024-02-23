@@ -8,6 +8,12 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'password', 'nickname', 'created_at', 'updated_at']
 
 
+class UserSafeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'nickname', 'created_at', 'updated_at']
+
+
 class UserCreateRequest(serializers.ModelSerializer):
     class Meta:
         model = User

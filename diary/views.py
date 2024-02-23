@@ -49,19 +49,14 @@ class WriteView(APIView):
             user = User.objects.get(id=userId)
 
             if user is not None:
-                serializer.save()
+                diary = serializer.save()
+                diary_json = DiarySerializer(diary)
 
-                result.append({
-                    'userId' : userId,
-                    'title' : title,
-                    'content' : content
-                })
+                return JsonResponse({'isSuccess' : True, 'result' : diary_json.data}, status=status.HTTP_201_CREATED)
 
-                return Response({'isSuccess' : True, 'result' : result}, status=status.HTTP_201_CREATED)
-
-            return Response({'isSuccess' : False, 'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_201_CREATED)
+            return JsonResponse({'isSuccess' : False, 'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
 class GetDiarybyUserView(APIView):
@@ -75,9 +70,9 @@ class GetDiarybyUserView(APIView):
                 user = User.objects.get(id=userId)
                 diaries = Diary.objects.filter(user=user)
                 serializer = DiarySerializer(diaries, many=True)
-                return Response(serializer.data, status=status.HTTP_200_OK)
+                return JsonResponse(serializer.data, status=status.HTTP_200_OK)
             except User.DoesNotExist:
-                return Response({'isSuccess' : False, 'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_201_CREATED)
+                return JsonResponse({'isSuccess' : False, 'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -110,8 +105,8 @@ class GetQuizView(APIView):
                 for q, a in zip(question, answer):
                     result.append({f'Q{len(result)+1}': q, f'A{len(result)+1}': a})
 
-                return Response({'isSuccess' : True, 'result' : result}, status=status.HTTP_200_OK)
+                return JsonResponse({'isSuccess' : True, 'result' : result}, status=status.HTTP_200_OK)
             except User.DoesNotExist:
-                return Response({'isSuccess' : False, 'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_201_CREATED)
+                return JsonResponse({'isSuccess' : False, 'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -1,12 +1,12 @@
 from rest_framework import serializers
 
 from users.models import User
-from users.serializers import UserSerializer
+from users.serializers import UserSafeSerializer
 from .models import Diary
 
 
 class DiarySerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
+    user = UserSafeSerializer(read_only=True)
 
     class Meta:
         model = Diary
