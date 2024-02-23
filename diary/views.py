@@ -39,23 +39,17 @@ class WriteView(APIView):
     @swagger_auto_schema(operation_description="일기 작성", request_body=WriteRequest, responses={"201":'작성 성공'})
     def post(self, request):
         serializer = WriteRequest(data=request.data)
-        result = []
 
         if serializer.is_valid():
-            userId = serializer.validated_data.get('userId')
-            title = serializer.validated_data.get('title')
-            content = serializer.validated_data.get('content')
-            
-            user = User.objects.get(id=userId)
+            user = User.objects.get(id=serializer.validated_data.get('userId'))
 
             if user is not None:
                 diary = serializer.save()
                 diary_json = DiarySerializer(diary)
-
                 return JsonResponse({'isSuccess' : True, 'result' : diary_json.data}, status=status.HTTP_201_CREATED)
-
-            return JsonResponse({'isSuccess' : False, 'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
-        
+            
+            return JsonResponse({'isSuccess' : False, 'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)   
+             
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
@@ -65,12 +59,11 @@ class GetDiarybyUserView(APIView):
         serializer = GetUserRequest(data=request.query_params)
 
         if serializer.is_valid():
-            userId = serializer.validated_data.get('userId')
             try:
-                user = User.objects.get(id=userId)
+                user = User.objects.get(id=serializer.validated_data.get('userId'))
                 diaries = Diary.objects.filter(user=user)
                 serializer = DiarySerializer(diaries, many=True)
-                return JsonResponse(serializer.data, status=status.HTTP_200_OK)
+                return JsonResponse(serializer.data, safe=False, status=status.HTTP_200_OK)
             except User.DoesNotExist:
                 return JsonResponse({'isSuccess' : False, 'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_201_CREATED)
         
