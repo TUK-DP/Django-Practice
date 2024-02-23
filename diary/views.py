@@ -45,8 +45,7 @@ class WriteView(APIView):
 
             if user is not None:
                 diary = serializer.save()
-                diary_json = DiarySerializer(diary)
-                return JsonResponse({'isSuccess' : True, 'result' : diary_json.data}, status=status.HTTP_201_CREATED)
+                return JsonResponse({'isSuccess' : True, 'result' : DiarySerializer(diary).data}, status=status.HTTP_201_CREATED)
             
             return JsonResponse({'isSuccess' : False, 'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)   
              
