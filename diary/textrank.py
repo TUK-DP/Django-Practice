@@ -4,31 +4,45 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.preprocessing import normalize
 from hanspell import spell_checker
 import numpy as np
+import re
 
-# # 불용어 파일
-# stopfile_path = './stopwords.txt'
-
-# # 텍스트 데이터 가져오는 함수
-# def get_stopword(stop_file_path):
-#     with open(stop_file_path, 'r', encoding='utf-8') as f:
-#         text = f.read()
-#     return text
-
-# # 불용어 데이터를 저장
-# stopword = get_stopword(stopfile_path)
-
-class SentenceTokenizer(object):
+class SentenceNomalize():
     def __init__(self):
         self.okt = Okt()
+        self.hanpattern = '([ㄱ-ㅎㅏ-ㅣ]+)'
+        self.signpattern = '[^\w\s]'
+        self.repl = ''
+    
+    def sent_nomalize(self, sentence):
+        # 이상한 받침 제거
+        sentence = self.okt.normalize(sentence)
+        # 한글 자음, 모음 제거
+        sentence = re.sub(pattern=self.hanpattern, repl=self.repl, string=sentence)
+        # 특수 기호 제거
+        sentence = re.sub(pattern=self.signpattern, repl=self.repl, string=sentence)
+        # 맞춤법 수정
+        sentence = spell_checker.check(sentence).checked
+        
+        return sentence
+
+class SentenceTokenizer():
+    def __init__(self):
+        self.okt = Okt()
+        self.replace_dict = {"\n": ".", "!": ".", "?": "."}
+        self.text_nomalize = SentenceNomalize()
         # self.stopwords = stopword
 
-    def get_text(self, file_path):
-        with open(file_path, 'r', encoding='utf-8') as f:
-            text = f.read()
-            text = text.replace('\n', '.')
-            sentences = text.split('.')
-            for idx in range(len(sentences)):
-                sentences[idx] = spell_checker.check(sentences[idx]).checked
+    def get_text(self, content):
+        content = content.translate(str.maketrans(self.replace_dict))
+        sentences = content.rsplit('.')
+        idx = 0
+        while idx < len(sentences):
+            # 빈 문자열 제거
+            if sentences[idx] == '':
+                del sentences[idx]
+            else:
+                self.text_nomalize.sent_nomalize(sentences[idx])
+                idx += 1
         
         return sentences
 
@@ -46,11 +60,13 @@ class GraphMatrix(object):
         self.cnt_vec = CountVectorizer()
         self.graph_sentence = []
         
+    # 문장별 가중치 그래프 생성
     def build_sent_graph(self, sentence):
         tfidf_mat = self.tfidf.fit_transform(sentence).toarray()
         self.graph_sentence = np.dot(tfidf_mat, tfidf_mat.T)
         return  self.graph_sentence
         
+    # 단어별 가중치 그래프 생성
     def build_words_graph(self, sentence):
         cnt_vec_mat = normalize(self.cnt_vec.fit_transform(sentence).toarray().astype(float), axis=0)
         vocab = self.cnt_vec.vocabulary_
@@ -73,10 +89,10 @@ class Rank(object):
         return {idx: r[0] for idx, r in enumerate(ranks)}
 
 class TextRank(object):
-    def __init__(self, text):
+    def __init__(self, content):
         self.sent_tokenize = SentenceTokenizer()
         
-        self.sentences = self.sent_tokenize.get_text(text)
+        self.sentences = self.sent_tokenize.get_text(content)
         
         self.nouns = self.sent_tokenize.get_nouns(self.sentences)
                     
@@ -135,18 +151,3 @@ def make_quiz(sentences, words):
                 quiz_sentences.append(sentence)
 
     return quiz_sentences, answer_keywords
-
-# 다이어리 파일
-file_path = './prac.txt'
-
-textrank = TextRank(file_path)
-# for row in textrank.summarize(3):
-#     print(row)
-#     print()
-# print('keywords :', textrank.keywords())
-
-quiz_sent, quiz_word = make_quiz(textrank.sentences, textrank.keywords())
-
-for idx, (sentence, keyword) in enumerate(zip(quiz_sent, quiz_word), start=1):
-    print(f"Q{idx}. {sentence}")
-    print(f"A{idx}. {keyword}\n")

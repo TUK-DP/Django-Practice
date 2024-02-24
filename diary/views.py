@@ -80,17 +80,8 @@ class GetQuizView(APIView):
                 diary = Diary.objects.get(id=diaryId)
                 content = diary.content
 
-                diary_sentences = textrank.get_text(content)
-                nouns = textrank.get_nouns(diary_sentences)
-                sent_graph = textrank.build_sent_graph(nouns)
-                words_graph, idx2word = textrank.build_words_graph(nouns)
-                sent_rank_idx = textrank.get_ranks(sent_graph)
-                sorted_sent_rank_idx = sorted(sent_rank_idx, key=lambda k: sent_rank_idx[k], reverse=True)
-                word_rank_idx = textrank.get_ranks(words_graph)
-                sorted_word_rank_idx = sorted(word_rank_idx, key=lambda k: word_rank_idx[k], reverse=True)
-                summary_sentence = textrank.summarize(sorted_sent_rank_idx, diary_sentences)
-                summary_key = textrank.keywords(sorted_word_rank_idx, idx2word)
-                question, answer = textrank.make_quiz(summary_sentence, summary_key)
+                memory = textrank.TextRank(content)
+                question, answer = textrank.make_quiz(memory.sentences, memory.keywords())
 
                 result = []
                 
