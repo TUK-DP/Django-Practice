@@ -12,7 +12,7 @@ from users.models import User
 
 from drf_yasg.utils import swagger_auto_schema
 
-from . import textrank
+from .textrank import TextRank, make_quiz
 
 class DiaryView(APIView):
     def get(self, request: WSGIRequest) -> HttpResponse:
@@ -80,8 +80,8 @@ class GetQuizView(APIView):
                 diary = Diary.objects.get(id=diaryId)
                 content = diary.content
 
-                memory = textrank.TextRank(content)
-                question, answer = textrank.make_quiz(memory.sentences, memory.keywords())
+                memory = TextRank(content)
+                question, answer = make_quiz(memory, keyword_size=3)
 
                 result = []
                 
