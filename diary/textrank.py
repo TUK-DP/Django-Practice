@@ -35,8 +35,8 @@ class SentenceTokenizer:
         # 문장 분리
         sentences = content.rsplit('.')
 
-        # 빈 문자열 제거
-        sentences = [sentence for sentence in sentences if sentence != '']
+        # 빈 문자열 제거 && 양옆 공백 제거
+        sentences = [sentence.strip() for sentence in sentences if sentence != '']
 
         # 문장 정규화 객체 생성
         text_normalize = SentenceNormalize()
@@ -96,18 +96,41 @@ class GraphMatrix:
 class Rank:
     @staticmethod
     def get_ranks(graph, d=0.85):  # d = damping factor
-        A = graph
-        matrix_size = A.shape[0]
-        for id in range(matrix_size):
-            A[id, id] = 0  # diagonal 부분을 0으로
-            link_sum = np.sum(A[:, id])  # A[:, id] = A[:][id]
-            if link_sum != 0:
-                A[:, id] /= link_sum
-            A[:, id] *= -d
-            A[id, id] = 1
 
-        B = (1 - d) * np.ones((matrix_size, 1))
-        ranks = np.linalg.solve(A, B)  # 연립방정식 Ax = b
+        A = graph
+
+        node_size = A.shape[0]
+
+        for node in range(node_size):
+            A[node, node] = 0  # diagonal(자기 자신의 노드의 가중치 == node -> node 가중치) 부분을 0으로
+
+            # node에 해당하는 열의 총합
+            col_sum = np.sum(A[:, node])  # graph[:, node] = graph[:][node]
+
+            # 열의 합이 0이 아닐 경우만 나누기
+            A[:, node] /= (col_sum if col_sum != 0 else 1)
+
+            # -d를 곱하고
+            A[:, node] *= -d
+
+            # node -> node 가중치를 1로 만듬
+            A[node, node] = 1
+
+        # 모든 원소가 1 - d로 이루어진 node_size x 1 행렬 생성
+        B = (1 - d) * np.ones((node_size, 1))
+
+        """
+        연립방정식 
+        A[0][0] * X1 + A[0][1] * X2 + ... + A[0][n] * Xn = B[0]
+        A[1][0] * X1 + A[1][1] * X2 + ... + A[1][n] * Xn = B[1]
+        ...
+        A[n][0] * X1 + A[n][1] * X2 + ... + A[n][n] * Xn = B[n]
+        를 푼다.
+        """
+        # ranks == [X1 ~ Xn]
+        ranks = np.linalg.solve(A, B)
+
+        # {index: 가중치} 사전 생성
         return {idx: r[0] for idx, r in enumerate(ranks)}
 
 
@@ -132,6 +155,10 @@ class TextRank(object):
             self.sorted_word_rank = sorted(word_rank_idx, key=lambda k: k[2], reverse=True)
         else:
             self.sorted_word_rank = []
+
+        self.words_graph = words_graph
+        self.sentences_dict = {index: sentence for index, sentence in enumerate(self.sentences)}
+        self.words_dict = word_vocab
 
     # sent_size 개의 문장 요약
     # def summarize(self, sent_size=3):
