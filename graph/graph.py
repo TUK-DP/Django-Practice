@@ -110,11 +110,8 @@ class GraphDB:
 if __name__ == '__main__':
     db = GraphDB("bolt://neo4j:7687", "neo4j", NEO4J_PASSWORD)
 
-    with open("../graph_vocab.pkl", "rb") as f:
-        graph_vocab = pickle.load(f)
-
-    db.insert_node(1, 1,
-                   graph=graph_vocab.graph,
-                   word_dict=graph_vocab.words_dict,
-                   weights_dict=graph_vocab.weights_dict
-                   )
+     # db.insert_node(1, 1,
+    #                graph=graph_vocab.graph,
+    #                word_dict=graph_vocab.words_dict,
+    #                weights_dict=graph_vocab.weights_dict
+    #                )
