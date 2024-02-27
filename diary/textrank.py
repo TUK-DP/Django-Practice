@@ -136,6 +136,9 @@ class Rank:
 
 class TextRank(object):
     def __init__(self, content):
+        """
+        :param content: The content of the text.
+        """
         # 문장 추출
         self.sentences = SentenceTokenizer.get_text(content)
         # 명사 추출
