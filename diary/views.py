@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from diary.models import Diary, Sentences, Quizs
-from diary.serializers import DiarySerializer, DiarySimpleSerializer, QuizSerializer, DiaryCreateRequest, WriteRequest, GetDiaryRequest, GetUserRequest
+from diary.serializers import *
 from users.models import User
 
 from drf_yasg.utils import swagger_auto_schema
@@ -57,7 +57,7 @@ class WriteView(APIView):
             for q, a in zip(question, answer):
                 Quizs.objects.create(question=q, answer=a, sentence=content)
 
-            return JsonResponse({'isSuccess': True, 'result': DiarySerializer(diary).data}, status=status.HTTP_201_CREATED)
+            return JsonResponse({'isSuccess': True, 'result': SentenceSimpleSerializer(content).data}, status=status.HTTP_201_CREATED)
         
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     

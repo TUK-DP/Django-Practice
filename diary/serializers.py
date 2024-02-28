@@ -26,6 +26,13 @@ class SentenceSerializer(serializers.ModelSerializer):
         model = Sentences
         fields = '__all__'
 
+class SentenceSimpleSerializer(serializers.ModelSerializer):
+    diary = DiarySimpleSerializer(read_only=True)
+
+    class Meta:
+        model = Sentences
+        fields = ['id', 'diary', 'sentence']
+
 class QuizSerializer(serializers.ModelSerializer):
     sentences = SentenceSerializer(read_only=True)
 
