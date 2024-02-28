@@ -50,7 +50,6 @@ class WriteView(APIView):
             diary = serializer.save()
 
             content = Sentences.objects.create(sentence=serializer.validated_data.get('content'), diary=diary)
-            print(content.sentence)
             memory = TextRank(content.sentence)
             question, answer = make_quiz(memory, keyword_size=5)
 
