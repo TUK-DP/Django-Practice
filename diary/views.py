@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from diary.models import Diary, Sentences, Keyword
+from diary.models import Diary, Sentences
 from diary.serializers import DiarySerializer, DiaryCreateRequest, WriteRequest, GetDiaryRequest, GetUserRequest
 from users.models import User
 
