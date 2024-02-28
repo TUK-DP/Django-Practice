@@ -52,7 +52,7 @@ class WriteView(APIView):
             content = Sentences.objects.create(sentence=serializer.validated_data.get('content'), diary=diary)
             print(content.sentence)
             memory = TextRank(content.sentence)
-            question, answer = make_quiz(memory, keyword_size=3)
+            question, answer = make_quiz(memory, keyword_size=5)
 
             for q, a in zip(question, answer):
                 Quizs.objects.create(question=q, answer=a, sentence=content)

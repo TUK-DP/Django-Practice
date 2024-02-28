@@ -154,12 +154,12 @@ def make_quiz(text_rank: TextRank, keyword_size=3):
         for sentence in text_rank.sentences:
             # 문장에 키워드가 있고, 사용한 문장이 아니며, 사용한 키워드가 아닐 경우
             if word in sentence and sentence not in remove_sentences and word not in answer_keywords:
-                # 문장에서 키워드를 _로 대체
-                sentence = sentence.replace(word, "_" * len(word))
-
                 # 사용한 문장과 사용한 키워드를 저장
                 remove_sentences.append(sentence)
                 answer_keywords.append(word)
+
+                # 문장에서 키워드를 _로 대체
+                sentence = sentence.replace(word, "_" * len(word))
 
                 # 퀴즈 문장 추가
                 quiz_sentences.append(sentence)
