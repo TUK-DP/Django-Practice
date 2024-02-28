@@ -6,8 +6,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from diary.models import Diary, Sentences
-from diary.serializers import DiarySerializer, DiaryCreateRequest, WriteRequest, GetDiaryRequest, GetUserRequest
+from diary.models import Diary, Sentences, Quizs
+from diary.serializers import DiarySerializer, QuizSerializer, DiaryCreateRequest, WriteRequest, GetDiaryRequest, GetUserRequest
 from users.models import User
 
 from drf_yasg.utils import swagger_auto_schema
@@ -41,24 +41,24 @@ class WriteView(APIView):
         serializer = WriteRequest(data=request.data)
 
         if serializer.is_valid():
-            user = User.objects.get(id=serializer.validated_data.get('userId'))
+            user_id = serializer.validated_data.get('userId')
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return JsonResponse({'isSuccess': False, 'message': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            if user is not None:
-                diary = serializer.save()
+            diary = serializer.save()
 
-                content = Sentences.objects.create(sentence=serializer.validated_data.get('content'), diary = diary)
-                content.save()
+            content = Sentences.objects.create(sentence=serializer.validated_data.get('content'), diary=diary)
+            print(content.sentence)
+            memory = TextRank(content.sentence)
+            question, answer = make_quiz(memory, keyword_size=3)
 
-                memory = TextRank(content)
-                question, answer = make_quiz(memory, keyword_size=3)
+            for q, a in zip(question, answer):
+                Quizs.objects.create(question=q, answer=a, sentence=content)
 
-                # for a in answer:
-                #     Keyword.objects.create(Keyword=a, sentence = ).save()
-
-                return JsonResponse({'isSuccess' : True, 'result' : DiarySerializer(diary).data}, status=status.HTTP_201_CREATED)
-            
-            return JsonResponse({'isSuccess' : False, 'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)   
-             
+            return JsonResponse({'isSuccess': True, 'result': DiarySerializer(diary).data}, status=status.HTTP_201_CREATED)
+        
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
@@ -78,33 +78,27 @@ class GetDiarybyUserView(APIView):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-
+    
 class GetQuizView(APIView):
     @swagger_auto_schema(operation_description="일기회상 퀴즈", query_serializer=GetDiaryRequest, responses={"200":"퀴즈"})
     def get(self, request):
         serializer = GetDiaryRequest(data=request.query_params)
 
         if serializer.is_valid():
-            diaryId = serializer.validated_data.get('diaryId')
+            diary_id = serializer.validated_data.get('diaryId')
             try:
-                diary = Diary.objects.get(id=diaryId)
+                diary = Diary.objects.get(id=diary_id)
+            except Diary.DoesNotExist:
+                return JsonResponse({'isSuccess': False, 'message': '해당 일기를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
 
-                sentences = Sentences.objects.filter(diary=diary)
-                question = [sentence.sentence for sentence in sentences]
+            sentences = diary.sentences.all()
+            quizs = []
 
-                answers = []
-                for sentence in sentences:
-                    keywords = Keyword.objects.filter(sentence=sentence)
-                    answer = ', '.join([keyword.keyword for keyword in keywords])
-                    answers.append(answer)
+            for sentence in sentences:
+                quizs.extend(sentence.quizs.all())
+            
+            serializer = QuizSerializer(quizs, many=True)
 
-                result = []
-                
-                for q, a in zip(question, answer):
-                    result.append({f'Q{len(result)+1}': q, f'A{len(result)+1}': a})
-
-                return JsonResponse({'isSuccess' : True, 'result' : result}, status=status.HTTP_200_OK)
-            except User.DoesNotExist:
-                return JsonResponse({'isSuccess' : False, 'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_201_CREATED)
+            return JsonResponse(serializer.data, safe=False, status=status.HTTP_200_OK)
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

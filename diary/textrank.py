@@ -123,6 +123,9 @@ class TextRank(object):
         # 단어별 가중치 그래프
         words_graph, word_vocab = matrix.get_words_graph_vocab()
 
+        print(sent_graph)
+        print(words_graph)
+
         # (문장, index, 가중치) 리스트 생성
         sent_rank = [(snet_vocab[index], index, weight) for index, weight in Rank.get_ranks(sent_graph).items()]
         # weight 기준으로 정렬
