@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from diary.models import Diary, Sentences, Quizs
-from diary.serializers import DiarySerializer, QuizSerializer, DiaryCreateRequest, WriteRequest, GetDiaryRequest, GetUserRequest
+from diary.serializers import DiarySerializer, DiarySimpleSerializer, QuizSerializer, DiaryCreateRequest, WriteRequest, GetDiaryRequest, GetUserRequest
 from users.models import User
 
 from drf_yasg.utils import swagger_auto_schema
@@ -17,7 +17,7 @@ from .textrank import TextRank, make_quiz
 class DiaryView(APIView):
     def get(self, request: WSGIRequest) -> HttpResponse:
         findDiaries = Diary.objects.all()
-        serializer = DiarySerializer(findDiaries, many=True)
+        serializer = DiarySimpleSerializer(findDiaries, many=True)
         return JsonResponse(serializer.data, safe=False)
 
     @csrf_exempt

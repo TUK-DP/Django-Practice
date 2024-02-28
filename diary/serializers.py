@@ -12,6 +12,13 @@ class DiarySerializer(serializers.ModelSerializer):
         model = Diary
         fields = '__all__'
 
+class DiarySimpleSerializer(serializers.ModelSerializer):
+    user = UserSafeSerializer(read_only=True)
+
+    class Meta:
+        model = Diary
+        fields = ['id', 'user', 'title']
+
 class SentenceSerializer(serializers.ModelSerializer):
     diay = DiarySerializer(read_only=True)
 
