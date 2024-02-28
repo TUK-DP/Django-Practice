@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from diary.models import Diary
+from diary.models import Diary, Sentences, Keyword
 from diary.serializers import DiarySerializer, DiaryCreateRequest, WriteRequest, GetDiaryRequest, GetUserRequest
 from users.models import User
 
@@ -45,6 +45,16 @@ class WriteView(APIView):
 
             if user is not None:
                 diary = serializer.save()
+
+                content = Sentences.objects.create(sentence=serializer.validated_data.get('content'), diary = diary)
+                content.save()
+
+                memory = TextRank(content)
+                question, answer = make_quiz(memory, keyword_size=3)
+
+                # for a in answer:
+                #     Keyword.objects.create(Keyword=a, sentence = ).save()
+
                 return JsonResponse({'isSuccess' : True, 'result' : DiarySerializer(diary).data}, status=status.HTTP_201_CREATED)
             
             return JsonResponse({'isSuccess' : False, 'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)   
@@ -78,10 +88,15 @@ class GetQuizView(APIView):
             diaryId = serializer.validated_data.get('diaryId')
             try:
                 diary = Diary.objects.get(id=diaryId)
-                content = diary.content
 
-                memory = TextRank(content)
-                question, answer = make_quiz(memory, keyword_size=3)
+                sentences = Sentences.objects.filter(diary=diary)
+                question = [sentence.sentence for sentence in sentences]
+
+                answers = []
+                for sentence in sentences:
+                    keywords = Keyword.objects.filter(sentence=sentence)
+                    answer = ', '.join([keyword.keyword for keyword in keywords])
+                    answers.append(answer)
 
                 result = []
                 
