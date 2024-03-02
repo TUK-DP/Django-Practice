@@ -17,7 +17,7 @@ from .textrank import TextRank, make_quiz
 class DiaryView(APIView):
     def get(self, request: WSGIRequest) -> HttpResponse:
         findDiaries = Diary.objects.all()
-        serializer = DiarySimpleSerializer(findDiaries, many=True)
+        serializer = DiarySerializer(findDiaries, many=True)
         return JsonResponse(serializer.data, safe=False)
 
     @csrf_exempt
