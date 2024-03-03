@@ -17,7 +17,7 @@ from .textrank import TextRank, make_quiz
 class DiaryView(APIView):
     def get(self, request: WSGIRequest) -> HttpResponse:
         findDiaries = Diary.objects.all()
-        serializer = DiarySimpleSerializer(findDiaries, many=True)
+        serializer = DiarySerializer(findDiaries, many=True)
         return JsonResponse(serializer.data, safe=False)
 
     @csrf_exempt
@@ -59,7 +59,39 @@ class WriteView(APIView):
             return JsonResponse({'isSuccess': True, 'result': SentenceSimpleSerializer(content).data}, status=status.HTTP_201_CREATED)
         
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
+class UpdateView(APIView):
+    @swagger_auto_schema(operation_description="일기 수정", request_body=UpdateRequest, responses={"201":'작성 성공'})
+    def post(self, request):
+        serializer = UpdateRequest(data=request.data)
+
+        if serializer.is_valid():
+            user_id = serializer.validated_data.get('userId')
+            diary_id = serializer.validated_data.get('diaryId')
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return JsonResponse({'isSuccess': False, 'message': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                deleteDiary = Diary.objects.get(id=diary_id)
+                Diary.delete(deleteDiary)
+
+                updateDiary = serializer.save()
+
+                content = Sentences.objects.create(sentence=serializer.validated_data.get('content'), diary=updateDiary)
+                memory = TextRank(content.sentence)
+                question, answer = make_quiz(memory, keyword_size=5)
+
+                for q, a in zip(question, answer):
+                    Quizs.objects.create(question=q, answer=a, sentence=content)
+
+                return JsonResponse({'isSuccess': True, 'result': SentenceSimpleSerializer(content).data}, status=status.HTTP_201_CREATED)
+            except Diary.DoesNotExist:
+                return JsonResponse({'isSuccess': False, 'message': '일기를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class GetDiarybyUserView(APIView):
     @swagger_auto_schema(operation_description="유저의 일기 조회", query_serializer=GetUserRequest, responses={"200":DiarySerializer})
