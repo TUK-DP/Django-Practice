@@ -9,12 +9,15 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -25,8 +28,7 @@ SECRET_KEY = 'django-insecure-5=9qd#p44rv-o@r=1ktt@gz(4sb@u5!gt6*58ths@*==y78wzh
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [ "*"]
-
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
@@ -80,8 +82,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'mysql.connector.django',
+        'NAME': os.getenv("MYSQL_DATABASE"),  # Your database name
+        'USER': os.getenv("MYSQL_USER"),  # Default MySQL root user, or use a different user if you've created one
+        'PASSWORD': os.getenv("MYSQL_PASSWORD"),  # The root password you set when running the MySQL container
+        'HOST': os.getenv("MYSQL_HOST"),  # Use the IP address of the MySQL container
+        'PORT': '3306',  # Default MySQL port
     }
 }
 
