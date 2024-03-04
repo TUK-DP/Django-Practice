@@ -1,4 +1,4 @@
-FROM twoone14/dp-base-image:0.1
+FROM twoone14/dp-base-image:0.2
 
 WORKDIR /app
 
