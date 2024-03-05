@@ -46,4 +46,4 @@ jobs:
             sudo echo "${{ secrets.DOT_ENT }}" > .env
             sudo docker rm -f ${{ secrets.REPOSITORY_NAME }} || true
             sudo docker rmi -f ${{ secrets.DOCKER_USERNAME }}/${{ secrets.REPOSITORY_NAME }}:latest || true
-            sudo docker run -d --name ${{ secrets.REPOSITORY_NAME }} -p 8001:8000 --env-file .env ${{ secrets.DOCKER_USERNAME }}/${{ secrets.REPOSITORY_NAME }}:latest
+            sudo docker-compose up -d
