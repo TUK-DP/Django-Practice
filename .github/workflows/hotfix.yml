@@ -1,15 +1,14 @@
 name: Build And Deploy
 
 on:
-  pull_request:
+  push:
     branches:
       - main
-    types:
-      - closed
 
 jobs:
-  deploy:
-    if: github.event.pull_request.merged == true
+  hotfix:
+    # push 이벤트가 발생했을 때만 실행
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -30,7 +29,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/${{ secrets.REPOSITORY_NAME }}:${{ github.event.pull_request.number }}, ${{ secrets.DOCKER_USERNAME }}/${{ secrets.REPOSITORY_NAME }}:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{ secrets.REPOSITORY_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -46,4 +45,6 @@ jobs:
             sudo echo "${{ secrets.DOT_ENT }}" > .env
             sudo docker rm -f ${{ secrets.REPOSITORY_NAME }} || true
             sudo docker rmi -f ${{ secrets.DOCKER_USERNAME }}/${{ secrets.REPOSITORY_NAME }}:latest || true
-            sudo docker-compose up -d
+            sudo docker run -d --name ${{ secrets.REPOSITORY_NAME }} -p 8001:8000 --env-file .env ${{ secrets.DOCKER_USERNAME }}/${{ secrets.REPOSITORY_NAME }}:latest
+            
+            sudo docker exec ${{ secrets.REPOSITORY_NAME }} python3 manage.py migrate
