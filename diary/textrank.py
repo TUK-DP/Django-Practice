@@ -1,6 +1,5 @@
 import re
 import numpy as np
-from hanspell import spell_checker
 from konlpy.tag import Okt
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -23,7 +22,7 @@ class SentenceNormalize:
         sentence = re.sub(pattern=self.signpattern, repl=self.repl, string=sentence)
 
         # 맞춤법 수정
-        return spell_checker.check(sentence).checked
+        return sentence
 
 
 class SentenceTokenizer:
@@ -52,9 +51,12 @@ class SentenceTokenizer:
 
         okt = Okt()
 
+        stopword = ["오늘", "내일", "빨리", "바쁘게"]
+
         # 명사 추출후 명사 리스트를 문자열로 변환하는 함수
         def join_nouns(sentence):
-            return ' '.join(okt.nouns(str(sentence)))
+            return ' '.join([noun for noun in okt.nouns(str(sentence)) 
+                                       if noun not in stopword])
 
         # 명사 추출
         return list(map(join_nouns, sentences))
