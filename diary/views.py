@@ -69,12 +69,16 @@ class UpdateView(APIView):
         # Diary와 연관된 모든 Sentence 삭제
         findDiary.sentences.all().delete()
 
+        # Sentence 객체 생성
         content = request.get('content')
         newSentence = Sentences.objects.create(sentence=content, diary=findDiary)
 
+        # 키워드 추출
         memory = TextRank(content=content)
+        # 키워드 추출 후 가중치가 높은 키워드 5개로 퀴즈 생성
         question, answer = make_quiz(memory, keyword_size=5)
 
+        # Quizs 객체 생성
         Quizs.objects.bulk_create(
             [Quizs(question=q, answer=a, sentence=newSentence) for q, a in zip(question, answer)]
         )
