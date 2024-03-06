@@ -118,22 +118,20 @@ class TextRank(object):
         # 명사 추출
         nouns = SentenceTokenizer.get_nouns(self.sentences)
 
-        # 가중치 그래프 객체 생성
-        matrix = GraphMatrix(nouns)
-        # 문장별 가중치 그래프 [문장수, 문장수], {index: 문장} 사전
-        # sent_graph, sent_vocab = matrix.get_sent_graph_vocab()
-        # 단어별 가중치 그래프 [단어수, 단어수], {index: 단어} 사전
-        words_graph, word_vocab = matrix.get_words_graph_vocab()
+        if nouns:
+            # 가중치 그래프 객체 생성
+            matrix = GraphMatrix(nouns)
+            # 문장별 가중치 그래프 [문장수, 문장수], {index: 문장} 사전
+            # sent_graph, sent_vocab = matrix.get_sent_graph_vocab()
+            # 단어별 가중치 그래프 [단어수, 단어수], {index: 단어} 사전
+            words_graph, word_vocab = matrix.get_words_graph_vocab()
 
-        # (문장, index, 가중치) 리스트 생성
-        # sent_rank = [(sent_vocab[index], index, weight) for index, weight in (Rank.get_ranks(sent_graph).items())]
-        # weight 기준으로 정렬
-        # self.sorted_sent_rank = sorted(sent_rank, key=lambda k: k[2], reverse=True)
-
-        # (단어, index, 가중치) 리스트 생성
-        word_rank_idx = [(word_vocab[index], index, weight) for index, weight in Rank.get_ranks(words_graph).items()]
-        # weight 기준으로 정렬
-        self.sorted_word_rank = sorted(word_rank_idx, key=lambda k: k[2], reverse=True)
+            # (단어, index, 가중치) 리스트 생성
+            word_rank_idx = [(word_vocab[index], index, weight) for index, weight in Rank.get_ranks(words_graph).items()]
+            # weight 기준으로 정렬
+            self.sorted_word_rank = sorted(word_rank_idx, key=lambda k: k[2], reverse=True)
+        else:
+            self.sorted_word_rank = []
 
     # sent_size 개의 문장 요약
     # def summarize(self, sent_size=3):
