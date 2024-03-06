@@ -21,7 +21,7 @@ class Sentences(BaseModel):
     diary = models.ForeignKey('diary.Diary', related_name='sentences', on_delete=models.CASCADE)
 
 class Keywords(BaseModel):
-    keyword = models.CharField()
+    keyword = models.CharField(max_length=100)
 
     sentence = models.ForeignKey('diary.Sentences', related_name='keywords', on_delete=models.CASCADE)
 
