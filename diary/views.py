@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from diary.models import Diary, Sentences, Quizs
+from diary.models import Diary, Sentences, Keywords, Questions
 from diary.serializers import *
 from users.models import User
 
@@ -54,9 +54,10 @@ class WriteView(APIView):
             sentence = Sentences.objects.create(sentence=content, diary=diary)
 
             memory = TextRank(content=content)
-            question, answer = make_quiz(memory, keyword_size=5)
+            question, keyword = make_quiz(memory, keyword_size=5)
 
-            Quizs.objects.bulk_create([Quizs(question=q, answer=a, sentence=sentence) for q, a in zip(question, answer)])
+            keywords = Keywords.objects.bulk_create([Keywords(keyword=k, sentence=sentence) for k in keyword])
+            Questions.objects.bulk_create([Questions(question=q, keyword=k) for q, k in zip(question, keywords)])
 
             return JsonResponse({'isSuccess': True, 'result': SentenceSimpleSerializer(sentence).data}, status=status.HTTP_201_CREATED)
         
@@ -87,9 +88,10 @@ class UpdateView(APIView):
                 sentence = Sentences.objects.create(sentence=content, diary=diary)
 
                 memory = TextRank(content=content)
-                question, answer = make_quiz(memory, keyword_size=5)
+                question, keyword = make_quiz(memory, keyword_size=5)
 
-                Quizs.objects.bulk_create([Quizs(question=q, answer=a, sentence=sentence) for q, a in zip(question, answer)])
+                keywords = Keywords.objects.bulk_create([Keywords(keyword=k, sentence=sentence) for k in keyword])
+                Questions.objects.bulk_create([Questions(question=q, keyword=k) for q, k in zip(question, keywords)])
 
                 return JsonResponse({'isSuccess': True, 'result': SentenceSimpleSerializer(sentence).data}, status=status.HTTP_201_CREATED)
             except Diary.DoesNotExist:
