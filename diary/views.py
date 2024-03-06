@@ -51,6 +51,9 @@ class WriteView(APIView):
 
             content = serializer.validated_data.get('content')
 
+            if not content or len(content) < 10:
+                return JsonResponse({'isSuccess': False, 'message': '적어도 한 문장 이상 작성해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
+
             sentence = Sentences.objects.create(sentence=content, diary=diary)
 
             memory = TextRank(content=content)
