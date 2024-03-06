@@ -86,7 +86,7 @@ class UpdateView(APIView):
 
 
 class GetDiaryByUserView(APIView):
-    @swagger_auto_schema(operation_description="유저의 일기 조회", query=GetUserRequest,
+    @swagger_auto_schema(operation_description="유저의 일기 조회", query_serializer=GetUserRequest,
                          response={"200": DiarySerializer})
     def get(self, request):
         requestSerial = GetUserRequest(data=request.query_params)
@@ -114,7 +114,7 @@ class GetDiaryByUserView(APIView):
 
 
 class GetQuizView(APIView):
-    @swagger_auto_schema(operation_description="일기회상 퀴즈", query=GetDiaryRequest,
+    @swagger_auto_schema(operation_description="일기회상 퀴즈", query_serializer=GetDiaryRequest,
                          responses={"200": "퀴즈"})
     def get(self, request):
         requestSerial = GetDiaryRequest(data=request.query_params)
