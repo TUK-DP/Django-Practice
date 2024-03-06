@@ -37,10 +37,6 @@ class SentenceSimpleSerializer(serializers.ModelSerializer):
         fields = ['id', 'diary', 'sentence']
 
 
-class QuizSerializer(serializers.ModelSerializer):
-    sentences = SentenceSerializer(read_only=True)
-
-
 class KeywordSerializer(serializers.ModelSerializer):
     sentence = SentenceSerializer(read_only=True)
 
