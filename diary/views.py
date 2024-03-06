@@ -1,6 +1,4 @@
-from django.http import JsonResponse
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from config.basemodel import ApiResponse
@@ -87,22 +85,32 @@ class UpdateView(APIView):
         )
 
 
-class GetDiarybyUserView(APIView):
-    @swagger_auto_schema(operation_description="유저의 일기 조회", query_serializer=GetUserRequest,
-                         responses={"200": DiarySerializer})
+class GetDiaryByUserView(APIView):
+    @swagger_auto_schema(operation_description="유저의 일기 조회", query=GetUserRequest,
+                         response={"200": DiarySerializer})
     def get(self, request):
-        serializer = GetUserRequest(data=request.query_params)
+        requestSerial = GetUserRequest(data=request.query_params)
 
-        if serializer.is_valid():
-            try:
-                user = User.objects.get(id=serializer.validated_data.get('userId'))
-                diaries = Diary.objects.filter(user=user)
-                serializer = DiarySerializer(diaries, many=True)
-                return JsonResponse(serializer.data, safe=False, status=status.HTTP_200_OK)
-            except User.DoesNotExist:
-                return JsonResponse({'isSuccess': False, 'message': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_201_CREATED)
+        isValid, response_status = requestSerial.is_valid()
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # 유효성 검사 통과하지 못한 경우
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
+
+        # 유효성 검사 통과한 경우
+        request = requestSerial.validated_data
+
+        # User 가져오기
+        user_id = request.get('userId')
+        findUser = User.objects.get(id=user_id)
+
+        # User와 연관된 모든 Diary 가져오기
+        findDiaries = Diary.objects.filter(user=findUser)
+
+        return ApiResponse.on_success(
+            result=DiarySerializer(findDiaries, many=True).data,
+            response_status=status.HTTP_200_OK
+        )
 
 
 class GetQuizView(APIView):
@@ -133,4 +141,6 @@ class GetQuizView(APIView):
             response_status=status.HTTP_200_OK
         )
 
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+"""
+떠나는 길에 네가 내게 말했지\n너는 바라는 게 너무나 많아\n잠깐이라도 널 안 바라보면\n머리에 불이 나버린다니까\n나는 흐르려는 눈물을 참고\n하려던 얘길 어렵게 누르고\n그래, 미안해라는 한 마디로\n너랑 나눈 날들 마무리했었지\n달디달고, 달디달고, 달디단, 밤양갱, 밤양갱\n내가 먹고 싶었던 건, 달디단, 밤양갱, 밤양갱이야\n떠나는 길에 네가 내게 말했지\n너는 바라는 게 너무나 많아\n아냐, 내가 늘 바란 건 하나야\n한 개뿐이야, 달디단, 밤양갱\n달디달고, 달디달고, 달디단, 밤양갱, 밤양갱\n내가 먹고 싶었던 건, 달디단, 밤양갱, 밤양갱이야\n상다리가 부러지고\n둘이서 먹다 하나가 쓰러져버려도\n나라는 사람을 몰랐던 넌\n떠나가다가 돌아서서 말했지\n너는 바라는 게 너무나 많아\n아냐, 내가 늘 바란 건 하나야\n한 개뿐이야, 달디단, 밤양갱\n"""
