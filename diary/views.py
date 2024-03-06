@@ -129,13 +129,21 @@ class GetQuizView(APIView):
                 return JsonResponse({'isSuccess': False, 'message': '해당 일기를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
 
             sentences = diary.sentences.all()
-            quizs = []
+
+            q = []
+            a = []
 
             for sentence in sentences:
-                quizs.extend(sentence.quizs.all())
-            
-            serializer = QuizSerializer(quizs, many=True)
+                keywords = sentence.keywords.all()
+                a.extend(keywords)
+                for keyword in keywords:
+                    questions = keyword.questions.all()
+                    q.extend(questions)
 
-            return JsonResponse(serializer.data, safe=False, status=status.HTTP_200_OK)
+            result = []
+            for question_obj, keyword_obj in zip(q, a):
+                result.append({"Q": question_obj.question, "A": keyword_obj.keyword})
+
+            return JsonResponse({'result': result}, status=status.HTTP_200_OK)
         
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
