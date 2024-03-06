@@ -39,6 +39,8 @@ class SentenceSimpleSerializer(serializers.ModelSerializer):
 
 class QuizSerializer(serializers.ModelSerializer):
     sentences = SentenceSerializer(read_only=True)
+
+
 class KeywordSerializer(serializers.ModelSerializer):
     sentence = SentenceSerializer(read_only=True)
 
@@ -53,6 +55,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Questions
         fields = '__all__'
+
 
 class DiaryCreateRequest(serializers.ModelSerializer):
     userId = serializers.IntegerField()

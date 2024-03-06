@@ -34,18 +34,13 @@ class WriteView(APIView):
 
         # 키워드 추출
         memory = TextRank(content=sentence)
-
-            memory = TextRank(content=content)
-            question, keyword = make_quiz(memory, keyword_size=5)
         # 키워드 추출 후 가중치가 높은 키워드 5개로 퀴즈 생성
-        question, answer = make_quiz(memory, keyword_size=5)
+        question, keyword = make_quiz(memory, keyword_size=5)
 
-            keywords = Keywords.objects.bulk_create([Keywords(keyword=k, sentence=sentence) for k in keyword])
-            Questions.objects.bulk_create([Questions(question=q, keyword=k) for q, k in zip(question, keywords)])
-        # Quizs 객체 생성
-        Quizs.objects.bulk_create(
-            [Quizs(question=q, answer=a, sentence=newSentence) for q, a in zip(question, answer)]
-        )
+        # 각 키워드별로 Question 생성
+        for q, k in zip(question, keyword):
+            newKeyword = Keywords.objects.create(keyword=k, sentence=newSentence)
+            Questions.objects.create(question=q, keyword=newKeyword)
 
         return ApiResponse.on_success(
             result=SentenceSimpleSerializer(newSentence).data,
@@ -71,26 +66,25 @@ class UpdateView(APIView):
         diary_id = request.get('diaryId')
         findDiary = Diary.objects.get(id=diary_id)
 
-        # Diary와 연관된 모든 Sentence 삭제
-        findDiary.sentences.all().delete()
+        # Diary와 연관된 모든 Sentence, Question, Keyword 삭제
+        sentences = findDiary.sentences.all()
+        for sentence in sentences:
+            sentence.keywords.all().delete()
+            sentence.delete()
 
-                memory = TextRank(content=content)
-                question, keyword = make_quiz(memory, keyword_size=5)
         # Sentence 객체 생성
         content = request.get('content')
         newSentence = Sentences.objects.create(sentence=content, diary=findDiary)
 
-                keywords = Keywords.objects.bulk_create([Keywords(keyword=k, sentence=sentence) for k in keyword])
-                Questions.objects.bulk_create([Questions(question=q, keyword=k) for q, k in zip(question, keywords)])
         # 키워드 추출
         memory = TextRank(content=content)
         # 키워드 추출 후 가중치가 높은 키워드 5개로 퀴즈 생성
-        question, answer = make_quiz(memory, keyword_size=5)
+        question, keyword = make_quiz(memory, keyword_size=5)
 
-        # Quizs 객체 생성
-        Quizs.objects.bulk_create(
-            [Quizs(question=q, answer=a, sentence=newSentence) for q, a in zip(question, answer)]
-        )
+        # 각 키워드별로 Question 생성
+        for q, k in zip(question, keyword):
+            newKeyword = Keywords.objects.create(keyword=k, sentence=newSentence)
+            Questions.objects.create(question=q, keyword=newKeyword)
 
         return ApiResponse.on_success(
             result=SentenceSimpleSerializer(newSentence).data,
@@ -136,37 +130,30 @@ class GetQuizView(APIView):
         if not isValid:
             return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
 
-            sentences = diary.sentences.all()
         # 유효성 검사 통과한 경우
         request = requestSerial.validated_data
 
-            q = []
-            a = []
-
-            for sentence in sentences:
-                keywords = sentence.keywords.all()
-                a.extend(keywords)
-                for keyword in keywords:
-                    questions = keyword.questions.all()
-                    q.extend(questions)
         # Diary 가져오기
         diary_id = request.get('diaryId')
         findDiary = Diary.objects.get(id=diary_id)
 
-            result = []
-            for question_obj, keyword_obj in zip(q, a):
-                result.append({"Q": question_obj.question, "A": keyword_obj.keyword})
-
-            return JsonResponse({'result': result}, status=status.HTTP_200_OK)
-        
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         # Diary와 연관된 모든 Sentence 가져오기
         sentences = findDiary.sentences.all()
 
-        # 모든 Sentence와 연관된 Quiz 가져오기 quizzes == [Quizs, Quizs, Quizs, ...]
-        quizzes = sum([list(sentence.quizs.all()) for sentence in sentences], [])
+        # 모든 Sentence 와 연관된 Question 가져오기
+        question_keyword = []
+        for sentence in sentences:
+            for keyword in sentence.keywords.all():
+                question_keyword.append({
+                        "Q": keyword.questions.first().question,
+                        "A": keyword.keyword
+                    })
 
         return ApiResponse.on_success(
-            result=QuizSerializer(quizzes, many=True).data,
+            result=question_keyword,
             response_status=status.HTTP_200_OK
         )
+
+
+"""
+"""
