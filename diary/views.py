@@ -47,16 +47,18 @@ class WriteView(APIView):
             except User.DoesNotExist:
                 return JsonResponse({'isSuccess': False, 'message': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            diary = serializer.save()
+            diary = Diary.objects.create(user=user, title=serializer.validated_data.get('title'))
 
-            content = Sentences.objects.create(sentence=serializer.validated_data.get('content'), diary=diary)
-            memory = TextRank(content.sentence)
+            content = serializer.validated_data.get('content')
+
+            sentence = Sentences.objects.create(sentence=content, diary=diary)
+
+            memory = TextRank(content=content)
             question, answer = make_quiz(memory, keyword_size=5)
 
-            for q, a in zip(question, answer):
-                Quizs.objects.create(question=q, answer=a, sentence=content)
+            Quizs.objects.bulk_create([Quizs(question=q, answer=a, sentence=sentence) for q, a in zip(question, answer)])
 
-            return JsonResponse({'isSuccess': True, 'result': SentenceSimpleSerializer(content).data}, status=status.HTTP_201_CREATED)
+            return JsonResponse({'isSuccess': True, 'result': SentenceSimpleSerializer(sentence).data}, status=status.HTTP_201_CREATED)
         
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -78,16 +80,18 @@ class UpdateView(APIView):
                 deleteDiary = Diary.objects.get(id=diary_id)
                 Diary.delete(deleteDiary)
 
-                updateDiary = serializer.save()
+                diary = Diary.objects.create(user=user, title=serializer.validated_data.get('title'))
 
-                content = Sentences.objects.create(sentence=serializer.validated_data.get('content'), diary=updateDiary)
-                memory = TextRank(content.sentence)
+                content = serializer.validated_data.get('content')
+
+                sentence = Sentences.objects.create(sentence=content, diary=diary)
+
+                memory = TextRank(content=content)
                 question, answer = make_quiz(memory, keyword_size=5)
 
-                for q, a in zip(question, answer):
-                    Quizs.objects.create(question=q, answer=a, sentence=content)
+                Quizs.objects.bulk_create([Quizs(question=q, answer=a, sentence=sentence) for q, a in zip(question, answer)])
 
-                return JsonResponse({'isSuccess': True, 'result': SentenceSimpleSerializer(content).data}, status=status.HTTP_201_CREATED)
+                return JsonResponse({'isSuccess': True, 'result': SentenceSimpleSerializer(sentence).data}, status=status.HTTP_201_CREATED)
             except Diary.DoesNotExist:
                 return JsonResponse({'isSuccess': False, 'message': '일기를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
