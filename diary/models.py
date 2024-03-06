@@ -20,8 +20,12 @@ class Sentences(BaseModel):
 
     diary = models.ForeignKey('diary.Diary', related_name='sentences', on_delete=models.CASCADE)
 
-class Quizs(BaseModel):
-    question = models.TextField()
-    answer = models.CharField(max_length=50)
+class Keywords(BaseModel):
+    keyword = models.CharField(max_length=100)
 
-    sentence = models.ForeignKey('diary.Sentences', related_name='quizs', on_delete=models.CASCADE)
+    sentence = models.ForeignKey('diary.Sentences', related_name='keywords', on_delete=models.CASCADE)
+
+class Questions(BaseModel):
+    question = models.TextField()
+
+    keyword = models.ForeignKey('diary.Keywords', related_name='questions', on_delete=models.CASCADE)

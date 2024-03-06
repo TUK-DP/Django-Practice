@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from diary.models import Diary, Sentences, Quizs
+from diary.models import Diary, Sentences, Keywords, Questions
 from diary.serializers import *
 from users.models import User
 
@@ -54,9 +54,10 @@ class WriteView(APIView):
             sentence = Sentences.objects.create(sentence=content, diary=diary)
 
             memory = TextRank(content=content)
-            question, answer = make_quiz(memory, keyword_size=5)
+            question, keyword = make_quiz(memory, keyword_size=5)
 
-            Quizs.objects.bulk_create([Quizs(question=q, answer=a, sentence=sentence) for q, a in zip(question, answer)])
+            keywords = Keywords.objects.bulk_create([Keywords(keyword=k, sentence=sentence) for k in keyword])
+            Questions.objects.bulk_create([Questions(question=q, keyword=k) for q, k in zip(question, keywords)])
 
             return JsonResponse({'isSuccess': True, 'result': SentenceSimpleSerializer(sentence).data}, status=status.HTTP_201_CREATED)
         
@@ -87,9 +88,10 @@ class UpdateView(APIView):
                 sentence = Sentences.objects.create(sentence=content, diary=diary)
 
                 memory = TextRank(content=content)
-                question, answer = make_quiz(memory, keyword_size=5)
+                question, keyword = make_quiz(memory, keyword_size=5)
 
-                Quizs.objects.bulk_create([Quizs(question=q, answer=a, sentence=sentence) for q, a in zip(question, answer)])
+                keywords = Keywords.objects.bulk_create([Keywords(keyword=k, sentence=sentence) for k in keyword])
+                Questions.objects.bulk_create([Questions(question=q, keyword=k) for q, k in zip(question, keywords)])
 
                 return JsonResponse({'isSuccess': True, 'result': SentenceSimpleSerializer(sentence).data}, status=status.HTTP_201_CREATED)
             except Diary.DoesNotExist:
@@ -127,13 +129,21 @@ class GetQuizView(APIView):
                 return JsonResponse({'isSuccess': False, 'message': '해당 일기를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
 
             sentences = diary.sentences.all()
-            quizs = []
+
+            q = []
+            a = []
 
             for sentence in sentences:
-                quizs.extend(sentence.quizs.all())
-            
-            serializer = QuizSerializer(quizs, many=True)
+                keywords = sentence.keywords.all()
+                a.extend(keywords)
+                for keyword in keywords:
+                    questions = keyword.questions.all()
+                    q.extend(questions)
 
-            return JsonResponse(serializer.data, safe=False, status=status.HTTP_200_OK)
+            result = []
+            for question_obj, keyword_obj in zip(q, a):
+                result.append({"Q": question_obj.question, "A": keyword_obj.keyword})
+
+            return JsonResponse({'result': result}, status=status.HTTP_200_OK)
         
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
