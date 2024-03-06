@@ -133,8 +133,8 @@ class GetQuizView(APIView):
         # Diary와 연관된 모든 Sentence 가져오기
         sentences = findDiary.sentences.all()
 
-        # 모든 Sentence와 연관된 Quiz 가져오기 == [Quizs, Quizs, Quizs, ...]
-        quizzes = sum([sentence.quizs.all() for sentence in sentences], [])
+        # 모든 Sentence와 연관된 Quiz 가져오기 quizzes == [Quizs, Quizs, Quizs, ...]
+        quizzes = sum([list(sentence.quizs.all()) for sentence in sentences], [])
 
         return ApiResponse.on_success(
             result=QuizSerializer(quizzes, many=True).data,
