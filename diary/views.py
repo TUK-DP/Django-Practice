@@ -1,9 +1,9 @@
 from django.http import JsonResponse
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from config.basemodel import ApiResponse
 from diary.serializers import *
 from users.models import User
 from .textrank import TextRank, make_quiz
@@ -12,32 +12,42 @@ from .textrank import TextRank, make_quiz
 class WriteView(APIView):
     @swagger_auto_schema(operation_description="일기 작성", request_body=WriteRequest, responses={"201": '작성 성공'})
     def post(self, request):
-        serializer = WriteRequest(data=request.data)
+        requestSerial = WriteRequest(data=request.data)
 
-        if serializer.is_valid():
-            user_id = serializer.validated_data.get('userId')
-            try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
-                return JsonResponse({'isSuccess': False, 'message': '사용자를 찾을 수 없습니다.'},
-                                    status=status.HTTP_400_BAD_REQUEST)
+        isValid, response_status = requestSerial.is_valid()
+        # 유효성 검사 통과하지 못한 경우
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
 
-            diary = Diary.objects.create(user=user, title=serializer.validated_data.get('title'))
+        request = requestSerial.validated_data
 
-            content = serializer.validated_data.get('content')
+        # user 가져오기
+        user_id = request.get('userId')
+        findUser = User.objects.get(id=user_id)
 
-            sentence = Sentences.objects.create(sentence=content, diary=diary)
+        # Diary 객체 생성
+        newDiary = Diary.objects.create(user=findUser, title=request.get('title'))
 
-            memory = TextRank(content=content)
-            question, answer = make_quiz(memory, keyword_size=5)
+        sentence = request.get('content')
 
-            Quizs.objects.bulk_create(
-                [Quizs(question=q, answer=a, sentence=sentence) for q, a in zip(question, answer)])
+        # Sentences 객체 생성
+        newSentence = Sentences.objects.create(sentence=sentence, diary=newDiary)
 
-            return JsonResponse({'isSuccess': True, 'result': SentenceSimpleSerializer(sentence).data},
-                                status=status.HTTP_201_CREATED)
+        # 키워드 추출
+        memory = TextRank(content=sentence)
 
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # 키워드 추출 후 가중치가 높은 키워드 5개로 퀴즈 생성
+        question, answer = make_quiz(memory, keyword_size=5)
+
+        # Quizs 객체 생성
+        Quizs.objects.bulk_create(
+            [Quizs(question=q, answer=a, sentence=newSentence) for q, a in zip(question, answer)]
+        )
+
+        return ApiResponse.on_success(
+            result=SentenceSimpleSerializer(newSentence).data,
+            response_status=status.HTTP_201_CREATED
+        )
 
 
 class UpdateView(APIView):
