@@ -1,149 +1,159 @@
-from django.core.handlers.wsgi import WSGIRequest
-from django.http import HttpResponse, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.parsers import JSONParser
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
 
 from diary.models import Diary, Sentences, Keywords, Questions
+from config.basemodel import ApiResponse
 from diary.serializers import *
 from users.models import User
-
-from drf_yasg.utils import swagger_auto_schema
-
 from .textrank import TextRank, make_quiz
-
-class DiaryView(APIView):
-    def get(self, request: WSGIRequest) -> HttpResponse:
-        findDiaries = Diary.objects.all()
-        serializer = DiarySerializer(findDiaries, many=True)
-        return JsonResponse(serializer.data, safe=False)
-
-    @csrf_exempt
-    def post(self, request: WSGIRequest) -> HttpResponse:
-        data = JSONParser().parse(request)
-        request = DiaryCreateRequest(data=data)
-        is_valid = request.is_valid()
-        print(request.data)
-        if is_valid:
-            findUser = User.objects.get(pk=request.data["userId"])
-            newDiary = request.to_diary(findUser)
-
-            return JsonResponse(newDiary.data, status=201)
-        else:
-            return JsonResponse(DiarySerializer(data=data).errors, status=400)
 
 
 class WriteView(APIView):
-    @swagger_auto_schema(operation_description="일기 작성", request_body=WriteRequest, responses={"201":'작성 성공'})
+    @swagger_auto_schema(operation_description="일기 작성", request_body=WriteRequest, responses={"201": '작성 성공'})
     def post(self, request):
-        serializer = WriteRequest(data=request.data)
+        requestSerial = WriteRequest(data=request.data)
 
-        if serializer.is_valid():
-            user_id = serializer.validated_data.get('userId')
-            try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
-                return JsonResponse({'isSuccess': False, 'message': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        isValid, response_status = requestSerial.is_valid()
+        # 유효성 검사 통과하지 못한 경우
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
 
-            diary = Diary.objects.create(user=user, title=serializer.validated_data.get('title'))
+        request = requestSerial.validated_data
 
-            content = serializer.validated_data.get('content')
+        # user 가져오기
+        user_id = request.get('userId')
+        findUser = User.objects.get(id=user_id)
 
-            sentence = Sentences.objects.create(sentence=content, diary=diary)
+        # Diary 객체 생성
+        newDiary = Diary.objects.create(user=findUser, title=request.get('title'))
 
-            memory = TextRank(content=content)
-            question, keyword = make_quiz(memory, keyword_size=5)
+        sentence = request.get('content')
 
-            keywords = Keywords.objects.bulk_create([Keywords(keyword=k, sentence=sentence) for k in keyword])
-            Questions.objects.bulk_create([Questions(question=q, keyword=k) for q, k in zip(question, keywords)])
+        # Sentences 객체 생성
+        newSentence = Sentences.objects.create(sentence=sentence, diary=newDiary)
 
-            return JsonResponse({'isSuccess': True, 'result': SentenceSimpleSerializer(sentence).data}, status=status.HTTP_201_CREATED)
-        
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # 키워드 추출
+        memory = TextRank(content=sentence)
+        # 키워드 추출 후 가중치가 높은 키워드 5개로 퀴즈 생성
+        question, keyword = make_quiz(memory, keyword_size=5)
+
+        # 각 키워드별로 Question 생성
+        for q, k in zip(question, keyword):
+            newKeyword = Keywords.objects.create(keyword=k, sentence=newSentence)
+            Questions.objects.create(question=q, keyword=newKeyword)
+
+        return ApiResponse.on_success(
+            result=SentenceSimpleSerializer(newSentence).data,
+            response_status=status.HTTP_201_CREATED
+        )
 
 
 class UpdateView(APIView):
-    @swagger_auto_schema(operation_description="일기 수정", request_body=UpdateRequest, responses={"201":'작성 성공'})
+    @swagger_auto_schema(operation_description="일기 수정", request_body=UpdateRequest, responses={"201": '작성 성공'})
     def post(self, request):
-        serializer = UpdateRequest(data=request.data)
+        requestSerial = UpdateRequest(data=request.data)
 
-        if serializer.is_valid():
-            user_id = serializer.validated_data.get('userId')
-            diary_id = serializer.validated_data.get('diaryId')
-            try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
-                return JsonResponse({'isSuccess': False, 'message': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        isValid, response_status = requestSerial.is_valid()
 
-            try:
-                deleteDiary = Diary.objects.get(id=diary_id)
-                Diary.delete(deleteDiary)
+        # 유효성 검사 통과하지 못한 경우
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
 
-                diary = Diary.objects.create(user=user, title=serializer.validated_data.get('title'))
+        # 유효성 검사 통과한 경우
+        request = requestSerial.validated_data
 
-                content = serializer.validated_data.get('content')
+        # Diary 가져오기
+        diary_id = request.get('diaryId')
+        findDiary = Diary.objects.get(id=diary_id)
 
-                sentence = Sentences.objects.create(sentence=content, diary=diary)
+        # Diary와 연관된 모든 Sentence, Question, Keyword 삭제
+        sentences = findDiary.sentences.all()
+        for sentence in sentences:
+            sentence.keywords.all().delete()
+            sentence.delete()
 
-                memory = TextRank(content=content)
-                question, keyword = make_quiz(memory, keyword_size=5)
+        # Sentence 객체 생성
+        content = request.get('content')
+        newSentence = Sentences.objects.create(sentence=content, diary=findDiary)
 
-                keywords = Keywords.objects.bulk_create([Keywords(keyword=k, sentence=sentence) for k in keyword])
-                Questions.objects.bulk_create([Questions(question=q, keyword=k) for q, k in zip(question, keywords)])
+        # 키워드 추출
+        memory = TextRank(content=content)
+        # 키워드 추출 후 가중치가 높은 키워드 5개로 퀴즈 생성
+        question, keyword = make_quiz(memory, keyword_size=5)
 
-                return JsonResponse({'isSuccess': True, 'result': SentenceSimpleSerializer(sentence).data}, status=status.HTTP_201_CREATED)
-            except Diary.DoesNotExist:
-                return JsonResponse({'isSuccess': False, 'message': '일기를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # 각 키워드별로 Question 생성
+        for q, k in zip(question, keyword):
+            newKeyword = Keywords.objects.create(keyword=k, sentence=newSentence)
+            Questions.objects.create(question=q, keyword=newKeyword)
+
+        return ApiResponse.on_success(
+            result=SentenceSimpleSerializer(newSentence).data,
+            response_status=status.HTTP_201_CREATED
+        )
 
 
-class GetDiarybyUserView(APIView):
-    @swagger_auto_schema(operation_description="유저의 일기 조회", query_serializer=GetUserRequest, responses={"200":DiarySerializer})
+class GetDiaryByUserView(APIView):
+    @swagger_auto_schema(operation_description="유저의 일기 조회", query_serializer=GetUserRequest,
+                         response={"200": DiarySerializer})
     def get(self, request):
-        serializer = GetUserRequest(data=request.query_params)
+        requestSerial = GetUserRequest(data=request.query_params)
 
-        if serializer.is_valid():
-            try:
-                user = User.objects.get(id=serializer.validated_data.get('userId'))
-                diaries = Diary.objects.filter(user=user)
-                serializer = DiarySerializer(diaries, many=True)
-                return JsonResponse(serializer.data, safe=False, status=status.HTTP_200_OK)
-            except User.DoesNotExist:
-                return JsonResponse({'isSuccess' : False, 'message' : '사용자를 찾을 수 없습니다.'}, status=status.HTTP_201_CREATED)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    
+        isValid, response_status = requestSerial.is_valid()
+
+        # 유효성 검사 통과하지 못한 경우
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
+
+        # 유효성 검사 통과한 경우
+        request = requestSerial.validated_data
+
+        # User 가져오기
+        user_id = request.get('userId')
+        findUser = User.objects.get(id=user_id)
+
+        # User와 연관된 모든 Diary 가져오기
+        findDiaries = Diary.objects.filter(user=findUser)
+
+        return ApiResponse.on_success(
+            result=DiarySerializer(findDiaries, many=True).data,
+            response_status=status.HTTP_200_OK
+        )
+
+
 class GetQuizView(APIView):
-    @swagger_auto_schema(operation_description="일기회상 퀴즈", query_serializer=GetDiaryRequest, responses={"200":"퀴즈"})
+    @swagger_auto_schema(operation_description="일기회상 퀴즈", query_serializer=GetDiaryRequest,
+                         responses={"200": "퀴즈"})
     def get(self, request):
-        serializer = GetDiaryRequest(data=request.query_params)
+        requestSerial = GetDiaryRequest(data=request.query_params)
 
-        if serializer.is_valid():
-            diary_id = serializer.validated_data.get('diaryId')
-            try:
-                diary = Diary.objects.get(id=diary_id)
-            except Diary.DoesNotExist:
-                return JsonResponse({'isSuccess': False, 'message': '해당 일기를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+        isValid, response_status = requestSerial.is_valid()
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
 
-            sentences = diary.sentences.all()
+        # 유효성 검사 통과한 경우
+        request = requestSerial.validated_data
 
-            q = []
-            a = []
+        # Diary 가져오기
+        diary_id = request.get('diaryId')
+        findDiary = Diary.objects.get(id=diary_id)
 
-            for sentence in sentences:
-                keywords = sentence.keywords.all()
-                a.extend(keywords)
-                for keyword in keywords:
-                    questions = keyword.questions.all()
-                    q.extend(questions)
+        # Diary와 연관된 모든 Sentence 가져오기
+        sentences = findDiary.sentences.all()
 
-            result = []
-            for question_obj, keyword_obj in zip(q, a):
-                result.append({"Q": question_obj.question, "A": keyword_obj.keyword})
+        # 모든 Sentence 와 연관된 Question 가져오기
+        question_keyword = []
+        for sentence in sentences:
+            for keyword in sentence.keywords.all():
+                question_keyword.append({
+                        "Q": keyword.questions.first().question,
+                        "A": keyword.keyword
+                    })
 
-            return JsonResponse({'result': result}, status=status.HTTP_200_OK)
-        
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return ApiResponse.on_success(
+            result=question_keyword,
+            response_status=status.HTTP_200_OK
+        )
+
+
+"""
+"""
