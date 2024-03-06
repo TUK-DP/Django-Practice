@@ -63,9 +63,6 @@ class UpdateView(APIView):
 
         # 유효성 검사 통과한 경우
         request = requestSerial.validated_data
-        # User 가져오기
-        user_id = request.get('userId')
-        findUser = User.objects.get(id=user_id)
 
         # Diary 가져오기
         diary_id = request.get('diaryId')
@@ -109,26 +106,31 @@ class GetDiarybyUserView(APIView):
 
 
 class GetQuizView(APIView):
-    @swagger_auto_schema(operation_description="일기회상 퀴즈", query_serializer=GetDiaryRequest, responses={"200": "퀴즈"})
+    @swagger_auto_schema(operation_description="일기회상 퀴즈", query=GetDiaryRequest,
+                         responses={"200": "퀴즈"})
     def get(self, request):
-        serializer = GetDiaryRequest(data=request.query_params)
+        requestSerial = GetDiaryRequest(data=request.query_params)
 
-        if serializer.is_valid():
-            diary_id = serializer.validated_data.get('diaryId')
-            try:
-                diary = Diary.objects.get(id=diary_id)
-            except Diary.DoesNotExist:
-                return JsonResponse({'isSuccess': False, 'message': '해당 일기를 찾을 수 없습니다.'},
-                                    status=status.HTTP_404_NOT_FOUND)
+        isValid, response_status = requestSerial.is_valid()
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
 
-            sentences = diary.sentences.all()
-            quizs = []
+        # 유효성 검사 통과한 경우
+        request = requestSerial.validated_data
 
-            for sentence in sentences:
-                quizs.extend(sentence.quizs.all())
+        # Diary 가져오기
+        diary_id = request.get('diaryId')
+        findDiary = Diary.objects.get(id=diary_id)
 
-            serializer = QuizSerializer(quizs, many=True)
+        # Diary와 연관된 모든 Sentence 가져오기
+        sentences = findDiary.sentences.all()
 
-            return JsonResponse(serializer.data, safe=False, status=status.HTTP_200_OK)
+        # 모든 Sentence와 연관된 Quiz 가져오기 == [Quizs, Quizs, Quizs, ...]
+        quizzes = sum([sentence.quizs.all() for sentence in sentences], [])
+
+        return ApiResponse.on_success(
+            result=QuizSerializer(quizzes, many=True).data,
+            response_status=status.HTTP_200_OK
+        )
 
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
