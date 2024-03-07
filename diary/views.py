@@ -25,7 +25,7 @@ class WriteView(APIView):
         findUser = User.objects.get(id=user_id)
 
         # Diary 객체 생성
-        newDiary = Diary.objects.create(user=findUser, title=request.get('title'))
+        newDiary = Diary.objects.create(user=findUser, title=request.get('title'), writedate=request.get('date'))
 
         content = request.get('content')
         # Sentences 객체 생성
@@ -72,21 +72,25 @@ class UpdateView(APIView):
         diary_id = request.get('diaryId')
         findDiary = Diary.objects.get(id=diary_id)
 
-        # Diary와 연관된 모든 Sentence, Question, Keyword 삭제
-        sentences = findDiary.sentences.all()
-        for sentence in sentences:
-            sentence.keywords.all().delete()
-            sentence.delete()
+        # Diary 삭제
+        findDiary.delete()
+
+        # user 가져오기
+        user_id = request.get('userId')
+        findUser = User.objects.get(id=user_id)
+
+        # Diary 객체 생성
+        updateDiary = Diary.objects.create(user=findUser, title=request.get('title'), writedate=request.get('date'))
             
         content = request.get('content')
-        newSentence = Sentences.objects.create(sentence=content, diary=findDiary)
+        updateSentence = Sentences.objects.create(sentence=content, diary=updateDiary)
 
         # 키워드 추출
         memory = TextRank(content=content)
         
         if memory is None:
             return ApiResponse.on_success(
-                result=SentenceSimpleSerializer(sentence).data,
+                result=SentenceSimpleSerializer(updateSentence).data,
                 response_status=status.HTTP_201_CREATED
             )
         
@@ -95,11 +99,11 @@ class UpdateView(APIView):
 
         # 각 키워드별로 Question 생성
         for q, k in zip(question, keyword):
-            newKeyword = Keywords.objects.create(keyword=k, sentence=newSentence)
+            newKeyword = Keywords.objects.create(keyword=k, sentence=updateSentence)
             Questions.objects.create(question=q, keyword=newKeyword)
 
         return ApiResponse.on_success(
-            result=SentenceSimpleSerializer(newSentence).data,
+            result=SentenceSimpleSerializer(updateSentence).data,
             response_status=status.HTTP_201_CREATED
         )
 

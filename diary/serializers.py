@@ -18,7 +18,7 @@ class DiarySimpleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Diary
-        fields = ['id', 'user', 'title']
+        fields = ['id', 'user', 'title', 'writedate']
 
 
 class SentenceSerializer(serializers.ModelSerializer):
@@ -71,6 +71,7 @@ class WriteRequest(serializers.Serializer):
     userId = serializers.IntegerField()
     title = serializers.CharField(max_length=100)
     content = serializers.CharField()
+    date = serializers.DateField()
 
     def is_valid(self, raise_exception=False):
         super_valid = super().is_valid()
@@ -86,6 +87,14 @@ class WriteRequest(serializers.Serializer):
             self._errors['userId'] = [f'userId: {self.data.get("userId")} 가 존재하지 않습니다.']
             return False, status.HTTP_404_NOT_FOUND
 
+        # 존재한다면 date에 일기가 존재하는지 확인
+        is_already_diary = Diary.objects.filter(writedate=self.data['date']).exists()
+
+        # 존재한다면 False, 400 반환
+        if is_already_diary:
+            self._errors['date'] = [f'date: 이미 일기가 존재합니다.']
+            return False, status.HTTP_400_BAD_REQUEST
+
         return True, status.HTTP_200_OK
 
 
@@ -94,6 +103,7 @@ class UpdateRequest(serializers.Serializer):
     userId = serializers.IntegerField()
     title = serializers.CharField(max_length=100)
     content = serializers.CharField()
+    date = serializers.DateField()
 
     def is_valid(self, raise_exception=False):
         super_valid = super().is_valid()
