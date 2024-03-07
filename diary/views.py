@@ -25,7 +25,7 @@ class WriteView(APIView):
         findUser = User.objects.get(id=user_id)
 
         # Diary 객체 생성
-        newDiary = Diary.objects.create(user=findUser, title=request.get('title'))
+        newDiary = Diary.objects.create(user=findUser, title=request.get('title'), writedate=request.get('date'))
 
         content = request.get('content')
         # Sentences 객체 생성
