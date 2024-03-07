@@ -13,12 +13,12 @@ class DiarySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class DiarySimpleSerializer(serializers.ModelSerializer):
-    user = UserSafeSerializer(read_only=True)
+class DiaryResultResponse(serializers.ModelSerializer):
+    diaryId = serializers.IntegerField(source="id")
 
     class Meta:
         model = Diary
-        fields = ['id', 'user', 'title', 'writedate']
+        fields = ['diaryId', 'title', 'createDate', 'content']
 
 
 class KeywordSerializer(serializers.ModelSerializer):
@@ -167,16 +167,10 @@ class GetDiaryByDateRequest(serializers.Serializer):
             return False, status.HTTP_404_NOT_FOUND
         
         # 날짜에 작성된 일기가 있는지 확인
-        is_diary_exist = Diary.objects.filter(writedate=self.data['date']).exists()
+        is_diary_exist = Diary.objects.filter(createDate=self.data['date']).exists()
         # 존재하지 않는다면 False, 404 반환
         if not is_diary_exist:
             self._errors['diaryId'] = [f'작성된 일기가 없습니다.']
             return False, status.HTTP_404_NOT_FOUND
         
         return True, status.HTTP_200_OK
-    
-class DiaryResultResponse(serializers.Serializer):
-    diaryId = serializers.IntegerField()
-    title = serializers.CharField(max_length=100)
-    createDate = serializers.DateField()
-    content = serializers.CharField()

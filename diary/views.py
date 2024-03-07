@@ -34,7 +34,7 @@ class WriteView(APIView):
 
         if memory is None:
             return ApiResponse.on_success(
-                result=DiarySerializer(newDiary).data,
+                result=DiaryResultResponse(newDiary).data,
                 response_status=status.HTTP_201_CREATED
             )
         
@@ -47,7 +47,7 @@ class WriteView(APIView):
             Questions.objects.create(question=q, keyword=newKeyword)
 
         return ApiResponse.on_success(
-            result=DiarySerializer(newDiary).data,
+            result=DiaryResultResponse(newDiary).data,
             response_status=status.HTTP_201_CREATED
         )
 
@@ -84,10 +84,10 @@ class UpdateView(APIView):
 
         # 키워드 추출
         memory = TextRank(content=content)
-        
+
         if memory is None:
             return ApiResponse.on_success(
-                result=DiarySerializer(updateDiary).data,
+                result=DiaryResultResponse(updateDiary).data,
                 response_status=status.HTTP_201_CREATED
             )
         
@@ -100,7 +100,7 @@ class UpdateView(APIView):
             Questions.objects.create(question=q, keyword=newKeyword)
 
         return ApiResponse.on_success(
-            result=DiarySerializer(updateDiary).data,
+            result=DiaryResultResponse(updateDiary).data,
             response_status=status.HTTP_201_CREATED
         )
 
@@ -127,18 +127,8 @@ class GetDiaryByUserView(APIView):
         # User와 연관된 모든 Diary 가져오기
         findDiaries = Diary.objects.filter(user=findUser)
 
-        serialized_diaries = []
-        for diary in findDiaries:
-            serialized_diary = DiaryResultResponse({
-                'diaryId': diary.id,
-                'title': diary.title,
-                'createDate': diary.createDate,
-                'content': diary.content,
-            })
-            serialized_diaries.append(serialized_diary.data)
-
         return ApiResponse.on_success(
-            result=serialized_diaries,
+            result=DiaryResultResponse(findDiaries, many=True).data,
             response_status=status.HTTP_200_OK
         )
 
@@ -192,11 +182,9 @@ class GetDiaryByDateView(APIView):
         # User 불러오기
         user_id = request.get('userId')
         findUser = User.objects.get(id=user_id)
-
-        diary_date = request.get('date')
-        findDiary = Diary.objects.get(user=findUser, writedate = diary_date)
+        findDiary = Diary.objects.get(user=findUser, createDate=request.get('date'))
 
         return ApiResponse.on_success(
-            result=DiarySerializer(findDiary).data,
+            result=DiaryResultResponse(findDiary).data,
             response_status=status.HTTP_200_OK
         )
