@@ -27,14 +27,18 @@ class WriteView(APIView):
         # Diary 객체 생성
         newDiary = Diary.objects.create(user=findUser, title=request.get('title'))
 
+        content = request.get('content')
         # Sentences 객체 생성
-        newSentence = Sentences.objects.create(sentence=sentence, diary=newDiary)
+        newSentence = Sentences.objects.create(sentence=content, diary=newDiary)
 
         # 키워드 추출
-        memory = TextRank(content=sentence)
+        memory = TextRank(content=content)
         
         if memory is None:
-            return JsonResponse({'isSuccess': True, 'result': SentenceSimpleSerializer(sentence).data}, status=status.HTTP_201_CREATED)
+            return ApiResponse.on_success(
+                result=SentenceSimpleSerializer(newSentence).data,
+                response_status=status.HTTP_201_CREATED
+            )
         
         # 키워드 추출 후 가중치가 높은 키워드 5개로 퀴즈 생성
         question, keyword = make_quiz(memory, keyword_size=5)
@@ -81,7 +85,10 @@ class UpdateView(APIView):
         memory = TextRank(content=content)
         
         if memory is None:
-            return JsonResponse({'isSuccess': True, 'result': SentenceSimpleSerializer(sentence).data}, status=status.HTTP_201_CREATED)
+            return ApiResponse.on_success(
+                result=SentenceSimpleSerializer(sentence).data,
+                response_status=status.HTTP_201_CREATED
+            )
         
         # 키워드 추출 후 가중치가 높은 키워드 5개로 퀴즈 생성
         question, keyword = make_quiz(memory, keyword_size=5)
