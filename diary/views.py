@@ -43,7 +43,7 @@ class WriteView(APIView):
 
         # 각 키워드별로 Question 생성
         for q, k in zip(question, keyword):
-            newKeyword = Keywords.objects.create(keyword=k, sentence=memory.sentences)
+            newKeyword = Keywords.objects.create(keyword=k, diary=newDiary)
             Questions.objects.create(question=q, keyword=newKeyword)
 
         return ApiResponse.on_success(
@@ -80,7 +80,7 @@ class UpdateView(APIView):
         content = request.get('content')
 
         # Diary 객체 생성
-        updateDiary = Diary.objects.create(user=findUser, title=request.get('title'), writedate=request.get('date'), content=content)
+        updateDiary = Diary.objects.create(user=findUser, title=request.get('title'), createDate=request.get('date'), content=content)
 
         # 키워드 추출
         memory = TextRank(content=content)
@@ -96,7 +96,7 @@ class UpdateView(APIView):
 
         # 각 키워드별로 Question 생성
         for q, k in zip(question, keyword):
-            newKeyword = Keywords.objects.create(keyword=k, sentence=memory.sentences)
+            newKeyword = Keywords.objects.create(keyword=k, diary=updateDiary)
             Questions.objects.create(question=q, keyword=newKeyword)
 
         return ApiResponse.on_success(
