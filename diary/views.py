@@ -56,7 +56,7 @@ class WriteView(APIView):
 
 class UpdateView(APIView):
     @swagger_auto_schema(operation_description="일기 수정", request_body=UpdateRequest, responses={"201": '작성 성공'})
-    def post(self, request):
+    def patch(self, request):
         requestSerial = UpdateRequest(data=request.data)
 
         isValid, response_status = requestSerial.is_valid()
