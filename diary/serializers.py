@@ -72,7 +72,7 @@ class WriteRequest(serializers.Serializer):
             return False, status.HTTP_404_NOT_FOUND
 
         # 존재한다면 date에 일기가 존재하는지 확인
-        is_already_diary = Diary.objects.filter(writedate=self.data['date']).exists()
+        is_already_diary = Diary.objects.filter(createDate=self.data['date']).exists()
 
         # 존재한다면 False, 400 반환
         if is_already_diary:
