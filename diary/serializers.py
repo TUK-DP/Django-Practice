@@ -2,7 +2,7 @@ from rest_framework import serializers, status
 
 from users.models import User
 from users.serializers import UserSafeSerializer
-from .models import Diary, Sentences, Keywords, Questions
+from .models import Diary, Keywords, Questions
 
 
 class DiarySerializer(serializers.ModelSerializer):
@@ -21,24 +21,8 @@ class DiarySimpleSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'title', 'writedate']
 
 
-class SentenceSerializer(serializers.ModelSerializer):
-    diay = DiarySerializer(read_only=True)
-
-    class Meta:
-        model = Sentences
-        fields = '__all__'
-
-
-class SentenceSimpleSerializer(serializers.ModelSerializer):
-    diary = DiarySimpleSerializer(read_only=True)
-
-    class Meta:
-        model = Sentences
-        fields = ['id', 'diary', 'sentence']
-
-
 class KeywordSerializer(serializers.ModelSerializer):
-    sentence = SentenceSerializer(read_only=True)
+    sentence = DiarySerializer(read_only=True)
 
     class Meta:
         model = Keywords

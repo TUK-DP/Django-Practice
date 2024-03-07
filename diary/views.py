@@ -1,7 +1,7 @@
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.views import APIView
 
-from diary.models import Diary, Sentences, Keywords, Questions
+from diary.models import Diary, Keywords, Questions
 from config.basemodel import ApiResponse
 from diary.serializers import *
 from users.models import User
@@ -164,7 +164,7 @@ class GetQuizView(APIView):
 
         # 모든 Sentence 와 연관된 Question 가져오기
         question_keyword = []
-        
+
         for keyword in keywords:
             question_keyword.append({
                 "Q": keyword.questions.first().question,
