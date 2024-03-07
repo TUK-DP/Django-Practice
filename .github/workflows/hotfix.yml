@@ -7,8 +7,8 @@ on:
 
 jobs:
   hotfix:
-    # push 이벤트가 발생했을 때만 실행
-    if: github.event_name == 'push'
+    # commit message가 [hotfix]로 시작하면 실행
+    if: startsWith(github.event.head_commit.message, '[hotfix]')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
