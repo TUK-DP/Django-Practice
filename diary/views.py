@@ -5,6 +5,7 @@ from diary.models import Diary, Keywords, Questions
 from config.basemodel import ApiResponse
 from diary.serializers import *
 from users.models import User
+from .graph import GraphDB
 from .textrank import TextRank, make_quiz
 
 
@@ -37,7 +38,15 @@ class WriteView(APIView):
                 result=DiaryResultResponse(newDiary).data,
                 response_status=status.HTTP_201_CREATED
             )
-        
+
+        conn = GraphDB()
+        conn.create_and_link_nodes(
+            user_id=user_id, diary_id=newDiary.id,
+            words_graph=memory.words_graph,
+            words_dict=memory.words_dict,
+            weights_dict=memory.weights_dict
+        )
+
         # 키워드 추출 후 가중치가 높은 키워드 5개로 퀴즈 생성
         question, keyword = make_quiz(memory, keyword_size=5)
 
@@ -73,6 +82,10 @@ class UpdateView(APIView):
         # Diary 삭제
         findDiary.delete()
 
+        # GraphDB에서도 삭제
+        conn = GraphDB()
+        conn.delete_diary(user_id=request.get('userId'), diary_id=diary_id)
+
         # user 가져오기
         user_id = request.get('userId')
         findUser = User.objects.get(id=user_id)
@@ -90,7 +103,15 @@ class UpdateView(APIView):
                 result=DiaryResultResponse(updateDiary).data,
                 response_status=status.HTTP_201_CREATED
             )
-        
+
+        # GraphDB에 추가
+        conn.create_and_link_nodes(
+            user_id=user_id, diary_id=updateDiary.id,
+            words_graph=memory.words_graph,
+            words_dict=memory.words_dict,
+            weights_dict=memory.weights_dict
+        )
+
         # 키워드 추출 후 가중치가 높은 키워드 5개로 퀴즈 생성
         question, keyword = make_quiz(memory, keyword_size=5)
 
