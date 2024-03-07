@@ -118,7 +118,7 @@ class TextRank(object):
         # 명사 추출
         nouns = SentenceTokenizer.get_nouns(self.sentences)
 
-        if nouns:
+        if nouns and nouns != ['']:
             # 가중치 그래프 객체 생성
             matrix = GraphMatrix(nouns)
             # 문장별 가중치 그래프 [문장수, 문장수], {index: 문장} 사전
