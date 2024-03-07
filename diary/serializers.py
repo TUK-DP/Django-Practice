@@ -2,7 +2,7 @@ from rest_framework import serializers, status
 
 from users.models import User
 from users.serializers import UserSafeSerializer
-from .models import Diary, Sentences, Keywords, Questions
+from .models import Diary, Keywords, Questions
 
 
 class DiarySerializer(serializers.ModelSerializer):
@@ -13,32 +13,16 @@ class DiarySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class DiarySimpleSerializer(serializers.ModelSerializer):
-    user = UserSafeSerializer(read_only=True)
+class DiaryResultResponse(serializers.ModelSerializer):
+    diaryId = serializers.IntegerField(source="id")
 
     class Meta:
         model = Diary
-        fields = ['id', 'user', 'title', 'writedate']
-
-
-class SentenceSerializer(serializers.ModelSerializer):
-    diay = DiarySerializer(read_only=True)
-
-    class Meta:
-        model = Sentences
-        fields = '__all__'
-
-
-class SentenceSimpleSerializer(serializers.ModelSerializer):
-    diary = DiarySimpleSerializer(read_only=True)
-
-    class Meta:
-        model = Sentences
-        fields = ['id', 'diary', 'sentence']
+        fields = ['diaryId', 'title', 'createDate', 'content']
 
 
 class KeywordSerializer(serializers.ModelSerializer):
-    sentence = SentenceSerializer(read_only=True)
+    sentence = DiarySerializer(read_only=True)
 
     class Meta:
         model = Keywords
@@ -88,7 +72,7 @@ class WriteRequest(serializers.Serializer):
             return False, status.HTTP_404_NOT_FOUND
 
         # 존재한다면 date에 일기가 존재하는지 확인
-        is_already_diary = Diary.objects.filter(writedate=self.data['date']).exists()
+        is_already_diary = Diary.objects.filter(createDate=self.data['date']).exists()
 
         # 존재한다면 False, 400 반환
         if is_already_diary:
@@ -183,7 +167,7 @@ class GetDiaryByDateRequest(serializers.Serializer):
             return False, status.HTTP_404_NOT_FOUND
         
         # 날짜에 작성된 일기가 있는지 확인
-        is_diary_exist = Diary.objects.filter(writedate=self.data['date']).exists()
+        is_diary_exist = Diary.objects.filter(createDate=self.data['date']).exists()
         # 존재하지 않는다면 False, 404 반환
         if not is_diary_exist:
             self._errors['diaryId'] = [f'작성된 일기가 없습니다.']
