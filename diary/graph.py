@@ -1,4 +1,3 @@
-import json
 import os
 from datetime import datetime
 
@@ -12,41 +11,95 @@ load_dotenv()
 NEO4J_PASSWORD = os.environ.get('NEO4j_PASSWORD')
 
 
-class GraphVocab:
-    def __init__(self, words_graph=None, words_dict=None, weights_dict=None):
-        self.graph = words_graph
-        self.words_dict = words_dict
-        self.weights_dict = weights_dict
-
-
 class GraphDB:
-    def __init__(self, uri, user, password):
-        self._driver = GraphDatabase.driver(uri, auth=(user, password))
+    """GraphDP 모듈입니다.
 
-    def find_all_by_user_diary(self, user_id: int = 1, diary_id: int = 1):
-        with self._driver.session() as session:
-            return session.execute_write(self._find_all_by_user_diary, user_id, diary_id)
+    GraphDB는 Neo4j 데이터베이스에 접근하여 키워드 노드를 추가하고, 노드들을 연결합니다.
+
+    usage:
+        conn = GraphDB()
+        conn.create_and_link_nodes(...)
+        conn.find_all_by_user_diary(...)
+    """
+
+    def __init__(self):
+        self._driver = GraphDatabase.driver("bolt://neo4j:7687", auth=("neo4j", NEO4J_PASSWORD))
+        print("GraphDB connected")
 
     def close(self):
         self._driver.close()
 
-    def insert_node(self, user_id: int, diary_id: int, graph: np.ndarray, word_dict: dict, weights_dict: dict):
-        """
-        Insert a node into the graph database.
-        :param user_id: The user's ID.
-        :param diary_id: The diary's ID.
-        :param graph: The graph database. A Numpy array. row and column is the word. == TextRank.words_graph
-        :param word_dict: The dictionary of words. {word_order: word_text} == TextRank.words_dict
-        :param weights_dict: The weights of the words. {index: weight} == Rank.get_ranks(graph)
-        """
-        with self._driver.session() as session:
-            session.execute_write(self._create_and_link_nodes, user_id, diary_id, graph, word_dict, weights_dict)
+    def delete_diary(self, user_id: int, diary_id: int):
+        """user_id와 diary_id에 해당하는 일기와 연결된 노드들을 삭제합니다.
 
-    @staticmethod
-    def _find_all_by_user_diary(tx, user_id=1, diary_id=1):
+        :param user_id: 유저의 ID.
+        :param diary_id: 일기의 ID.
         """
-        {
-            User : user_id,
+
+        with self._driver.session() as session:
+            session.execute_write(
+                self._delete_diary,
+                user_id=user_id,
+                diary_id=diary_id
+            )
+
+    def create_and_link_nodes(
+            self, user_id: int, diary_id: int,
+            words_graph: np.ndarray = None,
+            words_dict: dict = None,
+            weights_dict: dict = None
+    ):
+        """그래프 데이터베이스에 키워드 노드를 추가합니다.
+
+        그래프 데이터베이스에 키워드 노드를 추가하고, 노드들을 연결합니다.
+        이전에 userId, diaryId에 해당하는 노드가 존재한다면 초기화 이후 새로운 노드를 추가합니다.
+
+        :param user_id: 유저의 ID.
+
+        :param diary_id: 일기의 ID.
+
+        :param diary_date: 일기의 날짜. datetime 객체.
+
+        :param words_graph: 이차원 Numpy 배열. 각 원소는 키워드의 tfidf 이며 TextRank.words_graph 와 같다.
+
+        :param words_dict: 단어의 dictionary. {word_index: word_text} == TextRank.words_dict
+
+        :param weights_dict: 단어들의 가중치 dictionary. {index: weight} == Rank.get_ranks(graph)
+
+        usage:
+                db.insert_node(
+                    userId,diaryId, diary_date,
+                    words_graph=TextRank.words_graph,
+                    words_dict=TextRank.words_dict,
+                    weights_dict=Rank.get_ranks(graph)
+                )
+        """
+
+        with self._driver.session() as session:
+            # Delete previous keyword nodes and relationships
+            session.execute_write(
+                self._delete_diary,
+                user_id=user_id,
+                diary_id=diary_id
+            )
+
+            # Create and link nodes
+            session.execute_write(
+                self._create_and_link_nodes,
+                user_id, diary_id,
+                words_graph, words_dict, weights_dict
+            )
+
+    def find_all_by_user_diary(self, user_id: int, diary_id: int):
+        """user 와 diary 에 연결된 모든 노드를 찾는다.
+
+        :param user_id: 유저의 ID.
+        :param diary_id: 일기의 ID.
+
+        :return: {
+            User : {
+                user_id
+            },
             Diary : {
                 diary_id,
                 date,
@@ -68,26 +121,40 @@ class GraphDB:
         }
         """
 
-        # Find User and Diary nodes
-        user_diary_result = tx.run("MATCH (u:User {user_id: $user_id}) "
-                                   "MATCH (d:Diary {diary_id: $diary_id}) "
-                                   "RETURN u, d", user_id=user_id, diary_id=diary_id)
+        with self._driver.session() as session:
+            return session.execute_write(self._find_all_by_user_diary, user_id, diary_id)
 
-        dic = {}
+    @staticmethod
+    def _find_all_by_user_diary(tx, user_id: int, diary_id: int):
+        dic = {"User": {}, "Diary": {}, "CONNECTED": []}
 
-        for record in user_diary_result:
-            dic['User'] = record['u']['user_id']
-            _date = record['d']['date']
+        # Find User nodes
+        user_result = tx.run("MATCH (u:User {user_id: $user_id}) RETURN u", user_id=user_id)
+
+        user_nodes = user_result.data()
+
+        if len(user_nodes) > 0:
+            dic['User'] = {"user_id": user_nodes[0]['u']['user_id']}
+
+        # Find Diary nodes
+        diary_result = tx.run("MATCH (d:Diary {diary_id: $diary_id}) RETURN d", diary_id=diary_id)
+
+        diary_nodes = diary_result.data()
+
+        if len(diary_nodes) > 0:
+            diary_node = diary_nodes[0]
+            _date = diary_node['d']['date']
             dic['Diary'] = {
-                'diary_id': record['d']['diary_id'],
+                'diary_id': diary_node['d']['diary_id'],
                 'date': datetime(_date.year, _date.month, _date.day).isoformat()
             }
 
         # Find connected Keywords and include in Diary
-
         connected_result = tx.run(
-            f"MATCH (:Diary {{diary_id : {diary_id}}})-[:INCLUDE]-(k:Keyword)-[c:CONNECTED]->(other:Keyword) "
-            f"RETURN k, other, c"
+            "MATCH (:Diary {diary_id : $diary_id})-[:INCLUDE]-(k:Keyword) "
+            "MATCH (k)-[c:CONNECTED]-(other:Keyword) "
+            "RETURN k, other, c"
+            , diary_id=diary_id
         )
 
         connected = []
@@ -110,22 +177,23 @@ class GraphDB:
         return dic
 
     @staticmethod
-    def _create_and_link_nodes(tx, user_id, diary_id, graph, word_dict, weights):
-        # Create User node
-        user_node = tx.run("MERGE (u:User {user_id: $user_id}) "
-                           "RETURN u", user_id=user_id).single()[0]
-
-        # Create Diary node
-        diary_node = tx.run("MERGE (d:Diary {diary_id: $diary_id, date: date()}) "
-                            "RETURN d", diary_id=diary_id).single()[0]
+    def _create_and_link_nodes(
+            tx,
+            user_id, diary_id,
+            words_graph: np.ndarray = None, words_dict: dict = None, weights_dict: dict = None
+    ):
 
         # Create relationship between User and Diary
-        tx.run("MATCH (u:User {user_id: $user_id}), (d:Diary {diary_id: $diary_id}) "
-               "MERGE (u)-[:WROTE]->(d)", user_id=user_id, diary_id=diary_id)
+        tx.run(
+            "MERGE (u:User {user_id: $user_id}) "
+            "MERGE (d:Diary {diary_id: $diary_id}) "
+            "MERGE (u)-[:WROTE]->(d) "
+            , user_id=user_id, diary_id=diary_id
+        )
 
-        # graph[i][j] = weight of word i => word i
+        # words_graph[i][j] = weight of word i => word i
         # Create Keyword nodes and their relationships
-        for i, row in enumerate(graph):
+        for i, row in enumerate(words_graph):
             # row[j] = weight of word i => word j
             for j, weight in enumerate(row):
                 if i == j:
@@ -133,62 +201,31 @@ class GraphDB:
                 if weight == 0:
                     continue
 
-                # Create Keyword node
-
-                # Create i node
-                i_node = tx.run("MERGE (k:Keyword {text: $text, weight: $weight}) "
-                                "RETURN k", text=word_dict[i], weight=weights[i]).single()[0]
-
-                # Create j node
-                j_node = tx.run("MERGE (k:Keyword {text: $text, weight: $weight}) "
-                                "RETURN k", text=word_dict[j], weight=weights[j]).single()[0]
-
-                # Create relationship between Keyword and Diary
-                tx.run("MATCH (k:Keyword {text: $text}), (d:Diary {diary_id: $diary_id}) "
-                       "MERGE (k)-[:INCLUDE]->(d)", text=word_dict[i], diary_id=diary_id)
-
-                # Create relationship between Keyword and Keyword
+                # Create Keyword nodes
                 tx.run(
-                    "MATCH (k1:Keyword {text: $text1}), (k2:Keyword {text: $text2}) "
-                    "MERGE (k1)-[:CONNECTED {tfidf: $tfidf}]->(k2)",
-                    text1=word_dict[i],
-                    text2=word_dict[j],
-                    tfidf=graph[i][j]
+                    "MERGE (d:Diary {diary_id: $diary_id}) "
+                    "MERGE (d)-[:INCLUDE]-(k1:Keyword {text: $text1, weight: $weight1}) "
+                    "MERGE (d)-[:INCLUDE]-(k2:Keyword {text: $text2, weight: $weight2}) "
+                    "MERGE (k1)-[:CONNECTED {tfidf: $tfidf}]->(k2) ",
+                    diary_id=diary_id,
+                    text1=words_dict[i],
+                    text2=words_dict[j],
+                    weight1=weights_dict[i],
+                    weight2=weights_dict[j],
+                    tfidf=words_graph[i][j]
                 )
 
-
-if __name__ == '__main__':
-    db = GraphDB("bolt://neo4j:7687", "neo4j", NEO4J_PASSWORD)
-
-    dic = db.find_all_by_user_diary()
-
-    # Korean
-    print(json.dumps(dic, indent=2, ensure_ascii=False))
-
-    # rank = TextRank("\n".join(""""이 새벽을 비추는 초생달
-    # 오감보다 생생한 육감의 세계로
-    # 보내주는 푸르고 투명한 파랑새
-    # 술 취한 몸이 잠든 이 거릴
-    # 휘젓고 다니다 만나는 마지막 신호등이
-    # 뿜는 붉은 신호를 따라 회색 거리를 걸어서
-    # 가다 보니 좀 낯설어
-    # 보이는 그녀가 보인적 없던 눈물로 나를 반겨
-    # 태양보다 뜨거워진 나
-    # 그녀의 가슴에 안겨 (안겨)
-    # 창가로 비친 초승달
-    # 침대가로 날아온 파랑새가 전해준
-    # 그녀의 머리핀을 보고 눈물이 핑돌아
-    # 순간 픽하고 나가버린 시야는
-    # 오감의 정전을 의미 이미 희미해진 내 혼은
-    # 보랏빛 눈을 가진 아름다운 그녀를 만나러
-    # 사랑하는""".rsplit("\n")))
-    # weights_dict = Rank.get_ranks(rank.words_graph)
-    # graph_vocab = GraphVocab(rank.words_graph, rank.words_dict, weights_dict=weights_dict)
-    #
-    # db.insert_node(
-    #     1,
-    #     1,
-    #     graph=graph_vocab.graph,
-    #     word_dict=graph_vocab.words_dict,
-    #     weights_dict=graph_vocab.weights_dict
-    # )
+    @staticmethod
+    def _delete_diary(
+            tx,
+            user_id, diary_id
+    ):
+        # Delete previous keyword nodes and relationships
+        tx.run(
+            "MATCH (u:User {user_id: $user_id})-[w:WROTE]-(d:Diary {diary_id: $diary_id}) "
+            "DELETE w "
+            "WITH d "
+            "MATCH (d)-[i:INCLUDE]-(k:Keyword)-[c:CONNECTED]-(k2:Keyword)-[:INCLUDE]-(d) "
+            "DELETE i,c,k,k2,d"
+            , user_id=user_id, diary_id=diary_id
+        )
