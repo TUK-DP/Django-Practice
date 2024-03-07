@@ -170,6 +170,27 @@ class GetQuizView(APIView):
             response_status=status.HTTP_200_OK
         )
 
+class GetDiaryByDateView(APIView):
+    @swagger_auto_schema(operation_description="날짜로 일기 검색", query_serializer=GetDiaryByDateRequest,
+                         responses={"200": "일기"})
+    def get(self, request):
+        requestSerial = GetDiaryByDateRequest(data=request.query_params)
 
-"""
-"""
+        isValid, response_status = requestSerial.is_valid()
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
+
+        # 유효성 검사 통과한 경우
+        request = requestSerial.validated_data
+
+        # User 불러오기
+        user_id = request.get('userId')
+        findUser = User.objects.get(id=user_id)
+
+        diary_date = request.get('date')
+        findDiary = Diary.objects.get(user=findUser, writedate = diary_date)
+
+        return ApiResponse.on_success(
+            result=DiarySerializer(findDiary).data,
+            response_status=status.HTTP_200_OK
+        )
