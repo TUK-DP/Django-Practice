@@ -190,3 +190,9 @@ class GetDiaryByDateRequest(serializers.Serializer):
             return False, status.HTTP_404_NOT_FOUND
         
         return True, status.HTTP_200_OK
+    
+class DiaryResultResponse(serializers.Serializer):
+    diaryId = serializers.IntegerField()
+    title = serializers.CharField(max_length=100)
+    createDate = serializers.DateField()
+    content = serializers.CharField()
