@@ -33,7 +33,7 @@ class WriteView(APIView):
 
         # 키워드 추출
         memory = TextRank(content=content)
-        
+
         if memory is None:
             return ApiResponse.on_success(
                 result=SentenceSimpleSerializer(newSentence).data,
