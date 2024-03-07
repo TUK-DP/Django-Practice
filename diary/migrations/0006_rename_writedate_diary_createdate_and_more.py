@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='keywords',
             name='diary',
-            field=models.ForeignKey(default='string', on_delete=django.db.models.deletion.CASCADE, related_name='keywords', to='diary.diary'),
+            field=models.ForeignKey(default=7, on_delete=django.db.models.deletion.CASCADE, related_name='keywords', to='diary.diary'),
             preserve_default=False,
         ),
         migrations.DeleteModel(

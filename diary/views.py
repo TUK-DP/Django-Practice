@@ -47,7 +47,7 @@ class WriteView(APIView):
             Questions.objects.create(question=q, keyword=newKeyword)
 
         return ApiResponse.on_success(
-            result=SentenceSimpleSerializer(newDiary).data,
+            result=DiarySerializer(newDiary).data,
             response_status=status.HTTP_201_CREATED
         )
 
