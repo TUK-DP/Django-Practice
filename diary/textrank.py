@@ -55,8 +55,8 @@ class SentenceTokenizer:
 
         # 명사 추출후 명사 리스트를 문자열로 변환하는 함수
         def join_nouns(sentence):
-            return ' '.join([noun for noun in okt.nouns(str(sentence)) 
-                                       if noun not in stopword])
+            return ' '.join([noun for noun in okt.nouns(str(sentence))
+                             if noun not in stopword])
 
         # 명사 추출
         return list(map(join_nouns, sentences))
@@ -144,24 +144,32 @@ class TextRank(object):
         # 명사 추출
         nouns = SentenceTokenizer.get_nouns(self.sentences)
 
-        if nouns and nouns != ['']:
-            # 가중치 그래프 객체 생성
-            matrix = GraphMatrix(nouns)
-            # 문장별 가중치 그래프 [문장수, 문장수], {index: 문장} 사전
-            # sent_graph, sent_vocab = matrix.get_sent_graph_vocab()
-            # 단어별 가중치 그래프 [단어수, 단어수], {index: 단어} 사전
-            words_graph, word_vocab = matrix.get_words_graph_vocab()
-
-            # (단어, index, 가중치) 리스트 생성
-            word_rank_idx = [(word_vocab[index], index, weight) for index, weight in Rank.get_ranks(words_graph).items()]
-            # weight 기준으로 정렬
-            self.sorted_word_rank = sorted(word_rank_idx, key=lambda k: k[2], reverse=True)
-        else:
+        # 명사가 없는 경우 초기화
+        if not nouns or nouns == ['']:
             self.sorted_word_rank = []
+            self.words_graph = []
+            self.sentences_dict = {}
+            self.words_dict = {}
+            self.weights_dict = {}
+            return
 
+        # 가중치 그래프 객체 생성
+        matrix = GraphMatrix(nouns)
+        # 문장별 가중치 그래프 [문장수, 문장수], {index: 문장} 사전
+        # sent_graph, sent_vocab = matrix.get_sent_graph_vocab()
+        # 단어별 가중치 그래프 [단어수, 단어수], {index: 단어} 사전
+        words_graph, word_vocab = matrix.get_words_graph_vocab()
+
+        # 단어별 가중치 사전 생성 == {index: 가중치}
+        weights_dict = Rank.get_ranks(words_graph)
+        # (단어, index, 가중치) 리스트 생성
+        word_rank_idx = [(word_vocab[index], index, weight) for index, weight in weights_dict.items()]
+        # weight 기준으로 정렬
+        self.sorted_word_rank = sorted(word_rank_idx, key=lambda k: k[2], reverse=True)
         self.words_graph = words_graph
         self.sentences_dict = {index: sentence for index, sentence in enumerate(self.sentences)}
         self.words_dict = word_vocab
+        self.weights_dict = weights_dict
 
     # sent_size 개의 문장 요약
     # def summarize(self, sent_size=3):
