@@ -47,3 +47,4 @@ jobs:
             sudo docker rm -f ${{ secrets.REPOSITORY_NAME }} || true
             sudo docker rmi -f ${{ secrets.DOCKER_USERNAME }}/${{ secrets.REPOSITORY_NAME }}:latest || true
             sudo docker-compose up -d
+            sudo docker exec ${{ secrets.REPOSITORY_NAME }} python3 manage.py migrate
