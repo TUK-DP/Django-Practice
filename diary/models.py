@@ -6,7 +6,8 @@ from config.basemodel import BaseModel
 class Diary(BaseModel):
     title = models.CharField(max_length=100)
 
-    writedate = models.DateField()
+    createDate = models.DateField()
+    content = models.TextField()
     # 이 ForeignKey는 다른 모델과의 관계를 나타낸다.
     # 대부분의 경우는 ForeignKey를 사용하게 될 것이다.
     # users앱의 model 중 User 모델과 연결되어 있다.
@@ -16,15 +17,10 @@ class Diary(BaseModel):
     def __str__(self):
         return self.title
 
-class Sentences(BaseModel):
-    sentence = models.TextField()
-
-    diary = models.ForeignKey('diary.Diary', related_name='sentences', on_delete=models.CASCADE)
-
 class Keywords(BaseModel):
     keyword = models.CharField(max_length=100)
 
-    sentence = models.ForeignKey('diary.Sentences', related_name='keywords', on_delete=models.CASCADE)
+    diary = models.ForeignKey('diary.Diary', related_name='keywords', on_delete=models.CASCADE)
 
 class Questions(BaseModel):
     question = models.TextField()

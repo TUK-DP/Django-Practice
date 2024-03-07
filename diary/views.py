@@ -24,19 +24,17 @@ class WriteView(APIView):
         user_id = request.get('userId')
         findUser = User.objects.get(id=user_id)
 
-        # Diary 객체 생성
-        newDiary = Diary.objects.create(user=findUser, title=request.get('title'), writedate=request.get('date'))
-
         content = request.get('content')
-        # Sentences 객체 생성
-        newSentence = Sentences.objects.create(sentence=content, diary=newDiary)
+
+        # Diary 객체 생성
+        newDiary = Diary.objects.create(user=findUser, title=request.get('title'), createDate=request.get('date'), content=content)
 
         # 키워드 추출
         memory = TextRank(content=content)
 
         if memory is None:
             return ApiResponse.on_success(
-                result=SentenceSimpleSerializer(newSentence).data,
+                result=DiarySerializer(newDiary).data,
                 response_status=status.HTTP_201_CREATED
             )
         
@@ -45,11 +43,11 @@ class WriteView(APIView):
 
         # 각 키워드별로 Question 생성
         for q, k in zip(question, keyword):
-            newKeyword = Keywords.objects.create(keyword=k, sentence=newSentence)
+            newKeyword = Keywords.objects.create(keyword=k, sentence=memory.sentences)
             Questions.objects.create(question=q, keyword=newKeyword)
 
         return ApiResponse.on_success(
-            result=SentenceSimpleSerializer(newSentence).data,
+            result=SentenceSimpleSerializer(newDiary).data,
             response_status=status.HTTP_201_CREATED
         )
 
@@ -79,18 +77,17 @@ class UpdateView(APIView):
         user_id = request.get('userId')
         findUser = User.objects.get(id=user_id)
 
-        # Diary 객체 생성
-        updateDiary = Diary.objects.create(user=findUser, title=request.get('title'), writedate=request.get('date'))
-            
         content = request.get('content')
-        updateSentence = Sentences.objects.create(sentence=content, diary=updateDiary)
+
+        # Diary 객체 생성
+        updateDiary = Diary.objects.create(user=findUser, title=request.get('title'), writedate=request.get('date'), content=content)
 
         # 키워드 추출
         memory = TextRank(content=content)
         
         if memory is None:
             return ApiResponse.on_success(
-                result=SentenceSimpleSerializer(updateSentence).data,
+                result=DiarySerializer(updateDiary).data,
                 response_status=status.HTTP_201_CREATED
             )
         
@@ -99,18 +96,18 @@ class UpdateView(APIView):
 
         # 각 키워드별로 Question 생성
         for q, k in zip(question, keyword):
-            newKeyword = Keywords.objects.create(keyword=k, sentence=updateSentence)
+            newKeyword = Keywords.objects.create(keyword=k, sentence=memory.sentences)
             Questions.objects.create(question=q, keyword=newKeyword)
 
         return ApiResponse.on_success(
-            result=SentenceSimpleSerializer(updateSentence).data,
+            result=DiarySerializer(updateDiary).data,
             response_status=status.HTTP_201_CREATED
         )
 
 
 class GetDiaryByUserView(APIView):
     @swagger_auto_schema(operation_description="유저의 일기 조회", query_serializer=GetUserRequest,
-                         response={"200": DiarySerializer})
+                         response={"200": DiaryResultResponse})
     def get(self, request):
         requestSerial = GetUserRequest(data=request.query_params)
 
@@ -130,8 +127,18 @@ class GetDiaryByUserView(APIView):
         # User와 연관된 모든 Diary 가져오기
         findDiaries = Diary.objects.filter(user=findUser)
 
+        serialized_diaries = []
+        for diary in findDiaries:
+            serialized_diary = DiaryResultResponse({
+                'diaryId': diary.id,
+                'title': diary.title,
+                'createDate': diary.createDate,
+                'content': diary.content,
+            })
+            serialized_diaries.append(serialized_diary.data)
+
         return ApiResponse.on_success(
-            result=DiarySerializer(findDiaries, many=True).data,
+            result=serialized_diaries,
             response_status=status.HTTP_200_OK
         )
 
@@ -153,17 +160,16 @@ class GetQuizView(APIView):
         diary_id = request.get('diaryId')
         findDiary = Diary.objects.get(id=diary_id)
 
-        # Diary와 연관된 모든 Sentence 가져오기
-        sentences = findDiary.sentences.all()
+        keywords = findDiary.keywords.all()
 
         # 모든 Sentence 와 연관된 Question 가져오기
         question_keyword = []
-        for sentence in sentences:
-            for keyword in sentence.keywords.all():
-                question_keyword.append({
-                        "Q": keyword.questions.first().question,
-                        "A": keyword.keyword
-                    })
+        
+        for keyword in keywords:
+            question_keyword.append({
+                "Q": keyword.questions.first().question,
+                "A": keyword.keyword
+            })
 
         return ApiResponse.on_success(
             result=question_keyword,
