@@ -82,12 +82,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'mysql.connector.django',
-        'NAME': os.getenv("MYSQL_DATABASE"),  # Your database name
-        'USER': os.getenv("MYSQL_USER"),  # Default MySQL root user, or use a different user if you've created one
-        'PASSWORD': os.getenv("MYSQL_PASSWORD"),  # The root password you set when running the MySQL container
-        'HOST': os.getenv("MYSQL_HOST"),  # Use the IP address of the MySQL container
-        'PORT': '3306',  # Default MySQL port
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
