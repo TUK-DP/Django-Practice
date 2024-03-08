@@ -1,71 +1,9 @@
-import re
 import numpy as np
 from konlpy.tag import Okt
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import normalize
 
-
-class StringNormalize:
-    def __init__(self):
-        self.okt = Okt()
-        self.hanpattern = '([ㄱ-ㅎㅏ-ㅣ]+)'
-        self.signpattern = '[^\w\s]'
-        self.repl = ''
-
-    def str_normalizer(self, sentence):
-        # 이상한 받침 제거
-        sentence = self.okt.normalize(sentence)
-        # 한글 자음, 모음 제거
-        sentence = re.sub(pattern=self.hanpattern, repl=self.repl, string=sentence)
-        # 특수 기호 제거
-        sentence = re.sub(pattern=self.signpattern, repl=self.repl, string=sentence)
-
-        # 맞춤법 수정
-        return sentence
-
-
-class StringTokenizer:
-    # 불용어
-    stopword = ["오늘", "내일", "빨리", "바쁘게"]
-
-    # 문장 분리할 특수문자 정의
-    replace_dict = {"\n": ".", "!": ".", "?": "."}
-
-    @staticmethod
-    def token_to_sentences(content):
-        """긴 문장을 문장 리스트로 변환하는 함수
-        """
-        # 특수문자 제거
-        content = content.translate(str.maketrans(StringTokenizer.replace_dict))
-        # 문장 분리
-        sentences = content.rsplit('.')
-
-        # 빈 문자열 제거
-        sentences = [sentence for sentence in sentences if sentence != '']
-
-        # 문장 정규화 객체 생성
-        text_normalize = StringNormalize()
-
-        # 문장 정규화
-        return list(map(text_normalize.str_normalizer, sentences))
-
-    @staticmethod
-    def map_to_nouns(sentences):
-        """문장 리스트를 명사 리스트로 변환하는 함수 == ["명사 명사 ..." , "명사 명사 ..." , ...]
-        """
-        # 빈 문자열 제거
-        sentences = [sentence for sentence in sentences if sentence != '']
-
-        okt = Okt()
-
-        # 명사 추출후 명사 리스트를 문자열로 변환하는 함수
-        def join_nouns(sentence):
-            return ' '.join([noun for noun in okt.nouns(str(sentence))
-                             if noun not in StringTokenizer.stopword])
-
-        # 명사 추출
-        return list(map(join_nouns, sentences))
+from string_handler import sentence_normalize_tokenizer, map_to_nouns
 
 
 class GraphMatrix:
@@ -81,9 +19,6 @@ class GraphMatrix:
 
         # 단어 가중치 그래프, 단어 사전 을 저장 && 단어 사전 = {index: 단어}
         self.words_graph_vocab = np.dot(cnt_vec_mat.T, cnt_vec_mat), {vocab[word]: word for word in vocab}
-
-    def get_words_graph_vocab(self):
-        return self.words_graph_vocab
 
 
 class Rank:
@@ -107,15 +42,15 @@ class Rank:
 class TextRank(object):
     def __init__(self, content):
         # 문장 추출
-        self.sentences = StringTokenizer.token_to_sentences(content)
-        # 명사 추출
-        nouns = StringTokenizer.map_to_nouns(self.sentences)
+        self.normalized_sentence_list = sentence_normalize_tokenizer(content)
+        # 명사로 이루어진 문장 리스트로 변환
+        nouns = map_to_nouns(self.normalized_sentence_list)
 
         if nouns and nouns != ['']:
             # 가중치 그래프 객체 생성
             matrix = GraphMatrix(nouns)
             # 단어별 가중치 그래프 [단어수, 단어수], {index: 단어} 사전
-            words_graph, word_vocab = matrix.get_words_graph_vocab()
+            words_graph, word_vocab = matrix.words_graph_vocab
 
             # (단어, index, 가중치) 리스트 생성
             word_rank_idx = [(word_vocab[index], index, weight) for index, weight in
@@ -136,7 +71,7 @@ def make_quiz(text_rank: TextRank, keyword_size=3):
     answer_keywords = []
 
     for word in text_rank.get_keywords(keyword_size=keyword_size):
-        for sentence in text_rank.sentences:
+        for sentence in text_rank.normalized_sentence_list:
             # 문장에 키워드가 있고, 사용한 문장이 아니며, 사용한 키워드가 아닐 경우
             if word in sentence and sentence not in remove_sentences and word not in answer_keywords:
                 # 사용한 문장과 사용한 키워드를 저장
