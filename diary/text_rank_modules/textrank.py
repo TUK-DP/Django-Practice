@@ -1,5 +1,5 @@
-from diary.get_rank_graph import get_graph_matrix, get_ranks
-from diary.string_handler import sentence_normalize_tokenizer, map_to_nouns
+from diary.text_rank_modules.get_rank_graph import get_graph_matrix, get_ranks
+from diary.text_rank_modules.string_handler import sentence_normalize_tokenizer, map_to_nouns
 
 
 class TextRank(object):
