@@ -1,16 +1,17 @@
 import numpy as np
-from konlpy.tag import Okt
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.preprocessing import normalize
 
+from diary.text_rank_modules.string_handler import map_to_noun_list
 
-def get_graph_matrix(only_noun_sentence_list):
+
+def get_graph_matrix(normalized_sentence_list):
     """문장별 가중치 그래프 생성"""
     # CountVectorizer 객체 생성
-    cnt_vec = CountVectorizer(tokenizer=Okt().morphs)
+    cnt_vec = CountVectorizer(tokenizer=map_to_noun_list)
     # 단어별 가중치 그래프 생성
     cnt_vec_mat = normalize(
-        cnt_vec.fit_transform(only_noun_sentence_list).toarray().astype(float)
+        cnt_vec.fit_transform(normalized_sentence_list).toarray().astype(float)
         , axis=0
     )
     # 단어 사전 = {단어: index}
