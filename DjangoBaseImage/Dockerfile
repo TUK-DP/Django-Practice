@@ -3,7 +3,8 @@ FROM ubuntu:latest
 
 RUN apt-get update
 # Install python
-RUN apt-get install -y python3.9 python3-pip
+RUN apt-get install -y python3.9 python3-pip && \
+    pip3 install --upgrade pip
 
 # Install java-11
 RUN apt-get install -y openjdk-11-jdk
