@@ -16,6 +16,7 @@ class TextRank:
         try:
             words_graph, word_vocab = get_graph_matrix(self.normalized_sentence_list)
         except ValueError:
+            print("ValueError: get_graph_matrix ")
             pass
 
         # 단어별 가중치 사전 생성 == {index: 가중치}

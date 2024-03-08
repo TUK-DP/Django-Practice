@@ -52,10 +52,10 @@ def map_to_noun_list(normalized_sentence):
             if noun not in stop_word]
 
 
-def map_to_nouns(normalized_sentence_list):
+def map_to_nouns_join(normalized_sentence_list):
     """문장 리스트를 명사 리스트로 변환하는 함수
     return:
-    ["명사", "명사", ...]
+    ["명사 명사 ...", "명사 명사 ...", ...]
     """
     def join_noun(string):
         return " ".join([noun for noun in okt.nouns(str(string))

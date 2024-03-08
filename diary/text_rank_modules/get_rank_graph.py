@@ -3,7 +3,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.preprocessing import normalize
 
 from diary.text_rank_modules.stop_words import stop_words
-from diary.text_rank_modules.string_handler import map_to_noun_list, map_to_nouns
+from diary.text_rank_modules.string_handler import map_to_nouns_join
 
 
 def get_graph_matrix(normalized_sentence_list: list):
@@ -12,13 +12,13 @@ def get_graph_matrix(normalized_sentence_list: list):
     """
 
     # 명사 리스트로 변환 ["명사 명사 ...", "명사 명사 ...", ...]
-    only_nouns = map_to_noun_list(normalized_sentence_list)
+    only_nouns_enum_list = map_to_nouns_join(normalized_sentence_list)
 
     cnt_vec = CountVectorizer(stop_words=stop_words)
 
     # 단어별 가중치 그래프 생성
     cnt_vec_mat = normalize(
-        cnt_vec.fit_transform(only_nouns).toarray().astype(float)
+        cnt_vec.fit_transform(only_nouns_enum_list).toarray().astype(float)
         , axis=0
     )
 
@@ -45,3 +45,4 @@ def get_ranks(words_graph: np.array, d=0.85):  # d = damping factor
     B = (1 - d) * np.ones((matrix_size, 1))
     ranks = np.linalg.solve(A, B)  # 연립방정식 Ax = b
     return {idx: r[0] for idx, r in enumerate(ranks)}
+
