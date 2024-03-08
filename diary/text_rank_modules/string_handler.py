@@ -9,18 +9,17 @@ han_pattern = '([ㄱ-ㅎㅏ-ㅣ]+)'
 # 특수 기호
 sign_pattern = r'[^\w\s]'
 
+# 문장 분리할 특수문자
+sentence_split_pattern = r"[\n!?]+"
+
 # 불용어
 stop_word = ["오늘", "내일", "빨리", "바쁘게"]
-
-# 문장 분리할 특수문자 정의
-replace_str = "\n ! ?"
-replace_dict = {key: '.' for key in replace_str.split()}
 
 
 def sentence_normalize_tokenizer(sentence):
     """긴 문장을 문장 리스트로 변환하는 함수"""
     # 문자의 특수문자 제거
-    sentence = sentence.translate(str.maketrans(replace_dict))
+    sentence = re.sub(pattern=sentence_split_pattern, repl='.', string=sentence)
     # 문장 분리
     sentence_list = sentence.rsplit('.')
 
@@ -43,15 +42,25 @@ def string_normalizer(string):
     return re.sub(pattern=sign_pattern, repl='', string=string)
 
 
-def map_to_nouns(sentences):
+def map_to_noun_list(normalized_sentence):
     """문장 리스트를 명사 리스트로 변환하는 함수
     return:
-    ["명사 명사 ..." , "명사 명사 ..." , ...]
+    ["명사", "명사", ...]
     """
-    # 명사 추출후 명사 리스트를 문자열로 변환하는 함수
-    def join_nouns(sentence):
-        return ' '.join([noun for noun in okt.nouns(str(sentence))
+    # 명사 추출후 명사 리스트로변환하는 함수
+    return [noun for noun in okt.nouns(str(normalized_sentence))
+            if noun not in stop_word]
+
+
+def map_to_nouns_join(normalized_sentence_list):
+    """문장 리스트를 명사 리스트로 변환하는 함수
+    return:
+    ["명사 명사 ...", "명사 명사 ...", ...]
+    """
+    def join_noun(string):
+        return " ".join([noun for noun in okt.nouns(str(string))
                          if noun not in stop_word])
 
-    # 빈 문자열 제거와 명사 붙힌 리스트 반환
-    return [join_nouns(sentence) for sentence in sentences if sentence != '']
+    # 명사 추출후 명사 리스트로변환하는 함수
+    return [join_noun(normalized_sentence) for normalized_sentence in normalized_sentence_list]
+

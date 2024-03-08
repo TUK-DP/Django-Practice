@@ -1,31 +1,35 @@
+import numpy as np
+
 from diary.text_rank_modules.get_rank_graph import get_graph_matrix, get_ranks
-from diary.text_rank_modules.string_handler import sentence_normalize_tokenizer, map_to_nouns
+from diary.text_rank_modules.string_handler import sentence_normalize_tokenizer, map_to_noun_list
 
 
-class TextRank(object):
+class TextRank:
     def __init__(self, content):
         # 문장 추출
         self.normalized_sentence_list = sentence_normalize_tokenizer(content)
-        # 명사로 이루어진 문장 리스트로 변환
-        only_noun_sentence_list = map_to_nouns(self.normalized_sentence_list)
 
-        self.sorted_word_rank = []
-        self.words_graph = []
-        self.sentences_dict = {}
-        self.words_dict = {}
-        self.weights_dict = {}
+        # 단어별 가중치 그래프(행렬곱) [[...]], {index: 단어} 사전
+        words_graph, word_vocab = np.array([]), {}
 
-        if only_noun_sentence_list and only_noun_sentence_list != ['']:
-            # 단어별 가중치 그래프 [단어수, 단어수], {index: 단어} 사전
-            words_graph, word_vocab = get_graph_matrix(only_noun_sentence_list)
+        # get_graph_matrix 함수에서 ValueError 발생시 예외처리
+        try:
+            words_graph, word_vocab = get_graph_matrix(self.normalized_sentence_list)
+        except ValueError:
+            print("ValueError: get_graph_matrix ")
+            pass
 
-            # (단어, index, 가중치) 리스트 생성
-            word_rank_idx = [(word_vocab[index], index, weight) for index, weight in
-                             get_ranks(words_graph).items()]
-            # weight 기준으로 정렬
-            self.sorted_word_rank = sorted(word_rank_idx, key=lambda k: k[2], reverse=True)
-        else:
-            self.sorted_word_rank = []
+        # 단어별 가중치 사전 생성 == {index: 가중치}
+        weights_dict = get_ranks(words_graph)
+
+        # (단어, index, 가중치) 리스트 생성
+        word_rank_idx = [(word_vocab[index], index, weight) for index, weight in
+                         weights_dict.items()]
+
+        self.sorted_word_rank = sorted(word_rank_idx, key=lambda k: k[2], reverse=True)
+        self.words_graph = words_graph
+        self.words_dict = word_vocab
+        self.weights_dict = weights_dict
 
 
 def make_quiz(text_rank: TextRank, keyword_size=3):

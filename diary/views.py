@@ -3,8 +3,9 @@ from rest_framework.views import APIView
 
 from config.basemodel import ApiResponse
 from diary.serializers import *
-from users.models import User
 from diary.text_rank_modules.textrank import TextRank, make_quiz
+from users.models import User
+from .graph import GraphDB
 
 
 class WriteView(APIView):
@@ -26,7 +27,8 @@ class WriteView(APIView):
         content = request.get('content')
 
         # Diary 객체 생성
-        newDiary = Diary.objects.create(user=findUser, title=request.get('title'), createDate=request.get('date'), content=content)
+        newDiary = Diary.objects.create(user=findUser, title=request.get('title'), createDate=request.get('date'),
+                                        content=content)
 
         # 키워드 추출
         memory = TextRank(content=content)
@@ -36,7 +38,15 @@ class WriteView(APIView):
                 result=DiaryResultResponse(newDiary).data,
                 response_status=status.HTTP_201_CREATED
             )
-        
+
+        conn = GraphDB()
+        conn.create_and_link_nodes(
+            user_id=user_id, diary_id=newDiary.id,
+            words_graph=memory.words_graph,
+            words_dict=memory.words_dict,
+            weights_dict=memory.weights_dict
+        )
+
         # 키워드 추출 후 가중치가 높은 키워드 5개로 퀴즈 생성
         question, keyword = make_quiz(memory, keyword_size=5)
 
@@ -72,6 +82,10 @@ class UpdateView(APIView):
         # Diary 삭제
         findDiary.delete()
 
+        # GraphDB에서도 삭제
+        conn = GraphDB()
+        conn.delete_diary(user_id=request.get('userId'), diary_id=diary_id)
+
         # user 가져오기
         user_id = request.get('userId')
         findUser = User.objects.get(id=user_id)
@@ -79,7 +93,8 @@ class UpdateView(APIView):
         content = request.get('content')
 
         # Diary 객체 생성
-        updateDiary = Diary.objects.create(user=findUser, title=request.get('title'), createDate=request.get('date'), content=content)
+        updateDiary = Diary.objects.create(user=findUser, title=request.get('title'), createDate=request.get('date'),
+                                           content=content)
 
         # 키워드 추출
         memory = TextRank(content=content)
@@ -89,7 +104,15 @@ class UpdateView(APIView):
                 result=DiaryResultResponse(updateDiary).data,
                 response_status=status.HTTP_201_CREATED
             )
-        
+
+        # GraphDB에 추가
+        conn.create_and_link_nodes(
+            user_id=user_id, diary_id=updateDiary.id,
+            words_graph=memory.words_graph,
+            words_dict=memory.words_dict,
+            weights_dict=memory.weights_dict
+        )
+
         # 키워드 추출 후 가중치가 높은 키워드 5개로 퀴즈 생성
         question, keyword = make_quiz(memory, keyword_size=5)
 
@@ -164,6 +187,7 @@ class GetQuizView(APIView):
             result=question_keyword,
             response_status=status.HTTP_200_OK
         )
+
 
 class GetDiaryByDateView(APIView):
     @swagger_auto_schema(operation_description="날짜로 일기 검색", query_serializer=GetDiaryByDateRequest,
