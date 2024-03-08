@@ -51,7 +51,7 @@ class StringTokenizer:
         return list(map(text_normalize.str_normalizer, sentences))
 
     @staticmethod
-    def token_to_nouns(sentences):
+    def map_to_nouns(sentences):
         """문장 리스트를 명사 리스트로 변환하는 함수 == ["명사 명사 ..." , "명사 명사 ..." , ...]
         """
         # 빈 문자열 제거
@@ -122,7 +122,7 @@ class TextRank(object):
         # 문장 추출
         self.sentences = StringTokenizer.token_to_sentences(content)
         # 명사 추출
-        nouns = StringTokenizer.token_to_nouns(self.sentences)
+        nouns = StringTokenizer.map_to_nouns(self.sentences)
 
         if nouns and nouns != ['']:
             # 가중치 그래프 객체 생성
