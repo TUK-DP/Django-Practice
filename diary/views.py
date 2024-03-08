@@ -1,12 +1,12 @@
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.views import APIView
 
-from diary.models import Diary, Keywords, Questions
 from config.basemodel import ApiResponse
 from diary.serializers import *
 from users.models import User
 from .graph import GraphDB
 from .textrank import TextRank, make_quiz
+from diary.text_rank_modules.textrank import TextRank, make_quiz
 
 
 class WriteView(APIView):
