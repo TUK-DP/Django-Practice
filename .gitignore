@@ -152,3 +152,5 @@ py-hanspell
 
 mysql-volume
 neo4j-volume
+
+.env*
