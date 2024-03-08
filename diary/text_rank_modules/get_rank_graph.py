@@ -6,36 +6,32 @@ from diary.text_rank_modules.stop_words import stop_words
 from diary.text_rank_modules.string_handler import map_to_noun_list, map_to_nouns
 
 
-def get_graph_matrix(normalized_sentence_list):
+def get_graph_matrix(normalized_sentence_list: list):
     """문장별 가중치 그래프 생성
     TODO: 적은 문장이거나 단어가 적은 경우에 대한 예외처리해야함
     """
 
-    # 오류가 나는 버전 (하지만 합리적으로 작동함 (직관적으로 중요하다 생각되는게 뽑힘)
+    # 명사 리스트로 변환 ["명사 명사 ...", "명사 명사 ...", ...]
     only_nouns = map_to_noun_list(normalized_sentence_list)
+
     cnt_vec = CountVectorizer(stop_words=stop_words)
+
+    # 단어별 가중치 그래프 생성
     cnt_vec_mat = normalize(
         cnt_vec.fit_transform(only_nouns).toarray().astype(float)
         , axis=0
     )
 
-    # 정상 작동 하지만 너무 많은 단어가 나옴
-
-    # cnt_vec = CountVectorizer(tokenizer=map_to_noun_list, stop_words=stop_words)
-    # 단어별 가중치 그래프 생성
-    # cnt_vec_mat = normalize(
-    #     cnt_vec.fit_transform(normalized_sentence_list).toarray().astype(float)
-    #     , axis=0
-    # )
-
-    # 단어 사전 = {단어: index}
-    vocab = cnt_vec.vocabulary_
-
-    # 단어 (가중치 그래프, 단어 사전) 튜플을 저장 && 단어 사전 = {index: 단어}
-    return np.dot(cnt_vec_mat.T, cnt_vec_mat), {vocab[word]: word for word in vocab}
+    # 단어 (가중치 그래프, 단어 사전) 튜플 , 단어 사전 = {index: 단어}
+    return np.dot(cnt_vec_mat.T, cnt_vec_mat), {word: index for index, word in cnt_vec.vocabulary_.items()}
 
 
-def get_ranks(words_graph, d=0.85):  # d = damping factor
+def get_ranks(words_graph: np.array, d=0.85):  # d = damping factor
+    # 빈 문장이 들어온 경우
+    if words_graph.shape[0] == 0:
+        # 빈 사전 반환
+        return {}
+
     A = words_graph
     matrix_size = A.shape[0]
     for id in range(matrix_size):
