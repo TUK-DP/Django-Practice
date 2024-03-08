@@ -149,3 +149,8 @@ cython_debug/
 .DS_Store
 
 py-hanspell
+
+mysql-volume
+neo4j-volume
+
+.env*

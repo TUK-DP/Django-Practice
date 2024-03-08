@@ -1,0 +1,31 @@
+services:
+  django:
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - NEO4j_PASSWORD=neo4j1234
+      - MYSQL_DATABASE=dp
+      - MYSQL_HOST=mysql
+      - MYSQL_PASSWORD=1234
+
+  neo4j:
+    ports:
+      - "7474:7474"
+      - "7473:7473"
+      - "7687:7687"
+    volumes:
+      - ./neo4j-volume/data:/data
+      - ./neo4j-volume/logs:/logs
+    environment:
+      NEO4J_AUTH: neo4j/neo4j1234
+
+  mysql:
+    volumes:
+      - ./mysql-volume/mysql:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=1234
+      - MYSQL_DATABASE=dp
+    ports:
+      - "3306:3306"

@@ -142,3 +142,6 @@ node_modules/
 
 .env
 .DS_Store
+
+mysql-volume
+neo4j-volume
