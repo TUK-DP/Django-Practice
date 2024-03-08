@@ -3,7 +3,7 @@ from konlpy.tag import Okt
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.preprocessing import normalize
 
-from string_handler import sentence_normalize_tokenizer, map_to_nouns
+from diary.string_handler import sentence_normalize_tokenizer, map_to_nouns
 
 
 class GraphMatrix:
