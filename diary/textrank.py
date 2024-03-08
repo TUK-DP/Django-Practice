@@ -6,14 +6,14 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import normalize
 
 
-class SentenceNormalize:
+class StringNormalize:
     def __init__(self):
         self.okt = Okt()
         self.hanpattern = '([ㄱ-ㅎㅏ-ㅣ]+)'
         self.signpattern = '[^\w\s]'
         self.repl = ''
 
-    def sent_normalize(self, sentence):
+    def str_normalizer(self, sentence):
         # 이상한 받침 제거
         sentence = self.okt.normalize(sentence)
         # 한글 자음, 모음 제거
@@ -25,13 +25,19 @@ class SentenceNormalize:
         return sentence
 
 
-class SentenceTokenizer:
+class StringTokenizer:
+    # 불용어
+    stopword = ["오늘", "내일", "빨리", "바쁘게"]
+
+    # 문장 분리할 특수문자 정의
+    replace_dict = {"\n": ".", "!": ".", "?": "."}
+
     @staticmethod
-    def get_text(content):
-        # 문장 분리할 특수문자 정의
-        replace_dict = {"\n": ".", "!": ".", "?": "."}
+    def token_to_sentences(content):
+        """긴 문장을 문장 리스트로 변환하는 함수
+        """
         # 특수문자 제거
-        content = content.translate(str.maketrans(replace_dict))
+        content = content.translate(str.maketrans(StringTokenizer.replace_dict))
         # 문장 분리
         sentences = content.rsplit('.')
 
@@ -39,24 +45,24 @@ class SentenceTokenizer:
         sentences = [sentence for sentence in sentences if sentence != '']
 
         # 문장 정규화 객체 생성
-        text_normalize = SentenceNormalize()
+        text_normalize = StringNormalize()
 
         # 문장 정규화
-        return list(map(text_normalize.sent_normalize, sentences))
+        return list(map(text_normalize.str_normalizer, sentences))
 
     @staticmethod
-    def get_nouns(sentences):
+    def token_to_nouns(sentences):
+        """문장 리스트를 명사 리스트로 변환하는 함수 == ["명사 명사 ..." , "명사 명사 ..." , ...]
+        """
         # 빈 문자열 제거
         sentences = [sentence for sentence in sentences if sentence != '']
 
         okt = Okt()
 
-        stopword = ["오늘", "내일", "빨리", "바쁘게"]
-
         # 명사 추출후 명사 리스트를 문자열로 변환하는 함수
         def join_nouns(sentence):
-            return ' '.join([noun for noun in okt.nouns(str(sentence)) 
-                                       if noun not in stopword])
+            return ' '.join([noun for noun in okt.nouns(str(sentence))
+                             if noun not in StringTokenizer.stopword])
 
         # 명사 추출
         return list(map(join_nouns, sentences))
@@ -114,9 +120,9 @@ class Rank:
 class TextRank(object):
     def __init__(self, content):
         # 문장 추출
-        self.sentences = SentenceTokenizer.get_text(content)
+        self.sentences = StringTokenizer.token_to_sentences(content)
         # 명사 추출
-        nouns = SentenceTokenizer.get_nouns(self.sentences)
+        nouns = StringTokenizer.token_to_nouns(self.sentences)
 
         if nouns and nouns != ['']:
             # 가중치 그래프 객체 생성
@@ -127,7 +133,8 @@ class TextRank(object):
             words_graph, word_vocab = matrix.get_words_graph_vocab()
 
             # (단어, index, 가중치) 리스트 생성
-            word_rank_idx = [(word_vocab[index], index, weight) for index, weight in Rank.get_ranks(words_graph).items()]
+            word_rank_idx = [(word_vocab[index], index, weight) for index, weight in
+                             Rank.get_ranks(words_graph).items()]
             # weight 기준으로 정렬
             self.sorted_word_rank = sorted(word_rank_idx, key=lambda k: k[2], reverse=True)
         else:
