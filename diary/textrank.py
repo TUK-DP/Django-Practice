@@ -72,7 +72,7 @@ class GraphMatrix:
     # 문장별 가중치 그래프 생성
     def __init__(self, sentence):
         # CountVectorizer 객체 생성
-        cnt_vec = CountVectorizer()
+        cnt_vec = CountVectorizer(tokenizer=Okt().morphs)
 
         # 단어별 가중치 그래프 생성
         cnt_vec_mat = normalize(cnt_vec.fit_transform(sentence).toarray().astype(float), axis=0)
