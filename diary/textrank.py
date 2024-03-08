@@ -71,16 +71,6 @@ class StringTokenizer:
 class GraphMatrix:
     # 문장별 가중치 그래프 생성
     def __init__(self, sentence):
-        # tfidf 객체 생성
-        tfidf = TfidfVectorizer()
-
-        tfidf_mat = tfidf.fit_transform(sentence).toarray()
-        # 문장 사전 = {단어: index}
-        vocab = tfidf.vocabulary_
-
-        # 문장 가중치 그래프, 문장 사전 을 저장 && 문장 사전 = {index: 단어}
-        self.sent_graph_vocab = np.dot(tfidf_mat, tfidf_mat.T), {vocab[word]: word for word in vocab}
-
         # CountVectorizer 객체 생성
         cnt_vec = CountVectorizer()
 
@@ -91,9 +81,6 @@ class GraphMatrix:
 
         # 단어 가중치 그래프, 단어 사전 을 저장 && 단어 사전 = {index: 단어}
         self.words_graph_vocab = np.dot(cnt_vec_mat.T, cnt_vec_mat), {vocab[word]: word for word in vocab}
-
-    # def get_sent_graph_vocab(self):
-    #     return self.sent_graph_vocab
 
     def get_words_graph_vocab(self):
         return self.words_graph_vocab
@@ -127,8 +114,6 @@ class TextRank(object):
         if nouns and nouns != ['']:
             # 가중치 그래프 객체 생성
             matrix = GraphMatrix(nouns)
-            # 문장별 가중치 그래프 [문장수, 문장수], {index: 문장} 사전
-            # sent_graph, sent_vocab = matrix.get_sent_graph_vocab()
             # 단어별 가중치 그래프 [단어수, 단어수], {index: 단어} 사전
             words_graph, word_vocab = matrix.get_words_graph_vocab()
 
@@ -139,10 +124,6 @@ class TextRank(object):
             self.sorted_word_rank = sorted(word_rank_idx, key=lambda k: k[2], reverse=True)
         else:
             self.sorted_word_rank = []
-
-    # sent_size 개의 문장 요약
-    # def summarize(self, sent_size=3):
-    #     return [sentence for sentence, index, weight in self.sorted_sent_rank[:sent_size]]
 
     def get_keywords(self, keyword_size=3):
         # 단어 가중치 상위 word_size개 word만 추출
