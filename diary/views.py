@@ -3,10 +3,9 @@ from rest_framework.views import APIView
 
 from config.basemodel import ApiResponse
 from diary.serializers import *
+from diary.text_rank_modules.textrank import TextRank, make_quiz
 from users.models import User
 from .graph import GraphDB
-from .textrank import TextRank, make_quiz
-from diary.text_rank_modules.textrank import TextRank, make_quiz
 
 
 class WriteView(APIView):
@@ -28,7 +27,8 @@ class WriteView(APIView):
         content = request.get('content')
 
         # Diary 객체 생성
-        newDiary = Diary.objects.create(user=findUser, title=request.get('title'), createDate=request.get('date'), content=content)
+        newDiary = Diary.objects.create(user=findUser, title=request.get('title'), createDate=request.get('date'),
+                                        content=content)
 
         # 키워드 추출
         memory = TextRank(content=content)
@@ -93,7 +93,8 @@ class UpdateView(APIView):
         content = request.get('content')
 
         # Diary 객체 생성
-        updateDiary = Diary.objects.create(user=findUser, title=request.get('title'), createDate=request.get('date'), content=content)
+        updateDiary = Diary.objects.create(user=findUser, title=request.get('title'), createDate=request.get('date'),
+                                           content=content)
 
         # 키워드 추출
         memory = TextRank(content=content)
@@ -186,6 +187,7 @@ class GetQuizView(APIView):
             result=question_keyword,
             response_status=status.HTTP_200_OK
         )
+
 
 class GetDiaryByDateView(APIView):
     @swagger_auto_schema(operation_description="날짜로 일기 검색", query_serializer=GetDiaryByDateRequest,
