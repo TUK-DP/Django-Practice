@@ -226,6 +226,13 @@ class GraphDB:
             "DELETE w "
             "WITH d "
             "MATCH (d)-[i:INCLUDE]-(k:Keyword)-[c:CONNECTED]-(k2:Keyword)-[:INCLUDE]-(d) "
-            "DELETE i,c,k,k2,d"
+            "DELETE i,c,k,k2 "
             , user_id=user_id, diary_id=diary_id
+        )
+
+        # Delete Diary node
+        tx.run(
+            "MATCH (d:Diary {diary_id: $diary_id}) "
+            "DELETE d"
+            , diary_id=diary_id
         )
