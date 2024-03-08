@@ -50,3 +50,17 @@ def map_to_noun_list(normalized_sentence):
     # 명사 추출후 명사 리스트로변환하는 함수
     return [noun for noun in okt.nouns(str(normalized_sentence))
             if noun not in stop_word]
+
+
+def map_to_nouns(normalized_sentence_list):
+    """문장 리스트를 명사 리스트로 변환하는 함수
+    return:
+    ["명사", "명사", ...]
+    """
+    def join_noun(string):
+        return " ".join([noun for noun in okt.nouns(str(string))
+                         if noun not in stop_word])
+
+    # 명사 추출후 명사 리스트로변환하는 함수
+    return [join_noun(normalized_sentence) for normalized_sentence in normalized_sentence_list]
+
