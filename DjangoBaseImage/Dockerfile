@@ -9,6 +9,9 @@ RUN apt-get install -y python3.9 python3-pip && \
 # Install java-11
 RUN apt-get install -y openjdk-11-jdk
 
+# Install netcat
+RUN apt-get install -y netcat
+
 # TimeZone setting to Asia/Seoul
 ENV TZ=Asia/Seoul
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata && \
