@@ -1,3 +1,4 @@
+from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.views import APIView
 
@@ -9,6 +10,7 @@ from .graph import GraphDB
 
 
 class WriteView(APIView):
+    @transaction.atomic
     @swagger_auto_schema(operation_description="일기 작성", request_body=WriteRequest, responses={"201": '작성 성공'})
     def post(self, request):
         requestSerial = WriteRequest(data=request.data)
@@ -33,12 +35,6 @@ class WriteView(APIView):
         # 키워드 추출
         memory = TextRank(content=content)
 
-        if memory is None:
-            return ApiResponse.on_success(
-                result=DiaryResultResponse(newDiary).data,
-                response_status=status.HTTP_201_CREATED
-            )
-
         conn = GraphDB()
         conn.create_and_link_nodes(
             user_id=user_id, diary_id=newDiary.id,
@@ -62,6 +58,7 @@ class WriteView(APIView):
 
 
 class UpdateView(APIView):
+    @transaction.atomic
     @swagger_auto_schema(operation_description="일기 수정", request_body=UpdateRequest, responses={"201": '작성 성공'})
     def patch(self, request):
         requestSerial = UpdateRequest(data=request.data)
@@ -99,12 +96,6 @@ class UpdateView(APIView):
         # 키워드 추출
         memory = TextRank(content=content)
 
-        if memory is None:
-            return ApiResponse.on_success(
-                result=DiaryResultResponse(updateDiary).data,
-                response_status=status.HTTP_201_CREATED
-            )
-
         # GraphDB에 추가
         conn.create_and_link_nodes(
             user_id=user_id, diary_id=updateDiary.id,
@@ -128,6 +119,7 @@ class UpdateView(APIView):
 
 
 class GetDiaryByUserView(APIView):
+    @transaction.atomic
     @swagger_auto_schema(operation_description="유저의 일기 조회", query_serializer=GetUserRequest,
                          response={"200": DiaryResultResponse})
     def get(self, request):
@@ -156,6 +148,7 @@ class GetDiaryByUserView(APIView):
 
 
 class GetQuizView(APIView):
+    @transaction.atomic
     @swagger_auto_schema(operation_description="일기회상 퀴즈", query_serializer=GetDiaryRequest,
                          responses={"200": "퀴즈"})
     def get(self, request):
@@ -190,6 +183,7 @@ class GetQuizView(APIView):
 
 
 class GetDiaryByDateView(APIView):
+    @transaction.atomic
     @swagger_auto_schema(operation_description="날짜로 일기 검색", query_serializer=GetDiaryByDateRequest,
                          responses={"200": "일기"})
     def get(self, request):
