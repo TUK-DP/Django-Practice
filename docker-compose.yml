@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dp
+    networks:
+      - dp
+    command:
+      - /bin/bash
+      - -c
+      -  |
+        ./wait-for-services.sh python3 manage.py migrate 
+        ./wait-for-services.sh python3 manage.py runserver 0.0.0.0:8000
+    restart:
+      on-failure
+    depends_on:
+      - mysql
+      - neo4j
+
+  neo4j:
+    container_name: neo4j
+    image: neo4j:latest
+    networks:
+      - dp
+
+  mysql:
+    container_name: mysql
+    image: mysql
+    volumes:
+      - ./vol:/var/lib/mysql
+    networks:
+      - dp
+    command:
+      - --character-set-server=utf8
+      - --collation-server=utf8_general_ci
+
+networks:
+  dp:
+    driver: bridge

@@ -1,14 +1,16 @@
+from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.views import APIView
 
-from diary.models import Diary, Keywords, Questions
 from config.basemodel import ApiResponse
 from diary.serializers import *
+from diary.text_rank_modules.textrank import TextRank, make_quiz
 from users.models import User
-from .textrank import TextRank, make_quiz
+from .graph import GraphDB
 
 
 class WriteView(APIView):
+    @transaction.atomic
     @swagger_auto_schema(operation_description="일기 작성", request_body=WriteRequest, responses={"201": '작성 성공'})
     def post(self, request):
         requestSerial = WriteRequest(data=request.data)
@@ -27,17 +29,20 @@ class WriteView(APIView):
         content = request.get('content')
 
         # Diary 객체 생성
-        newDiary = Diary.objects.create(user=findUser, title=request.get('title'), createDate=request.get('date'), content=content)
+        newDiary = Diary.objects.create(user=findUser, title=request.get('title'), createDate=request.get('date'),
+                                        content=content)
 
         # 키워드 추출
         memory = TextRank(content=content)
 
-        if memory is None:
-            return ApiResponse.on_success(
-                result=DiaryResultResponse(newDiary).data,
-                response_status=status.HTTP_201_CREATED
-            )
-        
+        conn = GraphDB()
+        conn.create_and_link_nodes(
+            user_id=user_id, diary_id=newDiary.id,
+            words_graph=memory.words_graph,
+            words_dict=memory.words_dict,
+            weights_dict=memory.weights_dict
+        )
+
         # 키워드 추출 후 가중치가 높은 키워드 5개로 퀴즈 생성
         question, keyword = make_quiz(memory, keyword_size=5)
 
@@ -53,6 +58,7 @@ class WriteView(APIView):
 
 
 class UpdateView(APIView):
+    @transaction.atomic
     @swagger_auto_schema(operation_description="일기 수정", request_body=UpdateRequest, responses={"201": '작성 성공'})
     def patch(self, request):
         requestSerial = UpdateRequest(data=request.data)
@@ -73,6 +79,10 @@ class UpdateView(APIView):
         # Diary 삭제
         findDiary.delete()
 
+        # GraphDB에서도 삭제
+        conn = GraphDB()
+        conn.delete_diary(user_id=request.get('userId'), diary_id=diary_id)
+
         # user 가져오기
         user_id = request.get('userId')
         findUser = User.objects.get(id=user_id)
@@ -80,17 +90,20 @@ class UpdateView(APIView):
         content = request.get('content')
 
         # Diary 객체 생성
-        updateDiary = Diary.objects.create(user=findUser, title=request.get('title'), createDate=request.get('date'), content=content)
+        updateDiary = Diary.objects.create(user=findUser, title=request.get('title'), createDate=request.get('date'),
+                                           content=content)
 
         # 키워드 추출
         memory = TextRank(content=content)
 
-        if memory is None:
-            return ApiResponse.on_success(
-                result=DiaryResultResponse(updateDiary).data,
-                response_status=status.HTTP_201_CREATED
-            )
-        
+        # GraphDB에 추가
+        conn.create_and_link_nodes(
+            user_id=user_id, diary_id=updateDiary.id,
+            words_graph=memory.words_graph,
+            words_dict=memory.words_dict,
+            weights_dict=memory.weights_dict
+        )
+
         # 키워드 추출 후 가중치가 높은 키워드 5개로 퀴즈 생성
         question, keyword = make_quiz(memory, keyword_size=5)
 
@@ -106,6 +119,7 @@ class UpdateView(APIView):
 
 
 class GetDiaryByUserView(APIView):
+    @transaction.atomic
     @swagger_auto_schema(operation_description="유저의 일기 조회", query_serializer=GetUserRequest,
                          response={"200": DiaryResultResponse})
     def get(self, request):
@@ -134,6 +148,7 @@ class GetDiaryByUserView(APIView):
 
 
 class GetQuizView(APIView):
+    @transaction.atomic
     @swagger_auto_schema(operation_description="일기회상 퀴즈", query_serializer=GetDiaryRequest,
                          responses={"200": "퀴즈"})
     def get(self, request):
@@ -166,7 +181,9 @@ class GetQuizView(APIView):
             response_status=status.HTTP_200_OK
         )
 
+
 class GetDiaryByDateView(APIView):
+    @transaction.atomic
     @swagger_auto_schema(operation_description="날짜로 일기 검색", query_serializer=GetDiaryByDateRequest,
                          responses={"200": "일기"})
     def get(self, request):
