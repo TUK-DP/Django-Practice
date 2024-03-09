@@ -165,9 +165,9 @@ class GetDiaryByDateRequest(serializers.Serializer):
         if not is_user_exist:
             self._errors['userId'] = [f'userId: {self.data.get("userId")} 가 존재하지 않습니다.']
             return False, status.HTTP_404_NOT_FOUND
-        
+
         # 날짜에 작성된 일기가 있는지 확인
-        is_diary_exist = Diary.objects.filter(createDate=self.data['date']).exists()
+        is_diary_exist = Diary.objects.filter(user=User.objects.filter(id=self.data['userId']), createDate=self.data['date']).exists()
         # 존재하지 않는다면 False, 404 반환
         if not is_diary_exist:
             self._errors['diaryId'] = [f'작성된 일기가 없습니다.']
