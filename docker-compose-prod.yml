@@ -6,6 +6,13 @@ services:
       - "8001:8000"
     env_file:
       - .env-django
+    command:
+      - /bin/bash
+      - -c
+      - |
+        dos2unix /app/wait-for-services.sh
+        ./wait-for-services.sh python3 manage.py migrate 
+        ./wait-for-services.sh gunicorn config.wsgi:application --bind
 
   neo4j:
     ports:
