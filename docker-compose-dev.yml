@@ -4,11 +4,9 @@ services:
       - .:/app
     ports:
       - "8000:8000"
-    environment:
-      - NEO4j_PASSWORD=neo4j1234
-      - MYSQL_DATABASE=dp
-      - MYSQL_HOST=mysql
-      - MYSQL_PASSWORD=1234
+    env_file:
+      - .env-s3
+      - .env-django
     command:
       - /bin/bash
       - -c
