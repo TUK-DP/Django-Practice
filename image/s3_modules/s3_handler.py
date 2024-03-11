@@ -25,6 +25,8 @@ def upload_file_to_s3(file: InMemoryUploadedFile, filename: str):
     :param filename: 파일 이름
     """
 
+    filename = "image/" + filename
+
     # Upload the image file to S3
     bucket.upload_fileobj(file, filename, ExtraArgs={"ContentType": "image/jpeg"})
 
