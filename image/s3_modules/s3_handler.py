@@ -46,7 +46,3 @@ def get_all_files_from_s3():
     :return: 모든 파일 이름 리스트
     """
     return [obj.key for obj in bucket.objects.all()]
-
-if __name__ == '__main__':
-    s_ = get_all_files_from_s3()
-    print(s_)
