@@ -205,3 +205,29 @@ class GetDiaryByDateView(APIView):
             result=DiaryResultResponse(findDiary).data,
             response_status=status.HTTP_200_OK
         )
+    
+
+class DeleteDiaryView(APIView):
+    @transaction.atomic
+    @swagger_auto_schema(operation_description="일기 삭제", request_body=DeleteDiaryRequest, 
+                         responses={200: '삭제 완료'})
+    def delete(self, request):
+        requestSerial = DeleteDiaryRequest(data=request.data)
+
+        isValid, response_status = requestSerial.is_valid()
+        # 유효성 검사 통과하지 못한 경우
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
+
+        request = requestSerial.validated_data
+
+        # 다이어리 아이디 가져오기
+        diary_id = request.get('diaryId')
+        findDiary = Diary.objects.get(id=diary_id)
+
+        Diary.delete(findDiary)
+
+        return ApiResponse.on_success(
+            result=DiaryResultResponse(findDiary).data,
+            response_status=status.HTTP_200_OK
+        )
