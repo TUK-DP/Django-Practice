@@ -12,28 +12,6 @@ jobs:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Docker login
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Docker Build and Push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/${{ secrets.REPOSITORY_NAME }}:${{ github.event.pull_request.number }}, ${{ secrets.DOCKER_USERNAME }}/${{ secrets.REPOSITORY_NAME }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
         with:
@@ -42,9 +20,13 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             sudo sh -c 'truncate -s 0 /var/lib/docker/containers/*/*-json.log'
-            cd ~/${{ secrets.REPOSITORY_NAME }}
-            sudo echo "${{ secrets.DOT_ENT }}" > .env
+            cd ~/${{ secrets.REPOSITORY_NAME }}-prod
+            git checkout main 
+            git stash push || true
+            git pull
+            git stash pop || true
+            sudo echo "${{ secrets.DOT_ENT_DJANGO }}" > .env-django
+            sudo echo "${{ secrets.DOT_ENT_MYSQL }}" > .env-mysql
+            sudo echo "${{ secrets.DOT_ENT_NEO4J }}" > .env-neo4j
             sudo docker rm -f ${{ secrets.REPOSITORY_NAME }} || true
-            sudo docker rmi -f ${{ secrets.DOCKER_USERNAME }}/${{ secrets.REPOSITORY_NAME }}:latest || true
-            sudo docker-compose up -d
-            sudo docker exec ${{ secrets.REPOSITORY_NAME }} python3 manage.py migrate
+            sudo docker-compose -f docker-compose.yml -f docker-compose-prod.yml up -d --build

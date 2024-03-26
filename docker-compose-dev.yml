@@ -9,6 +9,16 @@ services:
       - MYSQL_DATABASE=dp
       - MYSQL_HOST=mysql
       - MYSQL_PASSWORD=1234
+    env_file:
+      - .env-s3
+    command:
+      - /bin/bash
+      - -c
+      - |
+        dos2unix /app/wait-for-services.sh
+        ./wait-for-services.sh python3 manage.py migrate 
+        ./wait-for-services.sh python3 manage.py runserver 0.0.0.0:8000
+  
 
   neo4j:
     ports:

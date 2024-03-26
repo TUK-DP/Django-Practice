@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     "drf_yasg",
     # Cors 에러 처리
     'corsheaders',
+    # S3 관련
+    'storages',
 ]
 
 MIDDLEWARE = [
