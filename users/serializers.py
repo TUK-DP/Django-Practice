@@ -31,7 +31,7 @@ class LoginRequest(serializers.Serializer):
     password = serializers.CharField(max_length=128)
 
 
-class DeleteRequest(serializers.Serializer):
+class NicknameRequest(serializers.Serializer):
     nickname = serializers.CharField(max_length=20)
 
 

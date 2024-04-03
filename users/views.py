@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from config.basemodel import ApiResponse
 from users.models import User
-from users.serializers import UserSerializer, UserResponse, LoginRequest, DeleteRequest, \
+from users.serializers import UserSerializer, UserResponse, LoginRequest, NicknameRequest, \
     UpdateResquest
 
 
@@ -65,9 +65,9 @@ class SigninView(APIView):
 
 class DeleteView(APIView):
     @transaction.atomic
-    @swagger_auto_schema(operation_description="유저 삭제", request_body=DeleteRequest, responses={200: '삭제 완료'})
+    @swagger_auto_schema(operation_description="유저 삭제", request_body=NicknameRequest, responses={200: '삭제 완료'})
     def delete(self, request):
-        serializer = DeleteRequest(data=request.data)
+        serializer = NicknameRequest(data=request.data)
 
         if serializer.is_valid():
             try:
