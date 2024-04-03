@@ -79,6 +79,23 @@ class DeleteView(APIView):
         return JsonResponse({'isSuccess': False, 'message': '입력한 값을 다시 확인해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class CheckNicknameView(APIView):
+    @transaction.atomic
+    @swagger_auto_schema(operation_description="닉네임 중복확인", request_body=NicknameRequest, responses={200: '닉네임 사용 가능'})
+    def post(self, request):
+        serializer = NicknameRequest(data=request.data)
+
+        if serializer.is_valid():
+            nickname = serializer.validated_data.get('nickname')
+            try:
+                user = User.objects.get(nickname=nickname)
+                return JsonResponse({'isSuccess': False, 'message': '사용할 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+            except User.DoesNotExist:
+                return JsonResponse({'isSuccess': True, 'message': '사용가능한 닉네임입니다.'}, status=status.HTTP_200_OK)
+
+        return JsonResponse({'isSuccess': False, 'message': '입력한 값을 다시 확인해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
 class UpdateView(APIView):
     @transaction.atomic
     @swagger_auto_schema(operation_description="유저 정보 수정", request_body=UpdateResquest, responses={"200": UserResponse})
