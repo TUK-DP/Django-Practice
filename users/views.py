@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from config.basemodel import ApiResponse
 from users.models import User
-from users.serializers import UserSerializer, UserResponse, LoginRequest, DeleteRequest, \
+from users.serializers import UserSerializer, UserResponse, LoginRequest, NicknameRequest, \
     UpdateResquest
 
 
@@ -65,9 +65,9 @@ class SigninView(APIView):
 
 class DeleteView(APIView):
     @transaction.atomic
-    @swagger_auto_schema(operation_description="유저 삭제", request_body=DeleteRequest, responses={200: '삭제 완료'})
+    @swagger_auto_schema(operation_description="유저 삭제", request_body=NicknameRequest, responses={200: '삭제 완료'})
     def delete(self, request):
-        serializer = DeleteRequest(data=request.data)
+        serializer = NicknameRequest(data=request.data)
 
         if serializer.is_valid():
             try:
@@ -75,6 +75,23 @@ class DeleteView(APIView):
             except User.DoesNotExist:
                 return JsonResponse({'isSuccess': False, 'message': '사용자를 찾을 수 없습니다.'},
                                     status=status.HTTP_400_BAD_REQUEST)
+
+        return JsonResponse({'isSuccess': False, 'message': '입력한 값을 다시 확인해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CheckNicknameView(APIView):
+    @transaction.atomic
+    @swagger_auto_schema(operation_description="닉네임 중복확인", request_body=NicknameRequest, responses={200: '닉네임 사용 가능'})
+    def post(self, request):
+        serializer = NicknameRequest(data=request.data)
+
+        if serializer.is_valid():
+            nickname = serializer.validated_data.get('nickname')
+            try:
+                user = User.objects.get(nickname=nickname)
+                return JsonResponse({'isSuccess': False, 'message': '사용할 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+            except User.DoesNotExist:
+                return JsonResponse({'isSuccess': True, 'message': '사용가능한 닉네임입니다.'}, status=status.HTTP_200_OK)
 
         return JsonResponse({'isSuccess': False, 'message': '입력한 값을 다시 확인해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
 

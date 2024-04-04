@@ -6,19 +6,18 @@ from .models import User
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'nickname', 'created_at', 'updated_at']
+        fields = ['id', 'username', 'email', 'password', 'nickname', 'birth', 'created_at', 'updated_at']
 
 
 class UserSafeSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'nickname', 'created_at', 'updated_at']
-
+        fields = ['id', 'username', 'email', 'nickname', 'birth', 'created_at', 'updated_at']
 
 class UserCreateRequest(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', 'email', 'password']
+        fields = ['username', 'email', 'password', 'birth']
 
     def to_user(self) -> UserSerializer:
         newUser = UserSerializer(data=self.data)
@@ -32,7 +31,7 @@ class LoginRequest(serializers.Serializer):
     password = serializers.CharField(max_length=128)
 
 
-class DeleteRequest(serializers.Serializer):
+class NicknameRequest(serializers.Serializer):
     nickname = serializers.CharField(max_length=20)
 
 
@@ -42,6 +41,7 @@ class UpdateResquest(serializers.Serializer):
     nickname = serializers.CharField(max_length=20)
     email = serializers.EmailField(max_length=100)
     password = serializers.CharField(max_length=128)
+    birth = serializers.DateField()
 
 
 class UserResponse(serializers.Serializer):
