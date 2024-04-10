@@ -205,11 +205,11 @@ class GetDiaryByDateView(APIView):
             result=DiaryResultResponse(findDiary).data,
             response_status=status.HTTP_200_OK
         )
-    
+
 
 class DeleteDiaryView(APIView):
     @transaction.atomic
-    @swagger_auto_schema(operation_description="일기 삭제", request_body=DeleteDiaryRequest, 
+    @swagger_auto_schema(operation_description="일기 삭제", request_body=DeleteDiaryRequest,
                          responses={200: '삭제 완료'})
     def delete(self, request):
         requestSerial = DeleteDiaryRequest(data=request.data)
@@ -229,5 +229,34 @@ class DeleteDiaryView(APIView):
 
         return ApiResponse.on_success(
             result=DiaryResultResponse(findDiary).data,
+            response_status=status.HTTP_200_OK
+        )
+
+
+class GetNodeData(APIView):
+    @transaction.atomic
+    @swagger_auto_schema(operation_description="노드데이터 가져오기", query_serializer=DeleteDiaryRequest)
+    def get(self, request):
+
+        requestSerial = DeleteDiaryRequest(data=request.query_params)
+
+        isValid, response_status = requestSerial.is_valid()
+        # 유효성 검사 통과하지 못한 경우
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
+
+        request = requestSerial.validated_data
+
+        # 다이어리 아이디 가져오기
+        diaryId = request.get('diaryId')
+        # 유저 아이디 가져오기
+        userId = request.get('userId')
+
+        # 그래프 데이터 가져오기
+        conn = GraphDB()
+        result = conn.find_all_by_user_diary(userId, diaryId)
+
+        return ApiResponse.on_success(
+            result=result,
             response_status=status.HTTP_200_OK
         )
