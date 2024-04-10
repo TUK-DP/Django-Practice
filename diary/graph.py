@@ -126,53 +126,79 @@ class GraphDB:
 
     @staticmethod
     def _find_all_by_user_diary(tx, user_id: int, diary_id: int):
-        dic = {"User": {}, "Diary": {}, "CONNECTED": []}
+        dic = {"User": {}, "Diary": {}, "nodes": [], "relationships": []}
 
-        # Find User nodes
-        user_result = tx.run("MATCH (u:User {user_id: $user_id}) RETURN u", user_id=user_id)
+        # Find User and Diary nodes
+        user_diary = tx.run(
+            f"MATCH (u:User {{ user_id: {user_id} }})-[:WROTE]-(d:Diary {{diary_id: {diary_id}}})"
+            "RETURN u, d"
+        )
 
-        user_nodes = user_result.data()
-
-        if len(user_nodes) > 0:
-            dic['User'] = {"user_id": user_nodes[0]['u']['user_id']}
-
-        # Find Diary nodes
-        diary_result = tx.run("MATCH (d:Diary {diary_id: $diary_id}) RETURN d", diary_id=diary_id)
-
-        diary_nodes = diary_result.data()
-
-        if len(diary_nodes) > 0:
-            diary_node = diary_nodes[0]
-            _date = diary_node['d']['date']
-            dic['Diary'] = {
-                'diary_id': diary_node['d']['diary_id'],
-                'date': datetime(_date.year, _date.month, _date.day).isoformat()
+        for n in user_diary:
+            dic['User'] = {
+                "id": n['u'].id,
+                "user_id": n['u']['user_id'],
+                "label": "User",
+                "text": "나"
             }
+
+            dic['Diary'] = {
+                "id": n['d'].id,
+                "diary_id": n['d']['diary_id'],
+                "label": "Diary",
+                "text": "일기"
+            }
+
+            dic['nodes'].append(dic['User'])
+            dic['nodes'].append(dic['Diary'])
+            dic['relationships'].append({
+                "properties": {},
+                "type": "WROTE",
+                'startNode': dic['User']['id'],
+                'endNode': dic['Diary']['id']
+            })
+
+        # Find Keywords include in Diary
+        include_result = tx.run(f"MATCH (d:Diary {{diary_id : {diary_id}}})-[:INCLUDE]-(k:Keyword) RETURN k, d")
+        for n in include_result:
+            k_node = n['k']
+
+            dic['nodes'].append({
+                "id": k_node.id,
+                "label": "Keyword",
+                "text": k_node['text'],
+                'weight': k_node['weight']
+            })
+
+            d_node = n['d']
+
+            dic['relationships'].append({
+                "properties": {},
+                "type": "INCLUDE",
+                'startNode': d_node.id,
+                'endNode': k_node.id
+            })
 
         # Find connected Keywords and include in Diary
         connected_result = tx.run(
-            "MATCH (:Diary {diary_id : $diary_id})-[:INCLUDE]-(k:Keyword) "
+            f"MATCH (:Diary {{diary_id : {diary_id}}})-[:INCLUDE]-(k:Keyword) "
             "MATCH (k)-[c:CONNECTED]-(other:Keyword) "
             "RETURN k, other, c"
-            , diary_id=diary_id
         )
 
-        connected = []
-
         for record in connected_result:
-            connected.append({
-                'tfidf': record['c']['tfidf'],
-                'start': {
-                    'text': record['k']['text'],
-                    'weight': record['k']['weight']
-                },
-                'end': {
-                    'text': record['other']['text'],
-                    'weight': record['other']['weight']
-                }
-            })
+            a_node = record['k']
+            b_node = record['other']
+            connect = record['c']
 
-        dic['CONNECTED'] = connected
+            dic['relationships'].append({
+                "properties": {
+                    'tfidf': connect['tfidf']
+                },
+                "type": "CONNECTED",
+                'startNode': a_node.id,
+                'endNode': b_node.id
+            })
 
         return dic
 
