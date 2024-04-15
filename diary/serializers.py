@@ -227,3 +227,23 @@ class GetNodeDataRequest(serializers.Serializer):
             return False, status.HTTP_404_NOT_FOUND
 
         return True, status.HTTP_200_OK
+    
+
+class KeyWordImgSaveRequest(serializers.Serializer):
+    keywordId = serializers.IntegerField()
+    imgUrl = serializers.CharField()
+
+    def is_valid(self, raise_exception=False):
+        super_valid = super().is_valid()
+        # 유효하지 않다면 False, 400 반환
+        if not super_valid:
+            return False, status.HTTP_400_BAD_REQUEST
+
+        # 유효하다면 keywordId가 존재하는지 확인
+        keyword_id = self.data.get('keywordId')
+        try:
+            keyword = Keywords.objects.get(id=keyword_id)
+            return True, status.HTTP_200_OK
+        except Keywords.DoesNotExist:
+            self._errors['keywordId'] = [f'keywordId: {keyword_id} 가 존재하지 않습니다.']
+            return False, status.HTTP_404_NOT_FOUND

@@ -8,5 +8,6 @@ urlpatterns = [
     path('update', UpdateView.as_view()),
     path('search', GetDiaryByDateView.as_view()),
     path('delete', DeleteDiaryView.as_view()),
-    path('graph', GetNodeData.as_view())
+    path('graph', GetNodeData.as_view()),
+    path('keywordImg', KeywordImgSaveView.as_view())
 ]

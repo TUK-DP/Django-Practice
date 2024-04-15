@@ -260,3 +260,29 @@ class GetNodeData(APIView):
             result=result,
             response_status=status.HTTP_200_OK
         )
+
+
+class KeywordImgSaveView(APIView):
+    @transaction.atomic
+    @swagger_auto_schema(operation_description="키워드별 이미지 저장", request_body=KeyWordImgSaveRequest, responses={"201": '저장 성공'})
+    def post(self, request):
+        requestSerial = KeyWordImgSaveRequest(data=request.data)
+
+        isValid, response_status = requestSerial.is_valid()
+        # 유효성 검사 통과하지 못한 경우
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
+
+        request = requestSerial.validated_data
+
+        # keyword 객체 가져오기
+        keyword = Keywords.objects.get(id=request.get('keywordId'))
+
+        # imgUrl 저장
+        keyword.imgUrl = request.get('imgUrl')
+        keyword.save()
+
+        return ApiResponse.on_success(
+            result=KeywordSerializer(keyword).data,
+            response_status=status.HTTP_201_CREATED
+        )
