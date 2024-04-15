@@ -340,31 +340,31 @@ class KeywordImgPagingView(APIView):
 
         # imgUrl 필드만 가져와서 리스트로 변환
         keyword_img_urls = list(keyword_objects.values_list('imgUrl', flat=True))
-        page = request.get('page')
+        requestPage = request.get('page')
         pageSize = request.get('pageSize')
 
         paginator = Paginator(keyword_img_urls, pageSize)
 
         try:
-            page_obj = paginator.page(page)
+            pageObj = paginator.page(requestPage)
         except PageNotAnInteger:
-            page = 1
-            page_obj = paginator.page(page)
+            firstPage = 1
+            pageObj = paginator.page(firstPage)
         except EmptyPage:
-            page = paginator.num_pages
-            page_obj = paginator.page(page)
+            lastPage = paginator.num_pages
+            pageObj = paginator.page(lastPage)
 
         # JSON 응답 생성
         response_data = {
             "isSuccess": True,
             "results": {
-                "data": list(page_obj),
+                "data": list(pageObj),
                 "count": paginator.count,
                 "numPages": paginator.num_pages,
-                "hasNext": page_obj.has_next(),
-                "hasPrevious": page_obj.has_previous(),
+                "hasNext": pageObj.has_next(),
+                "hasPrevious": pageObj.has_previous(),
                 "pageRange": list(paginator.page_range),
-                "currentPage": page_obj.number,
+                "currentPage": pageObj.number,
                 "pageSize": pageSize
             }
         }
