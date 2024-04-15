@@ -1,6 +1,8 @@
 from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.views import APIView
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.http import JsonResponse
 
 from config.basemodel import ApiResponse
 from diary.serializers import *
@@ -260,3 +262,110 @@ class GetNodeData(APIView):
             result=result,
             response_status=status.HTTP_200_OK
         )
+
+
+class KeywordImgSaveView(APIView):
+    @transaction.atomic
+    @swagger_auto_schema(operation_description="키워드별 이미지 저장", request_body=KeyWordImgSaveRequest, responses={"201": '저장 성공'})
+    def post(self, request):
+        requestSerial = KeyWordImgSaveRequest(data=request.data)
+
+        isValid, response_status = requestSerial.is_valid()
+        # 유효성 검사 통과하지 못한 경우
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
+
+        request = requestSerial.validated_data
+
+        # keyword 객체 가져오기
+        keyword = Keywords.objects.get(id=request.get('keywordId'))
+
+        # imgUrl 저장
+        keyword.imgUrl = request.get('imgUrl')
+        keyword.save()
+
+        return ApiResponse.on_success(
+            result=KeywordSerializer(keyword).data,
+            response_status=status.HTTP_201_CREATED
+        )
+
+
+class DiaryImgSaveView(APIView):
+    @transaction.atomic
+    @swagger_auto_schema(operation_description="일기 이미지 저장", request_body=DiaryImgSaveRequest, responses={"201": '저장 성공'})
+    def post(self, request):
+        requestSerial = DiaryImgSaveRequest(data=request.data)
+
+        isValid, response_status = requestSerial.is_valid()
+        # 유효성 검사 통과하지 못한 경우
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
+
+        request = requestSerial.validated_data
+
+        # keyword 객체 가져오기
+        diary = Diary.objects.get(id=request.get('diaryId'))
+
+        # imgUrl 저장
+        diary.imgUrl = request.get('imgUrl')
+        diary.save()
+
+        return ApiResponse.on_success(
+            result=DiaryResultResponse(diary).data,
+            response_status=status.HTTP_201_CREATED
+        )
+    
+
+class KeywordImgPagingView(APIView):
+    @transaction.atomic
+    @swagger_auto_schema(operation_description="키워드별 사진 페이징", query_serializer=FindKeywordImgRequest)
+    def get(self, request):
+        requestSerial = FindKeywordImgRequest(data=request.query_params)
+
+        isValid, response_status = requestSerial.is_valid()
+        # 유효성 검사 통과하지 못한 경우
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
+
+        request = requestSerial.validated_data
+
+        keyword_objects = Keywords.objects.filter(keyword=request.get('keyword'))
+
+        # 필터링된 객체가 없을 경우 404 반환
+        if not keyword_objects:
+            return ApiResponse.on_fail({"message": "아직 그려진 그림이 없습니다."}, status.HTTP_404_NOT_FOUND)
+        
+        # 최신순으로 정렬
+        keyword_objects = keyword_objects.order_by('-updated_at')
+
+        # imgUrl 필드만 가져와서 리스트로 변환하지 않고 쿼리셋으로 페이지네이션
+        keyword_img_urls = keyword_objects.values_list('imgUrl', flat=True)
+        requestPage = request.get('page')
+        pageSize = request.get('pageSize')
+
+        paginator = Paginator(keyword_img_urls, pageSize)
+
+        try:
+            pageObj = paginator.page(requestPage)
+        except PageNotAnInteger:
+            firstPage = 1
+            pageObj = paginator.page(firstPage)
+        except EmptyPage:
+            lastPage = paginator.num_pages
+            pageObj = paginator.page(lastPage)
+
+        # JSON 응답 생성
+        response_data = {
+            "isSuccess": True,
+            "results": {
+                "imgUrls": list(pageObj),
+                "totalDataSize": paginator.count,
+                "totalPage": paginator.num_pages,
+                "hasNext": pageObj.has_next(),
+                "hasPrevious": pageObj.has_previous(),
+                "currentPage": pageObj.number,
+                "dataSize": pageSize
+            }
+        }
+
+        return JsonResponse(response_data, status=status.HTTP_200_OK)
