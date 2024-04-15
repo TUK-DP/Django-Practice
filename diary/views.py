@@ -286,3 +286,29 @@ class KeywordImgSaveView(APIView):
             result=KeywordSerializer(keyword).data,
             response_status=status.HTTP_201_CREATED
         )
+
+
+class DiaryImgSaveView(APIView):
+    @transaction.atomic
+    @swagger_auto_schema(operation_description="일기 이미지 저장", request_body=DiaryImgSaveRequest, responses={"201": '저장 성공'})
+    def post(self, request):
+        requestSerial = DiaryImgSaveRequest(data=request.data)
+
+        isValid, response_status = requestSerial.is_valid()
+        # 유효성 검사 통과하지 못한 경우
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
+
+        request = requestSerial.validated_data
+
+        # keyword 객체 가져오기
+        diary = Diary.objects.get(id=request.get('diaryId'))
+
+        # imgUrl 저장
+        diary.imgUrl = request.get('imgUrl')
+        diary.save()
+
+        return ApiResponse.on_success(
+            result=DiaryResultResponse(diary).data,
+            response_status=status.HTTP_201_CREATED
+        )
