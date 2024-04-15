@@ -1,6 +1,8 @@
 from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.views import APIView
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.http import JsonResponse
 
 from config.basemodel import ApiResponse
 from diary.serializers import *
@@ -312,3 +314,59 @@ class DiaryImgSaveView(APIView):
             result=DiaryResultResponse(diary).data,
             response_status=status.HTTP_201_CREATED
         )
+    
+
+class KeywordImgPagingView(APIView):
+    @transaction.atomic
+    @swagger_auto_schema(operation_description="키워드별 사진 페이징", query_serializer=FindKeywordImgRequest)
+    def get(self, request):
+        requestSerial = FindKeywordImgRequest(data=request.query_params)
+
+        isValid, response_status = requestSerial.is_valid()
+        # 유효성 검사 통과하지 못한 경우
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
+
+        request = requestSerial.validated_data
+
+        keyword_objects = Keywords.objects.filter(keyword=request.get('keyword'))
+
+        # 필터링된 객체가 없을 경우 404 반환
+        if not keyword_objects:
+            return ApiResponse.on_fail({"message": "아직 그려진 그림이 없습니다."}, status.HTTP_404_NOT_FOUND)
+        
+        # 최신순으로 정렬
+        keyword_objects = keyword_objects.order_by('-updated_at')
+
+        # imgUrl 필드만 가져와서 리스트로 변환
+        keyword_img_urls = list(keyword_objects.values_list('imgUrl', flat=True))
+        page = request.get('page')
+        pageSize = request.get('pageSize')
+
+        paginator = Paginator(keyword_img_urls, pageSize)
+
+        try:
+            page_obj = paginator.page(page)
+        except PageNotAnInteger:
+            page = 1
+            page_obj = paginator.page(page)
+        except EmptyPage:
+            page = paginator.num_pages
+            page_obj = paginator.page(page)
+
+        # JSON 응답 생성
+        response_data = {
+            "isSuccess": True,
+            "results": {
+                "data": list(page_obj),
+                "count": paginator.count,
+                "num_pages": paginator.num_pages,
+                "has_next": page_obj.has_next(),
+                "has_previous": page_obj.has_previous(),
+                "page_range": list(paginator.page_range),
+                "current_page": page_obj.number,
+                "page_size": pageSize
+            }
+        }
+
+        return JsonResponse(response_data, status=status.HTTP_200_OK)
