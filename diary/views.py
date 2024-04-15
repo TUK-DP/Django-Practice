@@ -360,12 +360,12 @@ class KeywordImgPagingView(APIView):
             "results": {
                 "data": list(page_obj),
                 "count": paginator.count,
-                "num_pages": paginator.num_pages,
-                "has_next": page_obj.has_next(),
-                "has_previous": page_obj.has_previous(),
-                "page_range": list(paginator.page_range),
-                "current_page": page_obj.number,
-                "page_size": pageSize
+                "numPages": paginator.num_pages,
+                "hasNext": page_obj.has_next(),
+                "hasPrevious": page_obj.has_previous(),
+                "pageRange": list(paginator.page_range),
+                "currentPage": page_obj.number,
+                "pageSize": pageSize
             }
         }
 
