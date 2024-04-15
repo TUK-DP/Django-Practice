@@ -358,14 +358,13 @@ class KeywordImgPagingView(APIView):
         response_data = {
             "isSuccess": True,
             "results": {
-                "data": list(pageObj),
-                "count": paginator.count,
-                "numPages": paginator.num_pages,
+                "imgUrls": list(pageObj),
+                "totalDataSize": paginator.count,
+                "totalPage": paginator.num_pages,
                 "hasNext": pageObj.has_next(),
                 "hasPrevious": pageObj.has_previous(),
-                "pageRange": list(paginator.page_range),
                 "currentPage": pageObj.number,
-                "pageSize": pageSize
+                "dataSize": pageSize
             }
         }
 
