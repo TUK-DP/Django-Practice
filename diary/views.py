@@ -338,8 +338,8 @@ class KeywordImgPagingView(APIView):
         # 최신순으로 정렬
         keyword_objects = keyword_objects.order_by('-updated_at')
 
-        # imgUrl 필드만 가져와서 리스트로 변환
-        keyword_img_urls = list(keyword_objects.values_list('imgUrl', flat=True))
+        # imgUrl 필드만 가져와서 리스트로 변환하지 않고 쿼리셋으로 페이지네이션
+        keyword_img_urls = keyword_objects.values_list('imgUrl', flat=True)
         requestPage = request.get('page')
         pageSize = request.get('pageSize')
 
