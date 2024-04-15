@@ -279,4 +279,7 @@ class FindKeywordImgRequest(serializers.Serializer):
         if not super_valid:
             return False, status.HTTP_400_BAD_REQUEST
         
+        if self.validated_data.get('page') < 0 or self.validated_data.get('pageSize') < 0:
+            return False, status.HTTP_400_BAD_REQUEST
+        
         return True, status.HTTP_200_OK
