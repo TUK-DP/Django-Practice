@@ -8,7 +8,7 @@ class Diary(BaseModel):
 
     createDate = models.DateField()
     content = models.TextField()
-    imgUrl = models.TextField()
+    imgUrl = models.TextField(null=True)
 
     # 이 ForeignKey는 다른 모델과의 관계를 나타낸다.
     # 대부분의 경우는 ForeignKey를 사용하게 될 것이다.
@@ -21,7 +21,7 @@ class Diary(BaseModel):
 
 class Keywords(BaseModel):
     keyword = models.CharField(max_length=100)
-    imgUrl = models.TextField()
+    imgUrl = models.TextField(null=True)
 
     diary = models.ForeignKey('diary.Diary', related_name='keywords', on_delete=models.CASCADE)
 

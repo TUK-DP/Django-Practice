@@ -18,7 +18,7 @@ class DiaryResultResponse(serializers.ModelSerializer):
 
     class Meta:
         model = Diary
-        fields = ['diaryId', 'title', 'createDate', 'content']
+        fields = ['diaryId', 'title', 'createDate', 'content', 'imgUrl']
 
 
 class KeywordSerializer(serializers.ModelSerializer):
