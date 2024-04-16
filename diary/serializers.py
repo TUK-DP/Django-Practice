@@ -285,5 +285,8 @@ class FindKeywordImgRequest(serializers.Serializer):
         return True, status.HTTP_200_OK
     
 
-class AnswerListField(serializers.ListField):
-    answer = serializers.CharField()
+class AnswerListRequest(serializers.Serializer):
+    diaryId = serializers.IntegerField()
+    answer = serializers.ListField(
+        child=serializers.CharField()
+    )
