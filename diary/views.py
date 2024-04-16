@@ -25,8 +25,8 @@ class WriteView(APIView):
         request = requestSerial.validated_data
 
         # user 가져오기
-        user_id = request.get('userId')
-        findUser = User.objects.get(id=user_id)
+        userId = request.get('userId')
+        findUser = User.objects.get(id=userId)
 
         content = request.get('content')
 
@@ -39,7 +39,7 @@ class WriteView(APIView):
 
         conn = GraphDB()
         conn.create_and_link_nodes(
-            user_id=user_id, diary_id=newDiary.id,
+            user_id=userId, diary_id=newDiary.id,
             words_graph=memory.words_graph,
             words_dict=memory.words_dict,
             weights_dict=memory.weights_dict
@@ -75,19 +75,19 @@ class UpdateView(APIView):
         request = requestSerial.validated_data
 
         # Diary 가져오기
-        diary_id = request.get('diaryId')
-        findDiary = Diary.objects.get(id=diary_id)
+        diaryId = request.get('diaryId')
+        findDiary = Diary.objects.get(id=diaryId)
 
         # Diary 삭제
         findDiary.delete()
 
         # GraphDB에서도 삭제
         conn = GraphDB()
-        conn.delete_diary(user_id=request.get('userId'), diary_id=diary_id)
+        conn.delete_diary(user_id=request.get('userId'), diary_id=diaryId)
 
         # user 가져오기
-        user_id = request.get('userId')
-        findUser = User.objects.get(id=user_id)
+        userId = request.get('userId')
+        findUser = User.objects.get(id=userId)
 
         content = request.get('content')
 
@@ -100,7 +100,7 @@ class UpdateView(APIView):
 
         # GraphDB에 추가
         conn.create_and_link_nodes(
-            user_id=user_id, diary_id=updateDiary.id,
+            user_id=userId, diary_id=updateDiary.id,
             words_graph=memory.words_graph,
             words_dict=memory.words_dict,
             weights_dict=memory.weights_dict
@@ -137,8 +137,8 @@ class GetDiaryByUserView(APIView):
         request = requestSerial.validated_data
 
         # User 가져오기
-        user_id = request.get('userId')
-        findUser = User.objects.get(id=user_id)
+        userId = request.get('userId')
+        findUser = User.objects.get(id=userId)
 
         # User와 연관된 모든 Diary 가져오기
         findDiaries = Diary.objects.filter(user=findUser)
@@ -164,8 +164,8 @@ class GetQuizView(APIView):
         request = requestSerial.validated_data
 
         # Diary 가져오기
-        diary_id = request.get('diaryId')
-        findDiary = Diary.objects.get(id=diary_id)
+        diaryId = request.get('diaryId')
+        findDiary = Diary.objects.get(id=diaryId)
 
         keywords = findDiary.keywords.all()
 
@@ -216,7 +216,7 @@ class CheckAnswerView(APIView):
                 'userInput': answer,
                 'answer': keyword.keyword,
             })
-            
+
             if isCorrect:
                 score += 1
 
@@ -247,8 +247,8 @@ class GetDiaryByDateView(APIView):
         request = requestSerial.validated_data
 
         # User 불러오기
-        user_id = request.get('userId')
-        findUser = User.objects.get(id=user_id)
+        userId = request.get('userId')
+        findUser = User.objects.get(id=userId)
         findDiary = Diary.objects.get(user=findUser, createDate=request.get('date'))
 
         return ApiResponse.on_success(
@@ -377,21 +377,21 @@ class KeywordImgPagingView(APIView):
 
         request = requestSerial.validated_data
 
-        keyword_objects = Keywords.objects.filter(keyword=request.get('keyword'))
+        keywordObjects = Keywords.objects.filter(keyword=request.get('keyword'))
 
         # 필터링된 객체가 없을 경우 404 반환
-        if not keyword_objects:
+        if not keywordObjects:
             return ApiResponse.on_fail({"message": "아직 그려진 그림이 없습니다."}, status.HTTP_404_NOT_FOUND)
         
         # 최신순으로 정렬
-        keyword_objects = keyword_objects.order_by('-updated_at')
+        keywordObjects = keywordObjects.order_by('-updated_at')
 
         # imgUrl 필드만 가져와서 리스트로 변환하지 않고 쿼리셋으로 페이지네이션
-        keyword_img_urls = keyword_objects.values_list('imgUrl', flat=True)
+        keywordImgUrls = keywordObjects.values_list('imgUrl', flat=True)
         requestPage = request.get('page')
         pageSize = request.get('pageSize')
 
-        paginator = Paginator(keyword_img_urls, pageSize)
+        paginator = Paginator(keywordImgUrls, pageSize)
 
         try:
             pageObj = paginator.page(requestPage)
