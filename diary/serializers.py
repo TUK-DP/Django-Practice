@@ -287,6 +287,9 @@ class FindKeywordImgRequest(serializers.Serializer):
 
 class AnswerListRequest(serializers.Serializer):
     diaryId = serializers.IntegerField()
-    answer = serializers.ListField(
-        child=serializers.CharField()
+    answers = serializers.ListField(
+        child=serializers.DictField(
+            child=serializers.CharField(),
+            allow_empty=False  #빈 딕셔너리를 허용하지 않음
+        )
     )
