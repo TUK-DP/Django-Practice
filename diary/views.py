@@ -170,16 +170,19 @@ class GetQuizView(APIView):
         keywords = findDiary.keywords.all()
 
         # 모든 Sentence 와 연관된 Question 가져오기
-        question_keyword = []
+        result = []
 
         for keyword in keywords:
-            question_keyword.append({
-                "Q": keyword.questions.first().question,
-                "A": keyword.keyword
+            question = Questions.objects.get(keyword=keyword)
+            print(question)
+            result.append({
+                "questionId": question.pk,
+                "question": question.question,
+                "keywordId": keyword.id
             })
 
         return ApiResponse.on_success(
-            result=question_keyword,
+            result=result,
             response_status=status.HTTP_200_OK
         )
 
