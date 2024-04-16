@@ -283,3 +283,7 @@ class FindKeywordImgRequest(serializers.Serializer):
             return False, status.HTTP_400_BAD_REQUEST
         
         return True, status.HTTP_200_OK
+    
+
+class AnswerListField(serializers.ListField):
+    answer = serializers.CharField()
