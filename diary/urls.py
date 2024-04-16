@@ -11,5 +11,6 @@ urlpatterns = [
     path('graph', GetNodeData.as_view()),
     path('keywordImg', KeywordImgSaveView.as_view()),
     path('diaryImg', DiaryImgSaveView.as_view()),
-    path('pagingImg', KeywordImgPagingView.as_view())
+    path('pagingImg', KeywordImgPagingView.as_view()),
+    path('checkanswer', CheckAnswerView.as_view())
 ]

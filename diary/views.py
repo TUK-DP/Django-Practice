@@ -187,6 +187,51 @@ class GetQuizView(APIView):
         )
 
 
+class CheckAnswerView(APIView):
+    @transaction.atomic
+    @swagger_auto_schema(operation_description="일기회상 답안 확인", request_body=AnswerListRequest,
+                         responses={"200": "답안 채점"})
+    def post(self, request):
+        requestSerial = AnswerListRequest(data=request.data)
+
+        isValid, response_status = requestSerial.is_valid()
+
+        # 유효성 검사 통과하지 못한 경우
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
+
+        request = requestSerial.validated_data
+        
+        results = []
+        score = 0
+
+        for answerData in request['answers']:
+            keywordId = answerData['keywordId']
+            answer = answerData['answer']
+
+            keyword = Keywords.objects.get(id=keywordId)
+            isCorrect = answer == keyword.keyword
+            results.append({
+                'isCorrected': isCorrect,
+                'userInput': answer,
+                'answer': keyword.keyword,
+            })
+            
+            if isCorrect:
+                score += 1
+
+        response_data = {
+            "isSuccess": True,
+            "results": {
+                "totalQuizSize": len(request['answers']),
+                "score": score,
+                "answerList": results
+            }
+        }
+
+        return JsonResponse(response_data, status=status.HTTP_200_OK)
+
+
 class GetDiaryByDateView(APIView):
     @transaction.atomic
     @swagger_auto_schema(operation_description="날짜로 일기 검색", query_serializer=GetDiaryByDateRequest,
