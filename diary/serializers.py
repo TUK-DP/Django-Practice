@@ -285,11 +285,24 @@ class FindKeywordImgRequest(serializers.Serializer):
         return True, status.HTTP_200_OK
     
 
+class AnswerSerializer(serializers.Serializer):
+    keywordId = serializers.IntegerField()
+    answer = serializers.CharField()
+
 class AnswerListRequest(serializers.Serializer):
-    diaryId = serializers.IntegerField()
-    answers = serializers.ListField(
-        child=serializers.DictField(
-            child=serializers.CharField(),
-            allow_empty=False  #빈 딕셔너리를 허용하지 않음
-        )
-    )
+    answers = AnswerSerializer(many=True)
+
+    def is_valid(self, raise_exception=False):
+        super_valid = super().is_valid()
+        
+        if not super_valid:
+            return False, status.HTTP_400_BAD_REQUEST
+
+        for answer_data in self.validated_data.get('answers', []):
+            keywordId = answer_data.get('keywordId')
+            try:
+                keyword = Keywords.objects.get(id=keywordId)
+            except Keywords.DoesNotExist:
+                return False, status.HTTP_400_BAD_REQUEST
+
+        return True, status.HTTP_200_OK
