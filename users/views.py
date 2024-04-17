@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from config.basemodel import ApiResponse
 from users.models import User
 from users.serializers import UserSerializer, UserResponse, LoginRequest, NicknameRequest, \
-    UpdateResquest
+    UpdateResquest, UserIdReqeust
 
 
 class UserView(APIView):
@@ -57,8 +57,7 @@ class SigninView(APIView):
         request = requestSerial.validated_data
 
         try:
-            user = User.objects.get(nickname=request.get('nickname'),
-                                    password=request.get('password'))
+            user = User.objects.get(nickname=request.get('nickname'), password=request.get('password'))
         except User.DoesNotExist:
             return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
 
@@ -67,11 +66,12 @@ class SigninView(APIView):
             response_status=status.HTTP_201_CREATED
         )
 
+
 class DeleteView(APIView):
     @transaction.atomic
-    @swagger_auto_schema(operation_description="유저 삭제", request_body=NicknameRequest, responses={200: '삭제 완료'})
+    @swagger_auto_schema(operation_description="유저 삭제", request_body=UserIdReqeust, responses={200: '삭제 완료'})
     def delete(self, request):
-        requestSerial = NicknameRequest(data=request.data)
+        requestSerial = UserIdReqeust(data=request.data)
 
         isValid, response_status = requestSerial.is_valid()
         # 유효성 검사 통과하지 못한 경우
@@ -80,8 +80,8 @@ class DeleteView(APIView):
 
         request = requestSerial.validated_data
 
-        user = User.objects.get(nickname=request.get('nickname'))
-        user.isDeleted = False
+        user = User.objects.get(id=request.get('userId'))
+        user.isDeleted = True
         User.save(user)
 
         return ApiResponse.on_success(
@@ -94,17 +94,25 @@ class CheckNicknameView(APIView):
     @transaction.atomic
     @swagger_auto_schema(operation_description="닉네임 중복확인", request_body=NicknameRequest, responses={200: '닉네임 사용 가능'})
     def post(self, request):
-        serializer = NicknameRequest(data=request.data)
+        requestSerial = NicknameRequest(data=request.data)
 
-        if serializer.is_valid():
-            nickname = serializer.validated_data.get('nickname')
-            try:
-                user = User.objects.get(nickname=nickname)
-                return JsonResponse({'isSuccess': False, 'message': '사용할 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
-            except User.DoesNotExist:
-                return JsonResponse({'isSuccess': True, 'message': '사용가능한 닉네임입니다.'}, status=status.HTTP_200_OK)
+        isValid, response_status = requestSerial.is_valid()
+        # 유효성 검사 통과하지 못한 경우
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
 
-        return JsonResponse({'isSuccess': False, 'message': '입력한 값을 다시 확인해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
+        request = requestSerial.validated_data
+
+        result = []
+        result.append({
+            "nickname": request.get('nickname')
+        })
+
+        return ApiResponse.on_success(
+            message="사용가능한 닉네임입니다.",
+            result=result,
+            response_status=status.HTTP_200_OK
+        )
 
 
 class UpdateView(APIView):
