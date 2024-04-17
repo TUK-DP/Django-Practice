@@ -56,9 +56,11 @@ class SigninView(APIView):
 
         request = requestSerial.validated_data
 
-        try:
-            user = User.objects.get(nickname=request.get('nickname'), password=request.get('password'))
-        except User.DoesNotExist:
+        user = User.objects.filter(nickname=request.get('nickname'), 
+                                    password=request.get('password'),
+                                    isDeleted='False')
+        
+        if not user.exists():
             return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
 
         return ApiResponse.on_success(
@@ -119,36 +121,26 @@ class UpdateView(APIView):
     @transaction.atomic
     @swagger_auto_schema(operation_description="유저 정보 수정", request_body=UpdateResquest, responses={"200": UserResponse})
     def patch(self, request):
-        serializer = UpdateResquest(data=request.data)
+        requestSerial = UpdateResquest(data=request.data)
 
-        if serializer.is_valid():
-            nickname = serializer.validated_data.get('nickname')
-            email = serializer.validated_data.get('email')
+        isValid, response_status = requestSerial.is_valid()
+        # 유효성 검사 통과하지 못한 경우
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
 
-            try:
-                updateuser = User.objects.get(id=serializer.validated_data.get('id'))
+        request = requestSerial.validated_data
 
-                if (updateuser.nickname != nickname):
-                    if User.objects.filter(nickname=nickname).exists():
-                        return JsonResponse({'isSuccess': False, 'message': '중복된 아이디입니다.'},
-                                            status=status.HTTP_400_BAD_REQUEST)
-                updateuser.nickname = nickname
+        updateUser = User.objects.filter(id=request.get('userId'), isDeleted='False').first()
 
-                if (updateuser.email != email):
-                    if User.objects.filter(email=email).exists():
-                        return JsonResponse({'isSuccess': False, 'message': '중복된 이메일입니다.'},
-                                            status=status.HTTP_400_BAD_REQUEST)
-                updateuser.email = email
+        updateUser.username = request.get('username')
+        updateUser.nickname = request.get('nickname')
+        updateUser.email = request.get('email')
+        updateUser.password = request.get('password')
+        updateUser.birth = request.get('birth')
 
-                updateuser.username = serializer.validated_data.get('username')
-                updateuser.password = serializer.validated_data.get('password')
+        User.save(updateUser)
 
-                updateuser.save()
-
-                return JsonResponse({'isSuccess': True, 'result': UserSerializer(updateuser).data},
-                                    status=status.HTTP_200_OK)
-            except User.DoesNotExist:
-                return JsonResponse({'isSuccess': False, 'message': '사용자를 찾을 수 없습니다.'},
-                                    status=status.HTTP_400_BAD_REQUEST)
-
-        return JsonResponse({'isSuccess': False, 'message': '입력한 값을 다시 확인해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
+        return ApiResponse.on_success(
+            result=UserSerializer(updateUser).data,
+            response_status=status.HTTP_200_OK
+        )
