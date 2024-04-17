@@ -201,7 +201,8 @@ class CheckAnswerView(APIView):
 
         request = requestSerial.validated_data
         
-        results = []
+        answers = []
+        result = []
         score = 0
 
         for answerData in request['answers']:
@@ -210,7 +211,7 @@ class CheckAnswerView(APIView):
 
             keyword = Keywords.objects.get(id=keywordId)
             isCorrect = answer == keyword.keyword
-            results.append({
+            answers.append({
                 'isCorrected': isCorrect,
                 'userInput': answer,
                 'answer': keyword.keyword,
@@ -219,17 +220,16 @@ class CheckAnswerView(APIView):
             if isCorrect:
                 score += 1
 
-        response_data = {
-            "isSuccess": True,
-            "results": {
-                "totalQuestionSize": len(request['answers']),
-                "score": score,
-                "answerList": results
-            }
-        }
+        result.append({
+            "totalQuestionSize": len(request['answers']),
+            "score": score,
+            "answerList": answers
+        })
 
-        return JsonResponse(response_data, status=status.HTTP_200_OK)
-
+        return ApiResponse.on_success(
+            result=result,
+            response_status=status.HTTP_200_OK
+        )
 
 class GetDiaryByDateView(APIView):
     @transaction.atomic
@@ -401,8 +401,10 @@ class KeywordImgPagingView(APIView):
             lastPage = paginator.num_pages
             pageObj = paginator.page(lastPage)
 
+        result = []
+
         # JSON 응답 생성
-        response_data = {
+        result.append({
             "isSuccess": True,
             "results": {
                 "imgUrls": list(pageObj),
@@ -413,6 +415,9 @@ class KeywordImgPagingView(APIView):
                 "currentPage": pageObj.number,
                 "dataSize": pageSize
             }
-        }
+        })
 
-        return JsonResponse(response_data, status=status.HTTP_200_OK)
+        return ApiResponse.on_success(
+            result=result,
+            response_status=status.HTTP_201_CREATED
+        )
