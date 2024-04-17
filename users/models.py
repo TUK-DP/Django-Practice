@@ -16,3 +16,10 @@ class User(BaseModel):
 
     def __str__(self):
         return self.username
+
+
+class DiagRecord(BaseModel):
+    totalQuestionSize = models.IntegerField()
+    yesCount = models.IntegerField()
+
+    user = models.ForeignKey('users.User', related_name='diagrecord', on_delete=models.CASCADE)
