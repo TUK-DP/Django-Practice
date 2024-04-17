@@ -173,8 +173,7 @@ class GetQuizView(APIView):
         result = []
 
         for keyword in keywords:
-            question = Questions.objects.get(keyword=keyword)
-            print(question)
+            question = keyword.questions.first()
             result.append({
                 "questionId": question.pk,
                 "question": question.question,
@@ -223,7 +222,7 @@ class CheckAnswerView(APIView):
         response_data = {
             "isSuccess": True,
             "results": {
-                "totalQuizSize": len(request['answers']),
+                "totalQuestionSize": len(request['answers']),
                 "score": score,
                 "answerList": results
             }
