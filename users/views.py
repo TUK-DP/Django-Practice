@@ -65,7 +65,7 @@ class SigninView(APIView):
 
         return ApiResponse.on_success(
             result=UserSerializer(user).data,
-            response_status=status.HTTP_201_CREATED
+            response_status=status.HTTP_200_OK
         )
 
 
@@ -82,13 +82,13 @@ class DeleteView(APIView):
 
         request = requestSerial.validated_data
 
-        user = User.objects.get(id=request.get('userId'))
+        user = User.objects.get(id=request.get('userId'), isDeleted='False')
         user.isDeleted = True
         User.save(user)
 
         return ApiResponse.on_success(
             result=UserSerializer(user).data,
-            response_status=status.HTTP_201_CREATED
+            response_status=status.HTTP_200_OK
         )
 
 
@@ -166,6 +166,28 @@ class RecordSaveView(APIView):
             yesCount=request.get('yesCount'),
             user=User.objects.get(id=request.get('userId'), isDeleted='False')
         )
+
+        return ApiResponse.on_success(
+            result=DiagRecordSerializer(diagRecord).data,
+            response_status=status.HTTP_200_OK
+        )
+    
+
+class GetDiagRecordView(APIView):
+    @transaction.atomic
+    @swagger_auto_schema(operation_description="유저의 이전 진단 기록 조회", query_serializer=UserIdReqeust,
+                         response={"200": DiagRecordSerializer})
+    def get(self, request):
+        requestSerial = UserIdReqeust(data=request.query_params)
+
+        isValid, response_status = requestSerial.is_valid()
+        # 유효성 검사 통과하지 못한 경우
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
+
+        request = requestSerial.validated_data
+
+        diagRecord = DiagRecord.objects.filter(user=User.objects.get(id=request.get('userId'), isDeleted='False')).order_by('-created_at').first()
 
         return ApiResponse.on_success(
             result=DiagRecordSerializer(diagRecord).data,
