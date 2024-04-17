@@ -6,9 +6,9 @@ from rest_framework import status
 from rest_framework.views import APIView
 
 from config.basemodel import ApiResponse
-from users.models import User
+from users.models import User, DiagRecord
 from users.serializers import UserSerializer, UserResponse, LoginRequest, NicknameRequest, \
-    UpdateResquest, UserIdReqeust
+    UpdateResquest, UserIdReqeust, RecordSaveRequest, DiagRecordSerializer
 
 
 class UserView(APIView):
@@ -142,5 +142,32 @@ class UpdateView(APIView):
 
         return ApiResponse.on_success(
             result=UserSerializer(updateUser).data,
+            response_status=status.HTTP_200_OK
+        )
+    
+
+class RecordSaveView(APIView):
+    @transaction.atomic
+    @swagger_auto_schema(operation_description="치매진단 결과 저장", request_body=RecordSaveRequest, responses={200: '닉네임 사용 가능'})
+    def post(self, request):
+        requestSerial = RecordSaveRequest(data=request.data)
+
+        isValid, response_status = requestSerial.is_valid()
+        # 유효성 검사 통과하지 못한 경우
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
+
+        request = requestSerial.validated_data
+
+        # 유효성 검사 통과한 경우
+        # DiagRecord 객체 생성
+        diagRecord = DiagRecord.objects.create(
+            totalQuestionSize=request.get('totalQuestionSize'),
+            yesCount=request.get('yesCount'),
+            user=User.objects.get(id=request.get('userId'), isDeleted='False')
+        )
+
+        return ApiResponse.on_success(
+            result=DiagRecordSerializer(diagRecord).data,
             response_status=status.HTTP_200_OK
         )
