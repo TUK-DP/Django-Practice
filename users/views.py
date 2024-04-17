@@ -47,21 +47,25 @@ class SigninView(APIView):
     @transaction.atomic
     @swagger_auto_schema(operation_description="로그인", request_body=LoginRequest, responses={200: UserResponse})
     def post(self, request):
-        serializer = LoginRequest(data=request.data)
+        requestSerial = LoginRequest(data=request.data)
 
-        if not serializer.is_valid():
-            return JsonResponse({'isSuccess': False, 'message': '아이디와 비밀번호를 모두 입력해주세요.'},
-                                status=status.HTTP_400_BAD_REQUEST)
+        isValid, response_status = requestSerial.is_valid()
+        # 유효성 검사 통과하지 못한 경우
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
+
+        request = requestSerial.validated_data
 
         try:
-            user = User.objects.get(nickname=serializer.validated_data.get('nickname'),
-                                    password=serializer.validated_data.get('password'))
-            return JsonResponse({'isSuccess': True, 'result': UserSerializer(user).data},
-                                status=status.HTTP_201_CREATED)
+            user = User.objects.get(nickname=request.get('nickname'),
+                                    password=request.get('password'))
         except User.DoesNotExist:
-            return JsonResponse({'isSuccess': False, 'message': '아이디나 비밀번호를 다시 확인해주세요.'},
-                                status=status.HTTP_400_BAD_REQUEST)
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
 
+        return ApiResponse.on_success(
+            result=UserSerializer(user).data,
+            response_status=status.HTTP_201_CREATED
+        )
 
 class DeleteView(APIView):
     @transaction.atomic
