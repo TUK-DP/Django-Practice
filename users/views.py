@@ -71,16 +71,23 @@ class DeleteView(APIView):
     @transaction.atomic
     @swagger_auto_schema(operation_description="유저 삭제", request_body=NicknameRequest, responses={200: '삭제 완료'})
     def delete(self, request):
-        serializer = NicknameRequest(data=request.data)
+        requestSerial = NicknameRequest(data=request.data)
 
-        if serializer.is_valid():
-            try:
-                return JsonResponse({'isSuccess': True, 'message': '삭제되었습니다.'}, status=status.HTTP_200_OK)
-            except User.DoesNotExist:
-                return JsonResponse({'isSuccess': False, 'message': '사용자를 찾을 수 없습니다.'},
-                                    status=status.HTTP_400_BAD_REQUEST)
+        isValid, response_status = requestSerial.is_valid()
+        # 유효성 검사 통과하지 못한 경우
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
 
-        return JsonResponse({'isSuccess': False, 'message': '입력한 값을 다시 확인해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
+        request = requestSerial.validated_data
+
+        user = User.objects.get(nickname=request.get('nickname'))
+        user.isDeleted = False
+        User.save(user)
+
+        return ApiResponse.on_success(
+            result=UserSerializer(user).data,
+            response_status=status.HTTP_201_CREATED
+        )
 
 
 class CheckNicknameView(APIView):
