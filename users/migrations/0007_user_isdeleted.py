@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='user',
             name='isDeleted',
-            field=models.BooleanField(default=True),
+            field=models.BooleanField(default=False),
             preserve_default=False,
         ),
     ]
