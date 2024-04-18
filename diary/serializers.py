@@ -18,7 +18,7 @@ class DiaryResultResponse(serializers.ModelSerializer):
 
     class Meta:
         model = Diary
-        fields = ['diaryId', 'title', 'createDate', 'content']
+        fields = ['diaryId', 'title', 'createDate', 'content', 'imgUrl']
 
 
 class KeywordSerializer(serializers.ModelSerializer):
@@ -225,5 +225,84 @@ class GetNodeDataRequest(serializers.Serializer):
         if not is_diary_exist:
             self._errors['diaryId'] = [f'diaryId: {self.data.get("diaryId")} 가 존재하지 않습니다.']
             return False, status.HTTP_404_NOT_FOUND
+
+        return True, status.HTTP_200_OK
+    
+
+class KeyWordImgSaveRequest(serializers.Serializer):
+    keywordId = serializers.IntegerField()
+    imgUrl = serializers.CharField()
+
+    def is_valid(self, raise_exception=False):
+        super_valid = super().is_valid()
+        # 유효하지 않다면 False, 400 반환
+        if not super_valid:
+            return False, status.HTTP_400_BAD_REQUEST
+        
+        # keywordId가 존재하는지 확인
+        is_keyword_exist = Keywords.objects.filter(id=self.data['keywordId']).exists()
+        # 존재하지 않는다면 False, 404 반환
+        if not is_keyword_exist:
+            self._errors['keywordId'] = [f'keywordId: {self.data.get("keywordId")} 가 존재하지 않습니다.']
+            return False, status.HTTP_404_NOT_FOUND
+        
+        return True, status.HTTP_200_OK
+
+
+class DiaryImgSaveRequest(serializers.Serializer):
+    diaryId = serializers.IntegerField()
+    imgUrl = serializers.CharField()
+
+    def is_valid(self, raise_exception=False):
+        super_valid = super().is_valid()
+        # 유효하지 않다면 False, 400 반환
+        if not super_valid:
+            return False, status.HTTP_400_BAD_REQUEST
+
+        # diaryId가 존재하는지 확인
+        is_diary_exist = Diary.objects.filter(id=self.data['diaryId']).exists()
+        # 존재하지 않는다면 False, 404 반환
+        if not is_diary_exist:
+            self._errors['diaryId'] = [f'diaryId: {self.data.get("diaryId")} 가 존재하지 않습니다.']
+            return False, status.HTTP_404_NOT_FOUND
+        
+        return True, status.HTTP_200_OK
+
+class FindKeywordImgRequest(serializers.Serializer):
+    keyword = serializers.CharField()
+    page = serializers.IntegerField()
+    pageSize = serializers.IntegerField()
+
+    def is_valid(self, *, raise_exception=False):
+        super_valid = super().is_valid()
+        # 유효하지 않다면 False, 400 반환
+        if not super_valid:
+            return False, status.HTTP_400_BAD_REQUEST
+        
+        if self.validated_data.get('page') <= 0 or self.validated_data.get('pageSize') <= 0:
+            return False, status.HTTP_400_BAD_REQUEST
+        
+        return True, status.HTTP_200_OK
+    
+
+class AnswerSerializer(serializers.Serializer):
+    keywordId = serializers.IntegerField()
+    answer = serializers.CharField()
+
+class AnswerListRequest(serializers.Serializer):
+    answers = AnswerSerializer(many=True)
+
+    def is_valid(self, raise_exception=False):
+        super_valid = super().is_valid()
+        
+        if not super_valid:
+            return False, status.HTTP_400_BAD_REQUEST
+
+        for answer_data in self.validated_data.get('answers', []):
+            keywordId = answer_data.get('keywordId')
+            try:
+                keyword = Keywords.objects.get(id=keywordId)
+            except Keywords.DoesNotExist:
+                return False, status.HTTP_400_BAD_REQUEST
 
         return True, status.HTTP_200_OK

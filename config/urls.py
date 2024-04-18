@@ -20,6 +20,7 @@ urlpatterns = [
     path('diary/', include('diary.urls')),
     path('users/', include('users.urls')),
     path('image/', include('image.urls')),
+    path('center', include('center.urls')),
 
     re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]
