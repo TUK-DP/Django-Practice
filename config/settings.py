@@ -38,7 +38,7 @@ SWAGGER_SETTINGS = {
         'AccessToken': {
             'type': 'apiKey',
             'name': 'AccessToken',
-            'description': 'JWT authorization Access Token',
+            'description': '입력형 : `jwt <accessToken>`',
             'in': 'header'
         },
 
@@ -46,7 +46,7 @@ SWAGGER_SETTINGS = {
         'RefreshToken': {
             'type': 'apiKey',
             'name': 'RefreshToken',
-            'description': 'JWT authorization Refresh Token',
+            'description': '입력형 : `jwt <refreshToken>`',
             'in': 'header'
         },
 
