@@ -421,3 +421,31 @@ class KeywordImgPagingView(APIView):
             result=result,
             response_status=status.HTTP_201_CREATED
         )
+    
+
+class GetKeywordView(APIView):
+    @transaction.atomic
+    @swagger_auto_schema(operation_description="일기별 키워드 조회", query_serializer=GetDiaryRequest,
+                         response={"200": KeywordResultSerializer})
+    def get(self, request):
+        requestSerial = GetDiaryRequest(data=request.query_params)
+
+        isValid, response_status = requestSerial.is_valid()
+
+        # 유효성 검사 통과하지 못한 경우
+        if not isValid:
+            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
+
+        # 유효성 검사 통과한 경우
+        request = requestSerial.validated_data
+
+        # Diary 가져오기
+        diary = Diary.objects.get(id=request.get('diaryId'))
+
+        # Diary 연관된 모든 Keyword 가져오기
+        findKeywords = Keywords.objects.filter(diary=diary)
+
+        return ApiResponse.on_success(
+            result=KeywordResultSerializer(findKeywords, many=True).data,
+            response_status=status.HTTP_200_OK
+        )
