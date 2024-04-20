@@ -29,7 +29,7 @@ class KeywordSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class KeywordResultSerializer(serializers.ModelSerializer):
-    sentence = DiarySerializer(read_only=True)
+    keywordId = serializers.IntegerField(source="id")
 
     class Meta:
         model = Keywords
