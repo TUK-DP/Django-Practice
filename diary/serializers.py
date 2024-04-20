@@ -28,6 +28,13 @@ class KeywordSerializer(serializers.ModelSerializer):
         model = Keywords
         fields = '__all__'
 
+class KeywordResultSerializer(serializers.ModelSerializer):
+    sentence = DiarySerializer(read_only=True)
+
+    class Meta:
+        model = Keywords
+        fields = ['keywordId', 'keyword', 'imgUrl']
+
 
 class QuestionSerializer(serializers.ModelSerializer):
     keyword = KeywordSerializer(read_only=True)
