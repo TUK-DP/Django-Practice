@@ -4,18 +4,15 @@ from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
-    userId = serializers.IntegerField(source='id')
-
     class Meta:
         model = User
-        fields = ['userId', 'username', 'email', 'password', 'nickname', 'birth', 'created_at', 'updated_at']
+        fields = ['id', 'username', 'email', 'password', 'nickname', 'birth', 'created_at', 'updated_at']
 
 
 class UserSafeSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'nickname', 'birth', 'created_at', 'updated_at']
-
 
 class UserCreateRequest(serializers.ModelSerializer):
     class Meta:
