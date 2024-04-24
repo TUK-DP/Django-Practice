@@ -22,6 +22,9 @@ class UserCreateRequest(serializers.Serializer):
     password = serializers.CharField(max_length=128)
     birth = serializers.DateField()
 
+    def create(self, validated_data):
+        return User.objects.create(**validated_data)
+
 
 class LoginRequest(serializers.Serializer):
     email = serializers.CharField(max_length=20, validators=[exist_email])
