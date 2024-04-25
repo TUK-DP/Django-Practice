@@ -1,6 +1,9 @@
 from django.db import models
 from django.http import JsonResponse
 from rest_framework import status
+from rest_framework.request import Request
+
+from config.settings import REQUEST_BODY, REQUEST_QUERY, REQUEST_HEADER, REQUEST_PATH
 
 
 class BaseModel(models.Model):
@@ -25,20 +28,30 @@ class ApiResponse:
         return JsonResponse({'isSuccess': False, 'message': message}, status=response_status)
 
 
-def validator(request_serializer=None):
+def validator(request_serializer=None, request_type=REQUEST_BODY, return_key="serializer", **path_args):
     def decorator(fuc):
-        def decorated_func(self, request):
-            requestSerial = request_serializer(data=request.data)
+        def decorated_func(self, request: Request, *args, **kwargs):
+            response_serializer = request_serializer(data=request.data)
 
-            isValid = requestSerial.is_valid()
+            if request_type == REQUEST_QUERY:
+                response_serializer = request_serializer(data=request.query_params)
 
-            # 유효성 검사 통과하지 못한 경우
-            if not isValid:
+            elif request_type == REQUEST_PATH:
+                data = {key: kwargs.get(key) for key in request_serializer().fields.keys()}
+                response_serializer = request_serializer(data=data)
+
+            elif request_type == REQUEST_HEADER:
+                data = {key: request.headers.get(key) for key in request_serializer().fields.keys()}
+                response_serializer = request_serializer(data=data)
+
+            if not response_serializer.is_valid():
                 return ApiResponse.on_fail(
-                    requestSerial.errors
+                    response_serializer.errors
                 )
 
-            return fuc(self, request)
+            setattr(request, return_key, response_serializer)
+
+            return fuc(self, request, *args, **kwargs)
 
         return decorated_func
 
