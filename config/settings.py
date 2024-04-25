@@ -14,6 +14,11 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+REQUEST_HEADER = "header"
+REQUEST_BODY = "body"
+REQUEST_QUERY = "query"
+REQUEST_PATH = "path"
+
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -24,6 +29,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-5=9qd#p44rv-o@r=1ktt@gz(4sb@u5!gt6*58ths@*==y78wzh'
+
+JWT_SECRET = os.getenv("JWT_SECRET")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -38,7 +45,7 @@ SWAGGER_SETTINGS = {
         'AccessToken': {
             'type': 'apiKey',
             'name': 'AccessToken',
-            'description': '입력형 : `jwt <accessToken>`',
+            'description': '입력형 : `jwt <AccessToken>`',
             'in': 'header'
         },
 
@@ -46,7 +53,7 @@ SWAGGER_SETTINGS = {
         'RefreshToken': {
             'type': 'apiKey',
             'name': 'RefreshToken',
-            'description': '입력형 : `jwt <refreshToken>`',
+            'description': '입력형 : `jwt <RefreshToken>`',
             'in': 'header'
         },
 
