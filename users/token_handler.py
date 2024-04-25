@@ -12,6 +12,10 @@ from users.token_serializer import TokenSerializer
 
 
 def token_permission_validator(where_is_userId: str = REQUEST_PATH, userIdName: str = 'userId'):
+    """
+    :param where_is_userId: userId가 어디에 있는지 명세
+    :param userIdName: userId가 어떤 이름으로 들어있는지 명세
+    """
     def decorator(fuc):
         def decorated_func(self, request: Request, *args, **kwargs):
 

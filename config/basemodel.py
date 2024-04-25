@@ -29,6 +29,11 @@ class ApiResponse:
 
 
 def validator(request_serializer=None, request_type=REQUEST_BODY, return_key="serializer", **path_args):
+    """
+    :param request_serializer: 유효성검사를 원하는 serializer를 입력받음
+    :param request_type: 어떤 방식으로 데이터를 받을지 선택
+    :param return_key: request에 저장할 key값
+    """
     def decorator(fuc):
         def decorated_func(self, request: Request, *args, **kwargs):
             response_serializer = request_serializer(data=request.data)
