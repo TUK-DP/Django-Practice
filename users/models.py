@@ -10,6 +10,7 @@ class User(BaseModel):
     password = models.CharField(max_length=128, null=True)
     username = models.CharField(max_length=20, null=True)
     birth = models.DateField(null=True)
+    refresh_token = models.CharField(max_length=128, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
