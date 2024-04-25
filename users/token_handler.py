@@ -11,7 +11,7 @@ from users.models import User
 from users.token_serializer import TokenSerializer
 
 
-def token_validator(where_is_userId: str = REQUEST_PATH, userIdName: str = 'userId'):
+def token_permission_validator(where_is_userId: str = REQUEST_PATH, userIdName: str = 'userId'):
     def decorator(fuc):
         def decorated_func(self, request: Request, *args, **kwargs):
 

@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from config.basemodel import ApiResponse, validator
 from config.settings import REQUEST_BODY, REQUEST_HEADER, REQUEST_PATH
 from users.serializers import *
-from users.token_handler import create_token, token_validator, auto_login
+from users.token_handler import create_token, token_permission_validator, auto_login
 from users.token_serializer import AutoLoginRequest
 
 
@@ -30,7 +30,7 @@ class UserListView(APIView):
 class UserView(APIView):
     @transaction.atomic
     @swagger_auto_schema(operation_id="유저 조회", responses={200: '성공'}, security=[{'AccessToken': []}])
-    @token_validator(where_is_userId=REQUEST_PATH)
+    @token_permission_validator(where_is_userId=REQUEST_PATH)
     @validator(request_type=REQUEST_PATH, request_serializer=UserIdRequire, return_key='serializer')
     def get(self, request, userId: int):
         findUser = User.objects.get(id=userId)
@@ -39,7 +39,9 @@ class UserView(APIView):
         )
 
     @transaction.atomic
-    @swagger_auto_schema(operation_id="유저 수정", request_body=UserUpdateRequest, responses={200: '성공'})
+    @swagger_auto_schema(operation_id="유저 수정", request_body=UserUpdateRequest, responses={200: '성공'}
+        , security=[{'AccessToken': []}])
+    @token_permission_validator(where_is_userId=REQUEST_PATH)
     @validator(request_serializer=UserUpdateRequest, request_type=REQUEST_BODY, return_key='serializer')
     @validator(request_serializer=UserIdRequire, request_type=REQUEST_PATH, return_key='serializer')
     def patch(self, request, userId: int):
@@ -50,7 +52,9 @@ class UserView(APIView):
         )
 
     @transaction.atomic
-    @swagger_auto_schema(operation_id="유저 삭제", responses={200: '삭제 완료'})
+    @swagger_auto_schema(operation_id="유저 삭제", responses={200: '삭제 완료'},
+                         security=[{'AccessToken': []}])
+    @token_permission_validator(where_is_userId=REQUEST_PATH)
     @validator(request_serializer=UserIdRequire, request_type=REQUEST_PATH, return_key='serializer')
     def delete(self, request, userId: int):
         User.objects.get(id=userId).delete()
@@ -66,7 +70,8 @@ class SignupView(APIView):
         operation_id="회원 가입",
         operation_description="회원 가입",
         request_body=UserCreateRequest,
-        responses={200: "회원 가입 성공"}
+        responses={200: "회원 가입 성공"},
+        security=[],
     )
     @validator(request_serializer=UserCreateRequest, request_type=REQUEST_BODY, return_key='serializer')
     def post(self, request):
@@ -111,7 +116,8 @@ class LoginView(APIView):
 
 class CheckNicknameView(APIView):
     @transaction.atomic
-    @swagger_auto_schema(operation_id="닉네임 중복 확인", request_body=DuplicateNicknameRequest, responses={200: '닉네임 사용 가능'})
+    @swagger_auto_schema(operation_id="닉네임 중복 확인", request_body=DuplicateNicknameRequest,
+                         responses={200: '닉네임 사용 가능'}, security=[])
     @validator(request_serializer=DuplicateNicknameRequest)
     def post(self, request):
         return ApiResponse.on_success(
@@ -123,7 +129,7 @@ class CheckNicknameView(APIView):
 class AutoLoginView(APIView):
     @transaction.atomic
     @swagger_auto_schema(operation_id="자동 로그인", responses={200: '자동 로그인 성공'})
-    @token_validator(where_is_userId=REQUEST_PATH)
+    @token_permission_validator(where_is_userId=REQUEST_PATH)
     @validator(request_serializer=TokenSerializer, request_type=REQUEST_HEADER, return_key="token")
     @validator(request_serializer=AutoLoginRequest, request_type=REQUEST_PATH)
     def get(self, request, userId):
