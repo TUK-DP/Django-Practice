@@ -1,6 +1,11 @@
-from rest_framework import serializers, status
+from rest_framework import serializers
 
+from .token_serializer import TokenSerializer
 from .validator import *
+
+
+class UserIdRequire(serializers.Serializer):
+    userId = serializers.IntegerField(validators=[exist_user_id])
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -17,8 +22,8 @@ class UserSafeSerializer(serializers.ModelSerializer):
 
 class UserCreateRequest(serializers.Serializer):
     username = serializers.CharField(max_length=20)
-    nickname = serializers.CharField(max_length=20, validators=[not_exist_nickname])
-    email = serializers.EmailField(max_length=100, validators=[not_exist_email])
+    nickname = serializers.CharField(max_length=20, validators=[not_exist_user_nickname])
+    email = serializers.EmailField(max_length=100, validators=[not_exist_user_email])
     password = serializers.CharField(max_length=128)
     birth = serializers.DateField()
 
@@ -27,36 +32,39 @@ class UserCreateRequest(serializers.Serializer):
 
 
 class LoginRequest(serializers.Serializer):
-    email = serializers.CharField(max_length=20, validators=[exist_email])
+    email = serializers.CharField(max_length=20, validators=[exist_user_email])
     password = serializers.CharField(max_length=128)
 
-    def is_valid(self, *, raise_exception=False):
-        super_valid = super().is_valid()
-        if not super_valid:
-            return False, status.HTTP_400_BAD_REQUEST
+    def validate(self, attrs):
+        validate_login(attrs['email'], attrs['password'])
+        return attrs
 
-        if not (User.objects.filter(
-                email=self.validated_data.get('email'),
-                password=self.validated_data.get('password'))
-                .exists()):
-            self._errors['error'] = '존재하지 않는 사용자입니다.'
-            return False, status.HTTP_400_BAD_REQUEST
 
-        return True, status.HTTP_200_OK
+class LoginResponse(serializers.Serializer):
+    user = UserSerializer()
+    token = TokenSerializer()
 
 
 class DuplicateNicknameRequest(serializers.Serializer):
-    nickname = serializers.CharField(max_length=20, validators=[not_exist_nickname])
+    nickname = serializers.CharField(max_length=20, validators=[not_exist_user_nickname])
 
 
 class UserDeleteRequest(serializers.Serializer):
-    id = serializers.IntegerField(validators=[exist_user])
+    id = serializers.IntegerField(validators=[exist_user_id])
 
 
 class UserUpdateRequest(serializers.Serializer):
-    id = serializers.IntegerField(validators=[exist_user])
     username = serializers.CharField(max_length=20, required=False)
-    nickname = serializers.CharField(max_length=20, validators=[not_exist_nickname], required=False)
-    email = serializers.EmailField(max_length=100, validators=[not_exist_email], required=False)
+    nickname = serializers.CharField(max_length=20, validators=[not_exist_user_nickname], required=False)
+    email = serializers.EmailField(max_length=100, validators=[not_exist_user_email], required=False)
     password = serializers.CharField(max_length=128, required=False)
-    birth = serializers.DateField()
+    birth = serializers.DateField(required=False)
+
+    def update(self, instance, validated_data):
+        instance.username = validated_data.get('username', instance.username)
+        instance.nickname = validated_data.get('nickname', instance.nickname)
+        instance.email = validated_data.get('email', instance.email)
+        instance.password = validated_data.get('password', instance.password)
+        instance.birth = validated_data.get('birth', instance.birth)
+        instance.save()
+        return instance
