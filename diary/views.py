@@ -376,7 +376,7 @@ class KeywordImgPagingView(APIView):
 
         request = requestSerial.validated_data
 
-        keywordObjects = Keywords.objects.filter(keyword=request.get('keyword'))
+        keywordObjects = Keywords.objects.filter(keyword=request.get('keyword'), imgUrl__isnull=False)
 
         # 필터링된 객체가 없을 경우 404 반환
         if not keywordObjects:
