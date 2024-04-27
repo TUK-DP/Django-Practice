@@ -11,7 +11,7 @@ class User(BaseModel):
     username = models.CharField(max_length=20, null=True)
     birth = models.DateField(null=True)
     refresh_token = models.CharField(max_length=128, null=True)
-    isDeleted = models.BooleanField()
+    isDeleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
