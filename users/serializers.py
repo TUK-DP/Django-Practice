@@ -1,5 +1,6 @@
-from rest_framework import serializers
+from rest_framework import serializers, status
 
+from .models import User, DiagRecord
 from .token_serializer import TokenSerializer
 from .validator import *
 
@@ -11,13 +12,60 @@ class UserIdRequire(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'nickname', 'birth', 'created_at', 'updated_at']
+        fields = ['id', 'username', 'email', 'password', 'nickname', 'birth', 'isDeleted', 'created_at', 'updated_at']
 
 
 class UserSafeSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'nickname', 'birth', 'created_at', 'updated_at']
+
+
+class DiagRecordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DiagRecord
+        fields = ['id', 'user', 'totalQuestionSize', 'yesCount', 'created_at', 'updated_at']
+
+
+# class LoginRequest(serializers.Serializer):
+#     nickname = serializers.CharField(max_length=20)
+#     password = serializers.CharField(max_length=128)
+#
+#     def is_valid(self, raise_exception=False):
+#         super_valid = super().is_valid()
+#         # 유효하지 않다면 False, 400 반환
+#         if not super_valid:
+#             return False, status.HTTP_400_BAD_REQUEST
+#
+#         # 유효하다면 nickname이 존재하는지 확인
+#         is_user_exist = User.objects.filter(nickname=self.data['nickname'], isDeleted='False').exists()
+#
+#         # 존재하지 않는다면 False, 404 반환
+#         if not is_user_exist:
+#             self._errors['nickname'] = [f'nickname: {self.data.get("nickname")} 가 존재하지 않습니다.']
+#             return False, status.HTTP_404_NOT_FOUND
+#
+#         return True, status.HTTP_200_OK
+
+
+# class UserIdReqeust(serializers.Serializer):
+#     userId = serializers.IntegerField()
+#
+#     def is_valid(self, raise_exception=False):
+#         super_valid = super().is_valid()
+#         # 유효하지 않다면 False, 400 반환
+#         if not super_valid:
+#             return False, status.HTTP_400_BAD_REQUEST
+#
+#         # 유효하다면 userId가 존재하는지 확인
+#         is_user_exist = User.objects.filter(id=self.data['userId'], isDeleted='False').exists()
+#
+#         # 존재하지 않는다면 False, 404 반환
+#         if not is_user_exist:
+#             self._errors['userId'] = [f'userId: {self.data.get("userId")} 가 존재하지 않습니다.']
+#             return False, status.HTTP_404_NOT_FOUND
+#
+#         return True, status.HTTP_200_OK
 
 
 class UserCreateRequest(serializers.Serializer):
@@ -68,3 +116,25 @@ class UserUpdateRequest(serializers.Serializer):
         instance.birth = validated_data.get('birth', instance.birth)
         instance.save()
         return instance
+
+
+class RecordSaveRequest(serializers.Serializer):
+    userId = serializers.IntegerField()
+    totalQuestionSize = serializers.IntegerField()
+    yesCount = serializers.IntegerField()
+
+    def is_valid(self, raise_exception=False):
+        super_valid = super().is_valid()
+        # 유효하지 않다면 False, 400 반환
+        if not super_valid:
+            return False, status.HTTP_400_BAD_REQUEST
+
+        # 유효하다면 userId가 존재하는지 확인
+        is_user_exists = User.objects.filter(id=self.data['userId'], isDeleted='False').exists()
+
+        # 존재하지 않는다면 False, 404 반환
+        if not is_user_exists:
+            self._errors['userId'] = [f'userId: {self.data.get("userId")} 가 존재하지 않습니다.']
+            return False, status.HTTP_404_NOT_FOUND
+
+        return True, status.HTTP_200_OK
