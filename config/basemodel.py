@@ -21,7 +21,7 @@ class ApiResponse:
     def on_success(result=None, message="OK", response_status=status.HTTP_200_OK):
         if not result:
             return JsonResponse({'isSuccess': True, "message": message}, status=response_status)
-        return JsonResponse({'isSuccess': True, 'result': result}, status=response_status)
+        return JsonResponse({'isSuccess': True, "message": message, 'result': result}, status=response_status)
 
     @staticmethod
     def on_fail(message, response_status=status.HTTP_400_BAD_REQUEST):
@@ -34,6 +34,7 @@ def validator(request_serializer=None, request_type=REQUEST_BODY, return_key="se
     :param request_type: 어떤 방식으로 데이터를 받을지 선택
     :param return_key: request에 저장할 key값
     """
+
     def decorator(fuc):
         def decorated_func(self, request: Request, *args, **kwargs):
             response_serializer = request_serializer(data=request.data)
