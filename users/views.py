@@ -90,8 +90,7 @@ class LoginView(APIView):
     def post(self, request):
         findUser = User.objects.get(
             email=request.serializer.data.get('email'),
-            password=request.serializer.data.get('password'),
-            isDeleted=False
+            password=request.serializer.data.get('password')
         )
 
         # 토큰 생성
@@ -186,7 +185,7 @@ class GetDiagRecordView(APIView):
         request = request.serializer.validated_data
 
         diagRecord = DiagRecord.objects.filter(
-            user=User.objects.get(id=request.get('userId'), isDeleted='False')).order_by('-created_at').first()
+            user=User.objects.get(id=request.get('userId'))).order_by('-created_at').first()
 
         return ApiResponse.on_success(
             result=DiagRecordSerializer(diagRecord).data,

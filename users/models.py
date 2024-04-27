@@ -18,6 +18,10 @@ class User(BaseModel):
     def __str__(self):
         return self.username
 
+    def delete(self, using=None, keep_parents=False):
+        self.isDeleted = True
+        self.save()
+
 
 class DiagRecord(BaseModel):
     totalQuestionSize = models.IntegerField()
