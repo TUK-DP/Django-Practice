@@ -4,7 +4,7 @@ from users.models import User
 
 
 def exist_user_id(user_id: int = 0):
-    if not User.objects.filter(id=user_id).exists():
+    if not User.objects.filter(id=user_id, isDeleted=False).exists():
         raise ValidationError('존재하지 않는 사용자입니다.')
 
 
