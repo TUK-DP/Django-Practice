@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 
 from config.basemodel import ApiResponse
 from config.basemodel import validator
-from config.settings import REQUEST_BODY, REQUEST_HEADER, REQUEST_PATH
+from config.settings import REQUEST_BODY, REQUEST_HEADER, REQUEST_PATH, REQUEST_QUERY
 from users.serializers import *
 from users.token_handler import create_token, token_permission_validator, auto_login
 from users.token_serializer import AutoLoginRequest
@@ -31,7 +31,7 @@ class UserView(APIView):
     @transaction.atomic
     @swagger_auto_schema(operation_id="유저 조회", responses={200: '성공'}, security=[{'AccessToken': []}])
     @token_permission_validator(where_is_userId=REQUEST_PATH)
-    @validator(request_type=REQUEST_PATH, request_serializer=UserIdRequire, return_key='serializer')
+    @validator(request_type=REQUEST_PATH, request_serializer=UserIdReqeust, return_key='serializer')
     def get(self, request, userId: int):
         findUser = User.objects.get(id=userId)
         return ApiResponse.on_success(
@@ -42,8 +42,8 @@ class UserView(APIView):
     @swagger_auto_schema(operation_id="유저 수정", request_body=UserUpdateRequest, responses={200: '성공'}
         , security=[{'AccessToken': []}])
     @token_permission_validator(where_is_userId=REQUEST_PATH)
+    @validator(request_serializer=UserIdReqeust, request_type=REQUEST_PATH, return_key='serializer')
     @validator(request_serializer=UserUpdateRequest, request_type=REQUEST_BODY, return_key='serializer')
-    @validator(request_serializer=UserIdRequire, request_type=REQUEST_PATH, return_key='serializer')
     def patch(self, request, userId: int):
         findUser = User.objects.get(id=userId)
         request.serializer.update(findUser, request.serializer.validated_data)
@@ -55,7 +55,7 @@ class UserView(APIView):
     @swagger_auto_schema(operation_id="유저 삭제", responses={200: '삭제 완료'},
                          security=[{'AccessToken': []}])
     @token_permission_validator(where_is_userId=REQUEST_PATH)
-    @validator(request_serializer=UserIdRequire, request_type=REQUEST_PATH, return_key='serializer')
+    @validator(request_serializer=UserIdReqeust, request_type=REQUEST_PATH, return_key='serializer')
     def delete(self, request, userId: int):
         User.objects.get(id=userId).delete()
         return ApiResponse.on_success(
@@ -158,18 +158,12 @@ class AutoLoginView(APIView):
 
 class RecordSaveView(APIView):
     @transaction.atomic
-    @swagger_auto_schema(operation_description="치매진단 결과 저장", request_body=RecordSaveRequest, responses={200: '닉네임 사용 가능'})
+    @swagger_auto_schema(operation_description="치매진단 결과 저장", request_body=RecordSaveRequest,
+                         responses={200: '닉네임 사용 가능'})
+    @validator(request_serializer=RecordSaveRequest, request_type=REQUEST_BODY, return_key="serializer")
     def post(self, request):
-        requestSerial = RecordSaveRequest(data=request.data)
+        request = request.serializer.validated_data
 
-        isValid, response_status = requestSerial.is_valid()
-        # 유효성 검사 통과하지 못한 경우
-        if not isValid:
-            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
-
-        request = requestSerial.validated_data
-
-        # 유효성 검사 통과한 경우
         # DiagRecord 객체 생성
         diagRecord = DiagRecord.objects.create(
             totalQuestionSize=request.get('totalQuestionSize'),
@@ -187,17 +181,12 @@ class GetDiagRecordView(APIView):
     @transaction.atomic
     @swagger_auto_schema(operation_description="유저의 이전 진단 기록 조회", query_serializer=UserIdReqeust,
                          response={"200": DiagRecordSerializer})
+    @validator(request_serializer=UserIdReqeust, request_type=REQUEST_QUERY, return_key='serializer')
     def get(self, request):
-        requestSerial = UserIdReqeust(data=request.query_params)
+        request = request.serializer.validated_data
 
-        isValid, response_status = requestSerial.is_valid()
-        # 유효성 검사 통과하지 못한 경우
-        if not isValid:
-            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
-
-        request = requestSerial.validated_data
-
-        diagRecord = DiagRecord.objects.filter(user=User.objects.get(id=request.get('userId'), isDeleted='False')).order_by('-created_at').first()
+        diagRecord = DiagRecord.objects.filter(
+            user=User.objects.get(id=request.get('userId'), isDeleted='False')).order_by('-created_at').first()
 
         return ApiResponse.on_success(
             result=DiagRecordSerializer(diagRecord).data,
