@@ -24,5 +24,5 @@ def not_exist_user_email(email: str = 'email'):
 
 
 def validate_login(email: str, password: str):
-    if not User.objects.filter(email=email, password=password).exists():
+    if not User.objects.filter(email=email, password=password, isDeleted=False).exists():
         raise ValidationError('존재하지 않는 사용자입니다.')

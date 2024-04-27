@@ -85,13 +85,13 @@ class SignupView(APIView):
 class LoginView(APIView):
     @transaction.atomic
     @swagger_auto_schema(operation_id="로그인", request_body=LoginRequest,
-                         security=[], )
+                         security=[])
     @validator(request_serializer=LoginRequest, request_type=REQUEST_BODY, return_key="serializer")
     def post(self, request):
         findUser = User.objects.get(
             email=request.serializer.data.get('email'),
             password=request.serializer.data.get('password'),
-            isDelete=False
+            isDeleted=False
         )
 
         # 토큰 생성
