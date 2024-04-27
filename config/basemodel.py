@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.db import models
 from django.http import JsonResponse
 from drf_yasg import openapi
@@ -17,7 +19,7 @@ class BaseModel(models.Model):
         abstract = True
 
 
-class_hash = {}
+hashcode = [0]
 
 
 class ApiResponse(serializers.Serializer):
@@ -36,20 +38,26 @@ class ApiResponse(serializers.Serializer):
 
     @staticmethod
     def get_dynamic_class(result_class, many=False):
-        class_name = f'{result_class.__name__}' + 'List' if many else ''
+        class_name = f'{result_class.__name__}' + ('List' if many else '')
 
-        if class_name in class_hash:
-            return class_hash[class_name]
+        meta_class = type('Meta', (), {
+            'ref_name': hashcode[0],
+        })
+
+        hashcode[0] += 1
 
         d_class = type(class_name, (ApiResponse,), {
+            'Meta': meta_class,
             'result': result_class(many=many)
         })
 
-        class_hash[class_name] = d_class
         return d_class
 
     @staticmethod
-    def schema(serializer_class=None, description="성공", many=False):
+    def schema(serializer_class=None, description="성공", many=False) -> openapi.Response:
+        if serializer_class is ApiResponse:
+            return openapi.Response(description, ApiResponse)
+
         Schema = ApiResponse.get_dynamic_class(serializer_class, many=many)
         return openapi.Response(description, Schema)
 
