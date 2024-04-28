@@ -6,22 +6,22 @@ from rest_framework import status
 from rest_framework.views import APIView
 
 from center.center_data import centers
-from center.serializers import GetAroundCenterRequest
-from config.basemodel import ApiResponse
+from center.serializers import GetAroundCenterRequest, CenterResponse
+from config.basemodel import ApiResponse, validator
+from config.settings import REQUEST_QUERY
 
 
 class GetAroundCenter(APIView):
     @transaction.atomic
-    @swagger_auto_schema(operation_description="주변 치매 센터 조회", query_serializer=GetAroundCenterRequest,
-                         responses={"200": '성공'})
+    @swagger_auto_schema(
+        operation_id="주변 치매 센터 조회",
+        operation_description="주변 치매 센터 조회",
+        query_serializer=GetAroundCenterRequest(),
+        responses={status.HTTP_200_OK: ApiResponse.schema(CenterResponse, many=True)}
+    )
+    @validator(request_type=REQUEST_QUERY, request_serializer=GetAroundCenterRequest, return_key='query')
     def get(self, request):
-        requestSerial = GetAroundCenterRequest(data=request.query_params)
-
-        isValid, response_status = requestSerial.is_valid()
-        # 유효성 검사 통과하지 못한 경우
-        if not isValid:
-            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
-
+        requestSerial = request.query
         request = requestSerial.validated_data
 
         # 위도 경도 가져오기
