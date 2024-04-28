@@ -11,3 +11,6 @@ class ImageRequest(serializers.Serializer):
 
         return True, status.HTTP_200_OK
 
+
+class ImageResponse(serializers.Serializer):
+    imageUrl = serializers.CharField()
