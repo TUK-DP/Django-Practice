@@ -11,8 +11,9 @@ services:
       - -c
       - |
         dos2unix /app/wait-for-services.sh
-        ./wait-for-services.sh python3 manage.py migrate 
-        ./wait-for-services.sh gunicorn config.wsgi:application --bind
+        ./wait-for-services.sh python3 manage.py makemigrations
+        python3 manage.py migrate 
+        gunicorn config.wsgi:application --bind
 
   neo4j:
     ports:
