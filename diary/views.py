@@ -13,7 +13,12 @@ from .graph import GraphDB
 
 class WriteView(APIView):
     @transaction.atomic
-    @swagger_auto_schema(operation_description="일기 작성", request_body=WriteRequest, responses={"201": '작성 성공'})
+    @swagger_auto_schema(
+        operation_id="일기 작성",
+        operation_description="일기 작성",
+        request_body=WriteRequest,
+        responses={status.HTTP_200_OK: ApiResponse.schema(DiaryResultResponse)}
+    )
     def post(self, request):
         requestSerial = WriteRequest(data=request.data)
 
@@ -61,7 +66,12 @@ class WriteView(APIView):
 
 class UpdateView(APIView):
     @transaction.atomic
-    @swagger_auto_schema(operation_description="일기 수정", request_body=UpdateRequest, responses={"201": '작성 성공'})
+    @swagger_auto_schema(
+        operation_id="일기 수정",
+        operation_description="일기 수정",
+        request_body=UpdateRequest,
+        responses={status.HTTP_200_OK: ApiResponse.schema(DiaryResultResponse, description='수정 성공')}
+    )
     def patch(self, request):
         requestSerial = UpdateRequest(data=request.data)
 
@@ -122,8 +132,12 @@ class UpdateView(APIView):
 
 class GetDiaryByUserView(APIView):
     @transaction.atomic
-    @swagger_auto_schema(operation_description="유저의 일기 조회", query_serializer=GetUserRequest,
-                         response={"200": DiaryResultResponse})
+    @swagger_auto_schema(
+        operation_id="유저의 일기 조회",
+        operation_description="유저의 일기 조회",
+        query_serializer=GetUserRequest(),
+        responses={status.HTTP_200_OK: ApiResponse.schema(DiaryResultResponse, many=True)}
+    )
     def get(self, request):
         requestSerial = GetUserRequest(data=request.query_params)
 
@@ -151,8 +165,12 @@ class GetDiaryByUserView(APIView):
 
 class GetQuizView(APIView):
     @transaction.atomic
-    @swagger_auto_schema(operation_description="일기회상 퀴즈", query_serializer=GetDiaryRequest,
-                         responses={"200": "퀴즈"})
+    @swagger_auto_schema(
+        operation_id="일기회상 퀴즈",
+        operation_description="일기회상 퀴즈",
+        query_serializer=GetDiaryRequest(),
+        # responses={status.HTTP_200_OK: ApiResponse.schema(QuizResultResponse, description="퀴즈")}
+    )
     def get(self, request):
         requestSerial = GetDiaryRequest(data=request.query_params)
 
@@ -188,8 +206,12 @@ class GetQuizView(APIView):
 
 class CheckAnswerView(APIView):
     @transaction.atomic
-    @swagger_auto_schema(operation_description="일기회상 답안 확인", request_body=AnswerListRequest,
-                         responses={"200": "답안 채점"})
+    @swagger_auto_schema(
+        operation_id="일기회상 답안 확인",
+        operation_description="일기회상 답안 확인",
+        request_body=AnswerListRequest,
+        # responses={status.HTTP_200_OK: ApiResponse.schema(AnswerResultResponse, description="결과")}
+    )
     def post(self, request):
         requestSerial = AnswerListRequest(data=request.data)
 
@@ -200,7 +222,7 @@ class CheckAnswerView(APIView):
             return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
 
         request = requestSerial.validated_data
-        
+
         answers = []
         result = []
         score = 0
@@ -231,10 +253,15 @@ class CheckAnswerView(APIView):
             response_status=status.HTTP_200_OK
         )
 
+
 class GetDiaryByDateView(APIView):
     @transaction.atomic
-    @swagger_auto_schema(operation_description="날짜로 일기 검색", query_serializer=GetDiaryByDateRequest,
-                         responses={"200": "일기"})
+    @swagger_auto_schema(
+        operation_id="날짜로 일기 검색",
+        operation_description="날짜로 일기 검색",
+        query_serializer=GetDiaryByDateRequest(),
+        responses={status.HTTP_200_OK: ApiResponse.schema(DiaryResultResponse, description="일기")}
+    )
     def get(self, request):
         requestSerial = GetDiaryByDateRequest(data=request.query_params)
 
@@ -258,8 +285,12 @@ class GetDiaryByDateView(APIView):
 
 class DeleteDiaryView(APIView):
     @transaction.atomic
-    @swagger_auto_schema(operation_description="일기 삭제", request_body=DeleteDiaryRequest,
-                         responses={200: '삭제 완료'})
+    @swagger_auto_schema(
+        operation_id="일기 삭제",
+        operation_description="일기 삭제",
+        request_body=DeleteDiaryRequest,
+        responses={status.HTTP_200_OK: ApiResponse.schema(DiaryResultResponse, description='삭제 완료')}
+    )
     def delete(self, request):
         requestSerial = DeleteDiaryRequest(data=request.data)
 
@@ -284,9 +315,12 @@ class DeleteDiaryView(APIView):
 
 class GetNodeData(APIView):
     @transaction.atomic
-    @swagger_auto_schema(operation_description="노드데이터 가져오기", query_serializer=DeleteDiaryRequest)
+    @swagger_auto_schema(
+        operation_id="그래프 데이터 가져오기",
+        operation_description="노드데이터 가져오기",
+        query_serializer=DeleteDiaryRequest()
+    )
     def get(self, request):
-
         requestSerial = DeleteDiaryRequest(data=request.query_params)
 
         isValid, response_status = requestSerial.is_valid()
@@ -313,7 +347,12 @@ class GetNodeData(APIView):
 
 class KeywordImgSaveView(APIView):
     @transaction.atomic
-    @swagger_auto_schema(operation_description="키워드별 이미지 저장", request_body=KeyWordImgSaveRequest, responses={"201": '저장 성공'})
+    @swagger_auto_schema(
+        operation_id="키워드별 이미지 저장",
+        operation_description="키워드별 이미지 저장",
+        request_body=KeyWordImgSaveRequest,
+        responses={status.HTTP_201_CREATED: ApiResponse.schema(KeywordSerializer, description='저장 성공')}
+    )
     def post(self, request):
         requestSerial = KeyWordImgSaveRequest(data=request.data)
 
@@ -339,7 +378,12 @@ class KeywordImgSaveView(APIView):
 
 class DiaryImgSaveView(APIView):
     @transaction.atomic
-    @swagger_auto_schema(operation_description="일기 이미지 저장", request_body=DiaryImgSaveRequest, responses={"201": '저장 성공'})
+    @swagger_auto_schema(
+        operation_id="일기 이미지 저장",
+        operation_description="일기 이미지 저장",
+        request_body=DiaryImgSaveRequest,
+        responses={status.HTTP_201_CREATED: ApiResponse.schema(DiaryResultResponse, description='저장 성공')}
+    )
     def post(self, request):
         requestSerial = DiaryImgSaveRequest(data=request.data)
 
@@ -361,11 +405,16 @@ class DiaryImgSaveView(APIView):
             result=DiaryResultResponse(diary).data,
             response_status=status.HTTP_201_CREATED
         )
-    
+
 
 class KeywordImgPagingView(APIView):
     @transaction.atomic
-    @swagger_auto_schema(operation_description="키워드별 사진 페이징", query_serializer=FindKeywordImgRequest)
+    @swagger_auto_schema(
+        operation_id="키워드별 사진 페이징",
+        operation_description="키워드별 사진 페이징",
+        query_serializer=FindKeywordImgRequest(),
+        # responses=
+    )
     def get(self, request):
         requestSerial = FindKeywordImgRequest(data=request.query_params)
 
@@ -381,7 +430,7 @@ class KeywordImgPagingView(APIView):
         # 필터링된 객체가 없을 경우 404 반환
         if not keywordObjects:
             return ApiResponse.on_fail({"message": "아직 그려진 그림이 없습니다."}, status.HTTP_404_NOT_FOUND)
-        
+
         # 최신순으로 정렬
         keywordObjects = keywordObjects.order_by('-updated_at')
 
@@ -421,12 +470,16 @@ class KeywordImgPagingView(APIView):
             result=result,
             response_status=status.HTTP_201_CREATED
         )
-    
+
 
 class GetKeywordView(APIView):
     @transaction.atomic
-    @swagger_auto_schema(operation_description="일기별 키워드 조회", query_serializer=GetDiaryRequest,
-                         response={"200": KeywordResultSerializer})
+    @swagger_auto_schema(
+        operation_id="일기별 키워드 조회",
+        operation_description="일기별 키워드 조회",
+        query_serializer=GetDiaryRequest(),
+        response={status.HTTP_200_OK: ApiResponse.schema(KeywordResultSerializer, many=True)}
+    )
     def get(self, request):
         requestSerial = GetDiaryRequest(data=request.query_params)
 
