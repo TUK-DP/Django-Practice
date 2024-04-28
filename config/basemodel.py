@@ -28,7 +28,7 @@ class ApiResponse(serializers.Serializer):
 
     @staticmethod
     def on_success(result=None, message="OK", response_status=status.HTTP_200_OK):
-        if not result:
+        if result is None:
             return JsonResponse({'isSuccess': True, "message": message}, status=response_status)
         return JsonResponse({'isSuccess': True, "message": message, 'result': result}, status=response_status)
 

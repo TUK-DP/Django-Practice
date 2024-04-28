@@ -1,8 +1,10 @@
-from rest_framework import serializers, status
+from rest_framework import status
 
 from users.models import User
 from users.serializers import UserSafeSerializer
-from .models import Diary, Keywords, Questions
+from users.validator import exist_user_id
+from .models import Questions
+from .validator import *
 
 
 class DiarySerializer(serializers.ModelSerializer):
@@ -28,6 +30,7 @@ class KeywordSerializer(serializers.ModelSerializer):
         model = Keywords
         fields = '__all__'
 
+
 class KeywordResultSerializer(serializers.ModelSerializer):
     keywordId = serializers.IntegerField(source="id")
 
@@ -44,169 +47,62 @@ class QuestionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class DiaryCreateRequest(serializers.ModelSerializer):
-    userId = serializers.IntegerField()
-
-    class Meta:
-        model = Diary
-        fields = ('userId', 'title')
-
-    def to_diary(self, user: User) -> DiarySerializer:
-        newDiary = DiarySerializer(data={'title': self.data["title"], 'user': user})
-        newDiary.is_valid()
-        newDiary.save(user=user)
-        return newDiary
-
-
-class WriteRequest(serializers.Serializer):
-    userId = serializers.IntegerField()
+class DiaryCreateRequest(serializers.Serializer):
+    userId = serializers.IntegerField(validators=[exist_user_id])
     title = serializers.CharField(max_length=100)
     content = serializers.CharField()
     date = serializers.DateField()
 
-    def is_valid(self, raise_exception=False):
-        super_valid = super().is_valid()
-        # 유효하지 않다면 False, 400 반환
-        if not super_valid:
-            return False, status.HTTP_400_BAD_REQUEST
+    def validate(self, attrs):
+        not_exist_diary_date(attrs['userId'], attrs['date'])
+        return attrs
 
-        # 유효하다면 userId가 존재하는지 확인
-        is_user_exist = User.objects.filter(id=self.data['userId']).exists()
-
-        # 존재하지 않는다면 False, 404 반환
-        if not is_user_exist:
-            self._errors['userId'] = [f'userId: {self.data.get("userId")} 가 존재하지 않습니다.']
-            return False, status.HTTP_404_NOT_FOUND
-
-        # 존재한다면 date에 일기가 존재하는지 확인
-        is_already_diary = Diary.objects.filter(createDate=self.data['date'], user=User.objects.get(id=self.data['userId'])).exists()
-
-        # 존재한다면 False, 400 반환
-        if is_already_diary:
-            self._errors['date'] = [f'date: 이미 일기가 존재합니다.']
-            return False, status.HTTP_400_BAD_REQUEST
-
-        return True, status.HTTP_200_OK
+    def create(self, validated_data):
+        return Diary.objects.create(
+            user_id=validated_data['userId'],
+            title=validated_data['title'],
+            content=validated_data['content'],
+            createDate=validated_data['date']
+        )
 
 
-class UpdateRequest(serializers.Serializer):
-    diaryId = serializers.IntegerField()
-    userId = serializers.IntegerField()
-    title = serializers.CharField(max_length=100)
-    content = serializers.CharField()
-    date = serializers.DateField()
+class DiaryUpdateRequest(serializers.Serializer):
+    userId = serializers.IntegerField(validators=[exist_user_id])
+    title = serializers.CharField(max_length=100, required=False)
+    content = serializers.CharField(required=False)
+    date = serializers.DateField(required=False)
 
-    def is_valid(self, raise_exception=False):
-        super_valid = super().is_valid()
-        # 유효하지 않다면 False, 400 반환
-        if not super_valid:
-            return False, status.HTTP_400_BAD_REQUEST
+    def validate(self, attrs):
+        if 'date' in attrs:
+            not_exist_diary_date(attrs['userId'], attrs['date'])
+        return attrs
 
-        # userId가 존재하는지 확인
-        is_user_exist = User.objects.filter(id=self.data['userId']).exists()
-        # 존재하지 않는다면 False, 404 반환
-        if not is_user_exist:
-            self._errors['userId'] = [f'userId: {self.data.get("userId")} 가 존재하지 않습니다.']
-            return False, status.HTTP_404_NOT_FOUND
+    def update(self, instance, validated_data):
+        title = validated_data.get('title', instance.title)
+        content = validated_data.get('content', instance.content)
+        createDate = validated_data.get('date', instance.createDate)
+        userId = validated_data.get('userId', instance.user_id)
 
-        # diaryId가 존재하는지 확인
-        is_diary_exist = Diary.objects.filter(id=self.data['diaryId']).exists()
-        # 존재하지 않는다면 False, 404 반환
-        if not is_diary_exist:
-            self._errors['diaryId'] = [f'diaryId: {self.data.get("diaryId")} 가 존재하지 않습니다.']
-            return False, status.HTTP_404_NOT_FOUND
+        instance.delete()
 
-        return True, status.HTTP_200_OK
+        return Diary.objects.create(
+            user_id=userId,
+            title=title,
+            content=content,
+            createDate=createDate
+        )
 
 
 class GetUserRequest(serializers.Serializer):
-    userId = serializers.IntegerField()
-
-    def is_valid(self, raise_exception=False):
-        super_valid = super().is_valid()
-        # 유효하지 않다면 False, 400 반환
-        if not super_valid:
-            return False, status.HTTP_400_BAD_REQUEST
-
-        # userId가 존재하는지 확인
-        is_user_exist = User.objects.filter(id=self.data['userId']).exists()
-        # 존재하지 않는다면 False, 404 반환
-        if not is_user_exist:
-            self._errors['userId'] = [f'userId: {self.data.get("userId")} 가 존재하지 않습니다.']
-            return False, status.HTTP_404_NOT_FOUND
-
-        return True, status.HTTP_200_OK
+    userId = serializers.IntegerField(validators=[exist_user_id])
 
 
 class GetDiaryRequest(serializers.Serializer):
-    diaryId = serializers.IntegerField()
+    diaryId = serializers.IntegerField(validators=[exist_diary_id])
 
-    def is_valid(self, raise_exception=False):
-        super_valid = super().is_valid()
-        # 유효하지 않다면 False, 400 반환
-        if not super_valid:
-            return False, status.HTTP_400_BAD_REQUEST
 
-        # diaryId가 존재하는지 확인
-        is_diary_exist = Diary.objects.filter(id=self.data['diaryId']).exists()
-        # 존재하지 않는다면 False, 404 반환
-        if not is_diary_exist:
-            self._errors['diaryId'] = [f'diaryId: {self.data.get("diaryId")} 가 존재하지 않습니다.']
-            return False, status.HTTP_404_NOT_FOUND
-
-        return True, status.HTTP_200_OK
-    
 class GetDiaryByDateRequest(serializers.Serializer):
-    userId = serializers.IntegerField()
-    date = serializers.DateField()
-
-    def is_valid(self, *, raise_exception=False):
-        super_valid = super().is_valid()
-        # 유효하지 않다면 False, 400 반환
-        if not super_valid:
-            return False, status.HTTP_400_BAD_REQUEST
-        
-        # userId가 존재하는지 확인
-        is_user_exist = User.objects.filter(id=self.data['userId']).exists()
-        # 존재하지 않는다면 False, 404 반환
-        if not is_user_exist:
-            self._errors['userId'] = [f'userId: {self.data.get("userId")} 가 존재하지 않습니다.']
-            return False, status.HTTP_404_NOT_FOUND
-
-        # 날짜에 작성된 일기가 있는지 확인
-        is_diary_exist = Diary.objects.filter(user=User.objects.get(id=self.data['userId']), createDate=self.data['date']).exists()
-        # 존재하지 않는다면 False, 404 반환
-        if not is_diary_exist:
-            self._errors['diaryId'] = [f'작성된 일기가 없습니다.']
-            return False, status.HTTP_404_NOT_FOUND
-        
-        return True, status.HTTP_200_OK
-
-class DeleteDiaryRequest(serializers.Serializer):
-    userId = serializers.IntegerField()
-    diaryId = serializers.IntegerField()
-
-    def is_valid(self, *, raise_exception=False):
-        super_valid = super().is_valid()
-        # 유효하지 않다면 False, 400 반환
-        if not super_valid:
-            return False, status.HTTP_400_BAD_REQUEST
-        
-        # userId가 존재하는지 확인
-        is_user_exist = User.objects.filter(id=self.data['userId']).exists()
-        # 존재하지 않는다면 False, 404 반환
-        if not is_user_exist:
-            self._errors['userId'] = [f'userId: {self.data.get("userId")} 가 존재하지 않습니다.']
-            return False, status.HTTP_404_NOT_FOUND
-
-        # diaryId가 존재하는지 확인
-        is_diary_exist = Diary.objects.filter(id=self.data['diaryId'], user=User.objects.get(id=self.data['userId'])).exists()
-        # 존재하지 않는다면 False, 404 반환
-        if not is_diary_exist:
-            self._errors['diaryId'] = [f'diaryId: {self.data.get("diaryId")} 가 존재하지 않습니다.']
-            return False, status.HTTP_404_NOT_FOUND
-
-        return True, status.HTTP_200_OK
+    date = serializers.DateField(required=False, help_text='YYYY-MM-DD 형식으로 입력해주세요.')
 
 
 class GetNodeDataRequest(serializers.Serializer):
@@ -227,53 +123,23 @@ class GetNodeDataRequest(serializers.Serializer):
             return False, status.HTTP_404_NOT_FOUND
 
         # diaryId가 존재하는지 확인
-        is_diary_exist = Diary.objects.filter(id=self.data['diaryId'], user=User.objects.get(id=self.data['userId'])).exists()
+        is_diary_exist = Diary.objects.filter(id=self.data['diaryId'],
+                                              user=User.objects.get(id=self.data['userId'])).exists()
         # 존재하지 않는다면 False, 404 반환
         if not is_diary_exist:
             self._errors['diaryId'] = [f'diaryId: {self.data.get("diaryId")} 가 존재하지 않습니다.']
             return False, status.HTTP_404_NOT_FOUND
 
         return True, status.HTTP_200_OK
-    
 
-class KeyWordImgSaveRequest(serializers.Serializer):
-    keywordId = serializers.IntegerField()
+
+class KeywordIdRequest(serializers.Serializer):
+    keywordId = serializers.IntegerField(validators=[exist_keyword_id])
+
+
+class ImageUrlRequest(serializers.Serializer):
     imgUrl = serializers.CharField()
 
-    def is_valid(self, raise_exception=False):
-        super_valid = super().is_valid()
-        # 유효하지 않다면 False, 400 반환
-        if not super_valid:
-            return False, status.HTTP_400_BAD_REQUEST
-        
-        # keywordId가 존재하는지 확인
-        is_keyword_exist = Keywords.objects.filter(id=self.data['keywordId']).exists()
-        # 존재하지 않는다면 False, 404 반환
-        if not is_keyword_exist:
-            self._errors['keywordId'] = [f'keywordId: {self.data.get("keywordId")} 가 존재하지 않습니다.']
-            return False, status.HTTP_404_NOT_FOUND
-        
-        return True, status.HTTP_200_OK
-
-
-class DiaryImgSaveRequest(serializers.Serializer):
-    diaryId = serializers.IntegerField()
-    imgUrl = serializers.CharField()
-
-    def is_valid(self, raise_exception=False):
-        super_valid = super().is_valid()
-        # 유효하지 않다면 False, 400 반환
-        if not super_valid:
-            return False, status.HTTP_400_BAD_REQUEST
-
-        # diaryId가 존재하는지 확인
-        is_diary_exist = Diary.objects.filter(id=self.data['diaryId']).exists()
-        # 존재하지 않는다면 False, 404 반환
-        if not is_diary_exist:
-            self._errors['diaryId'] = [f'diaryId: {self.data.get("diaryId")} 가 존재하지 않습니다.']
-            return False, status.HTTP_404_NOT_FOUND
-        
-        return True, status.HTTP_200_OK
 
 class FindKeywordImgRequest(serializers.Serializer):
     keyword = serializers.CharField()
@@ -285,23 +151,24 @@ class FindKeywordImgRequest(serializers.Serializer):
         # 유효하지 않다면 False, 400 반환
         if not super_valid:
             return False, status.HTTP_400_BAD_REQUEST
-        
+
         if self.validated_data.get('page') <= 0 or self.validated_data.get('pageSize') <= 0:
             return False, status.HTTP_400_BAD_REQUEST
-        
+
         return True, status.HTTP_200_OK
-    
+
 
 class AnswerSerializer(serializers.Serializer):
     keywordId = serializers.IntegerField()
     answer = serializers.CharField()
+
 
 class AnswerListRequest(serializers.Serializer):
     answers = AnswerSerializer(many=True)
 
     def is_valid(self, raise_exception=False):
         super_valid = super().is_valid()
-        
+
         if not super_valid:
             return False, status.HTTP_400_BAD_REQUEST
 
