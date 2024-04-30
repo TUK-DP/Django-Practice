@@ -14,6 +14,11 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+REQUEST_HEADER = "header"
+REQUEST_BODY = "body"
+REQUEST_QUERY = "query"
+REQUEST_PATH = "path"
+
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,12 +30,38 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-5=9qd#p44rv-o@r=1ktt@gz(4sb@u5!gt6*58ths@*==y78wzh'
 
+JWT_SECRET = os.getenv("JWT_SECRET")
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
 # Application definition
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        # AccessToken 을 header 에 넣어서 보내야 한다.
+        'AccessToken': {
+            'type': 'apiKey',
+            'name': 'AccessToken',
+            'description': '입력형 : `jwt <AccessToken>`',
+            'in': 'header'
+        },
+
+        # RefreshToken 을 header 에 넣어서 보내야 한다.
+        'RefreshToken': {
+            'type': 'apiKey',
+            'name': 'RefreshToken',
+            'description': '입력형 : `jwt <RefreshToken>`',
+            'in': 'header'
+        },
+
+    },
+
+    # PERSIST_AUTH 를 True 로 설정하면, Swagger 페이지에서 로그인을 한 번 하면, 그 이후에는 로그인을 하지 않아도 된다.
+    'PERSIST_AUTH': True,
+}
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -52,7 +83,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware', 
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -64,8 +95,8 @@ MIDDLEWARE = [
 ]
 
 ##CORS
-CORS_ORIGIN_ALLOW_ALL=True # <- 모든 호스트 허용
-CORS_ALLOW_CREDENTIALS = True # <-쿠키가 cross-site HTTP 요청에 포함될 수 있다
+CORS_ORIGIN_ALLOW_ALL = True  # <- 모든 호스트 허용
+CORS_ALLOW_CREDENTIALS = True  # <-쿠키가 cross-site HTTP 요청에 포함될 수 있다
 
 CORS_ALLOW_METHODS = (  # <-실제 요청에 허용되는 HTTP 동사 리스트
     'DELETE',
@@ -76,7 +107,7 @@ CORS_ALLOW_METHODS = (  # <-실제 요청에 허용되는 HTTP 동사 리스트
     'PUT',
 )
 
-CORS_ALLOW_HEADERS = ( # <-실제 요청을 할 때 사용될 수 있는 non-standard HTTP 헤더 목록// 현재 기본값
+CORS_ALLOW_HEADERS = (  # <-실제 요청을 할 때 사용될 수 있는 non-standard HTTP 헤더 목록// 현재 기본값
     'accept',
     'accept-encoding',
     'authorization',
@@ -88,7 +119,7 @@ CORS_ALLOW_HEADERS = ( # <-실제 요청을 할 때 사용될 수 있는 non-sta
     'x-requested-with',
 )
 
-APPEND_SLASH = False #<- / 관련 에러 제거
+APPEND_SLASH = False  # <- / 관련 에러 제거
 
 ROOT_URLCONF = 'config.urls'
 
