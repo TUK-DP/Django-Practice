@@ -1,4 +1,5 @@
 import os
+import uuid
 from datetime import datetime
 
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
@@ -50,10 +51,15 @@ class ImageView(APIView):
 
         # 파일 이름 자르기 [0]은 파일 이름, [1]은 확장자
         splitext = os.path.splitext(request.data.get('image').name)
+
+        # uuid 생성
+        uuid_str = str(uuid.uuid4())
+
         # 파일확장자
         file_extension = splitext[1]
-        # 파일이름 = 현재시간 + 확장자
-        filename = datetime.now().strftime("%d-%m-%YT%H:%M:%S") + file_extension
+
+        # 파일이름 = 현재시간 + uuid + 확장자
+        filename = (datetime.now().strftime("%d-%m-%YT%H:%M:%S") + uuid_str + file_extension)
 
         # S3에 이미지 업로드
         url = upload_file_to_s3(request.data.get('image'), filename)

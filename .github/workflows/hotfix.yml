@@ -23,9 +23,10 @@ jobs:
             git checkout main 
             git stash push || true
             git pull
-            git stash pop || true
+            git stash clear || true
             sudo echo "${{ secrets.DOT_ENT_DJANGO }}" > .env-django
             sudo echo "${{ secrets.DOT_ENT_MYSQL }}" > .env-mysql
             sudo echo "${{ secrets.DOT_ENT_NEO4J }}" > .env-neo4j
+            sudo echo "${{ secrets.DOT_ENT_S3 }}" > .env-s3
             sudo docker rm -f ${{ secrets.REPOSITORY_NAME }} || true
             sudo docker-compose -f docker-compose.yml -f docker-compose-prod.yml up -d --build
