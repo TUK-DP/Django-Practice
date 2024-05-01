@@ -118,19 +118,10 @@ class GetQuizView(APIView):
         query_serializer=GetDiaryRequest(),
         # responses={status.HTTP_200_OK: ApiResponse.schema(QuizResultResponse, description="퀴즈")}
     )
+    @validator(request_type=REQUEST_QUERY, request_serializer=GetDiaryRequest, return_key='query')
     def get(self, request):
-        requestSerial = GetDiaryRequest(data=request.query_params)
-
-        isValid, response_status = requestSerial.is_valid()
-        if not isValid:
-            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
-
-        # 유효성 검사 통과한 경우
-        request = requestSerial.validated_data
-
         # Diary 가져오기
-        diaryId = request.get('diaryId')
-        findDiary = Diary.objects.get(id=diaryId)
+        findDiary = Diary.objects.get(id=request.query.validated_data.get('diaryId'))
 
         keywords = findDiary.keywords.all()
 
