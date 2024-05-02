@@ -28,7 +28,7 @@ class DiaryCRUDView(APIView):
         findDiary = Diary.objects.get(id=diaryId)
 
         # 일기 삭제 후 재생성
-        newDiary = requestSerializer.update(findDiary, requestSerializer.validated_data)
+        newDiary = requestSerializer.update(findDiary, request)
 
         return ApiResponse.on_success(
             result=DiaryResultResponse(newDiary).data,
@@ -46,6 +46,7 @@ class DiaryCRUDView(APIView):
         findDiary = Diary.objects.get(id=diaryId)
 
         findDiary.delete()
+        Diary.objects.filter(id=diaryId).delete()
 
         return ApiResponse.on_success(
             message="삭제 완료",

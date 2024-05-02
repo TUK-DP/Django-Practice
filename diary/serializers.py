@@ -84,6 +84,7 @@ class DiaryUpdateRequest(serializers.Serializer):
         userId = validated_data.get('userId', instance.user_id)
 
         instance.delete()
+        Diary.objects.filter(id=instance.id).delete()
 
         return Diary.objects.create(
             user_id=userId,
