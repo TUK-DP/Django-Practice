@@ -86,8 +86,8 @@ class DiaryUpdateRequest(serializers.Serializer):
         instance.delete()
         Diary.objects.filter(id=instance.id).delete()
 
-        return Diary.objects.create(
-            user_id=userId,
+        return Diary.create(
+            user=User.objects.get(id=userId),
             title=title,
             content=content,
             createDate=createDate
