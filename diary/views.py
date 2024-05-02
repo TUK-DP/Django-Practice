@@ -26,17 +26,9 @@ class DiaryCRUDView(APIView):
         request: ReturnDict = requestSerializer.validated_data
 
         findDiary = Diary.objects.get(id=diaryId)
-        # 일기 삭제
-        findDiary.delete()
 
-        # GraphDB, 키워드 관련 로직과 같이 일기 생성
-        newDiary = Diary.create(
-            user=User.objects.get(id=request.get('userId')),
-            createDate=request.get('date'),
-            img_url=request.get('imgUrl'),
-            title=request.get('title'),
-            content=request.get('content')
-        )
+        # 일기 삭제 후 재생성
+        newDiary = requestSerializer.update(findDiary, requestSerializer.validated_data)
 
         return ApiResponse.on_success(
             result=DiaryResultResponse(newDiary).data,
