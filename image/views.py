@@ -2,17 +2,17 @@ import os
 import uuid
 from datetime import datetime
 
-from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db import transaction
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.parsers import MultiPartParser
 from rest_framework.views import APIView
 
-from config.basemodel import ApiResponse
+from config.basemodel import ApiResponse, validator
+from config.settings import REQUEST_QUERY
 from diary.serializers import *
 from image.s3_modules.s3_handler import upload_file_to_s3
-from image.serializer import ImageRequest, ImageResponse
+from image.serializers import *
 
 
 # Create your views here.
@@ -75,60 +75,26 @@ class ImageView(APIView):
         operation_id="키워드별 사진 페이징",
         operation_description="키워드별 사진 페이징",
         query_serializer=FindKeywordImgRequest(),
-        # responses=
+        responses={status.HTTP_200_OK: ApiResponse.schema(KeywordImagePaging)}
     )
+    @validator(request_type=REQUEST_QUERY, request_serializer=FindKeywordImgRequest, return_serializer="serializer")
     def get(self, request):
-        requestSerial = FindKeywordImgRequest(data=request.query_params)
-
-        isValid, response_status = requestSerial.is_valid()
-        # 유효성 검사 통과하지 못한 경우
-        if not isValid:
-            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
-
+        requestSerial = request.serializer
         request = requestSerial.validated_data
-
-        keywordObjects = Keywords.objects.filter(keyword=request.get('keyword'))
-
-        # 필터링된 객체가 없을 경우 404 반환
-        if not keywordObjects:
-            return ApiResponse.on_fail({"message": "아직 그려진 그림이 없습니다."}, status.HTTP_404_NOT_FOUND)
+        keywordObjects = Keywords.objects.filter(keyword=request.get('keyword'), imgUrl__isnull=False)
 
         # 최신순으로 정렬
         keywordObjects = keywordObjects.order_by('-updated_at')
 
         # imgUrl 필드만 가져와서 리스트로 변환하지 않고 쿼리셋으로 페이지네이션
         keywordImgUrls = keywordObjects.values_list('imgUrl', flat=True)
+
         requestPage = request.get('page')
         pageSize = request.get('pageSize')
 
-        paginator = Paginator(keywordImgUrls, pageSize)
-
-        try:
-            pageObj = paginator.page(requestPage)
-        except PageNotAnInteger:
-            firstPage = 1
-            pageObj = paginator.page(firstPage)
-        except EmptyPage:
-            lastPage = paginator.num_pages
-            pageObj = paginator.page(lastPage)
-
-        result = []
-
-        # JSON 응답 생성
-        result.append({
-            "isSuccess": True,
-            "results": {
-                "imgUrls": list(pageObj),
-                "totalDataSize": paginator.count,
-                "totalPage": paginator.num_pages,
-                "hasNext": pageObj.has_next(),
-                "hasPrevious": pageObj.has_previous(),
-                "currentPage": pageObj.number,
-                "dataSize": pageSize
-            }
-        })
+        result = KeywordImagePaging(page=requestPage, pageSize=pageSize, object_list=keywordImgUrls)
 
         return ApiResponse.on_success(
-            result=result,
+            result=result.data,
             response_status=status.HTTP_201_CREATED
         )
