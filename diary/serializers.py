@@ -1,5 +1,6 @@
 from rest_framework import status
 
+from config.validator import positive_value
 from users.models import User
 from users.serializers import UserSafeSerializer
 from users.validator import exist_user_id
@@ -144,19 +145,8 @@ class ImageUrlRequest(serializers.Serializer):
 
 class FindKeywordImgRequest(serializers.Serializer):
     keyword = serializers.CharField()
-    page = serializers.IntegerField()
-    pageSize = serializers.IntegerField()
-
-    def is_valid(self, *, raise_exception=False):
-        super_valid = super().is_valid()
-        # 유효하지 않다면 False, 400 반환
-        if not super_valid:
-            return False, status.HTTP_400_BAD_REQUEST
-
-        if self.validated_data.get('page') <= 0 or self.validated_data.get('pageSize') <= 0:
-            return False, status.HTTP_400_BAD_REQUEST
-
-        return True, status.HTTP_200_OK
+    page = serializers.IntegerField(validators=[positive_value])
+    pageSize = serializers.IntegerField(validators=[positive_value])
 
 
 class AnswerSerializer(serializers.Serializer):
