@@ -143,15 +143,9 @@ class CheckAnswerView(APIView):
         request_body=AnswerListRequest,
         # responses={status.HTTP_200_OK: ApiResponse.schema(AnswerResultResponse, description="결과")}
     )
+    @validator(request_type=REQUEST_BODY, request_serializer=AnswerListRequest)
     def post(self, request):
-        requestSerial = AnswerListRequest(data=request.data)
-
-        isValid, response_status = requestSerial.is_valid()
-
-        # 유효성 검사 통과하지 못한 경우
-        if not isValid:
-            return ApiResponse.on_fail(requestSerial.errors, response_status=response_status)
-
+        requestSerial = request.serializer
         request = requestSerial.validated_data
 
         answers = []
