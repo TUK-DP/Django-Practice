@@ -16,15 +16,15 @@ schema_view = get_schema_view(
     permission_classes=(permissions.AllowAny,),
 )
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('diary', include('diary.urls')),
-    path('keyword', include('diary.keyword_urls')),
-    path('quiz', include('diary.quiz_urls')),
-    path('users', include('users.urls')),
-    path('image', include('image.urls')),
-    path('center', include('center.urls')),
+    path('api/admin/', admin.site.urls),
+    path('api/diary', include('diary.urls')),
+    path('api/keyword', include('diary.keyword_urls')),
+    path('api/quiz', include('diary.quiz_urls')),
+    path('api/users', include('users.urls')),
+    path('api/image', include('image.urls')),
+    path('api/center', include('center.urls')),
 
-    re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    re_path(r'^api/swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='api2/schema-swagger-ui'),
 ]
 
 urlpatterns += staticfiles_urlpatterns()
