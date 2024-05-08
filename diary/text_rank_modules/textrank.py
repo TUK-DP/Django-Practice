@@ -49,7 +49,7 @@ def make_quiz(text_rank: TextRank, keyword_size=3):
                 answer_keywords.append(word)
 
                 # 문장에서 키워드를 _로 대체
-                sentence = sentence.replace(word, "_" * len(word))
+                sentence = sentence.replace(word, "_" * len(word), 1)
 
                 # 퀴즈 문장 추가
                 quiz_sentences.append(sentence)
