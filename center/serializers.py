@@ -8,9 +8,9 @@ def positive_validator(value):
 
 class GetAroundCenterRequest(serializers.Serializer):
     # 위도
-    lat = serializers.FloatField(help_text='사용자 위도', validators=[positive_validator])
+    lat = serializers.FloatField(help_text='사용자 위도')
     # 경도
-    lon = serializers.FloatField(help_text='사용자 경도', validators=[positive_validator])
+    lon = serializers.FloatField(help_text='사용자 경도')
     # 반경 (km)
     radius = serializers.FloatField(help_text='반경 (km) 거리안 치매센터 조회', validators=[positive_validator])
 
