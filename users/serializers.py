@@ -56,6 +56,10 @@ class DuplicateNicknameRequest(serializers.Serializer):
     nickname = serializers.CharField(max_length=20, validators=[not_exist_user_nickname])
 
 
+class DuplicateEmailRequest(serializers.Serializer):
+    email = serializers.CharField(max_length=100, validators=[not_exist_user_email])
+
+
 class UserDeleteRequest(serializers.Serializer):
     id = serializers.IntegerField(validators=[exist_user_id])
 

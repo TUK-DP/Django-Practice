@@ -9,5 +9,6 @@ urlpatterns = [
     path('/<int:userId>', UserView.as_view()),
     path('/checknickname', CheckNicknameView.as_view()),
     path('/recordsave', RecordSaveView.as_view()),
-    path('/prevrecord', GetDiagRecordView.as_view())
+    path('/prevrecord', GetDiagRecordView.as_view()),
+    path('/checkemail', CheckEmailView.as_view())
 ]
