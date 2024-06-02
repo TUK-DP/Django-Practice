@@ -143,6 +143,21 @@ class CheckNicknameView(APIView):
             response_status=status.HTTP_200_OK,
             message="사용가능한 닉네임입니다.",
         )
+    
+
+class CheckEmailView(APIView):
+    @transaction.atomic
+    @swagger_auto_schema(
+        operation_id="이메일 중복 확인", request_body=DuplicateEmailRequest,
+        responses={status.HTTP_200_OK: ApiResponse.schema(ApiResponse, description="사용가능한 이메일")},
+        security=[]
+    )
+    @validator(request_serializer=DuplicateEmailRequest)
+    def post(self, request):
+        return ApiResponse.on_success(
+            response_status=status.HTTP_200_OK,
+            message="사용가능한 이메일입니다.",
+        )
 
 
 class AutoLoginView(APIView):
