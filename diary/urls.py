@@ -9,4 +9,5 @@ urlpatterns = [
     path('/<int:diaryId>/graph', GetNodeData.as_view()),
     path('/user/<int:userId>', GetDiaryByUserView.as_view()),
     path('/checkanswer', CheckAnswerView.as_view()),
+    path('/checkdiary', IsExistDiaryView.as_view()),
 ]

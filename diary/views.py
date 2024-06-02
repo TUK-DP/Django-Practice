@@ -10,6 +10,7 @@ from users.models import User
 from .graph import GraphDB
 from .graph_serializer import GraphDataSerializer
 
+import calendar
 
 class DiaryCRUDView(APIView):
     @transaction.atomic
@@ -247,5 +248,41 @@ class GetKeywordView(APIView):
 
         return ApiResponse.on_success(
             result=KeywordResultSerializer(findKeywords, many=True).data,
+            response_status=status.HTTP_200_OK
+        )
+
+
+class IsExistDiaryView(APIView):
+    @transaction.atomic
+    @swagger_auto_schema(
+        operation_id="기간별 일기 유무 리스트 가져오기",
+        operation_description="기간별 일기 유무 리스트 가져오기",
+        query_serializer=IsExistDiaryRequest(),
+        responses={status.HTTP_200_OK: ApiResponse.schema(ApiResponse)}
+    )
+    @validator(request_type=REQUEST_QUERY, request_serializer=IsExistDiaryRequest, return_key='query')
+    def get(self, request):
+        # 요청 데이터에서 userId, year, month 추출
+        userId = request.query.validated_data.get('userId')
+        year = request.query.validated_data.get('year')
+        month = request.query.validated_data.get('month')
+
+        # 해당 월의 일수를 가져옴
+        _, lastDay = calendar.monthrange(year, month)
+
+        # 일기가 존재하는 날짜를 boolean 배열로 초기화
+        Diaries = [False] * lastDay
+
+        # 해당 userId, year, month에 해당하는 일기를 조회
+        diaries = Diary.objects.filter(user_id=userId, createDate__year=year, createDate__month=month)
+
+        # 조회된 일기의 날짜를 boolean 배열에 반영
+        for diary in diaries:
+            Diaries[diary.createDate.day - 1] = True
+
+        # 결과를 JSON 형식으로 반환
+        result = {f'{year}년 {month}월': Diaries}
+        return ApiResponse.on_success(
+            result=result,
             response_status=status.HTTP_200_OK
         )
