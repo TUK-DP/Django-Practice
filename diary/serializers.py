@@ -168,3 +168,4 @@ class GetDiaryByUserAndDateRequest(serializers.Serializer):
     userId = serializers.IntegerField()
     startDate = serializers.DateField()
     finishDate = serializers.DateField()
+    sortBy = serializers.ChoiceField(choices=['createDate', '-createDate'], required=False, default='createDate')
