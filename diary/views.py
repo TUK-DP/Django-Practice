@@ -286,3 +286,35 @@ class IsExistDiaryView(APIView):
             result=result,
             response_status=status.HTTP_200_OK
         )
+    
+
+class GetDiaryByUserAndDateView(APIView):
+    @transaction.atomic
+    @swagger_auto_schema(
+        operation_id="기간별 일기 리스트 가져오기",
+        operation_description="기간별 일기 리스트 가져오기",
+        query_serializer=GetDiaryByUserAndDateRequest(),
+        responses={status.HTTP_200_OK: ApiResponse.schema(ApiResponse)}
+    )
+    @validator(request_type=REQUEST_QUERY, request_serializer=GetDiaryByUserAndDateRequest, return_key='query')
+    def get(self, request):
+        # 요청 데이터에서 userId, year, month 추출
+        userId = request.query.validated_data.get('userId')
+        startDate = request.query.validated_data.get('startDate')
+        finishDate = request.query.validated_data.get('finishDate')
+
+        # 해당 userId, startDate, finishDate에 해당하는 일기를 조회
+        diaries = Diary.objects.filter(
+            user_id=userId,
+            createDate__range=[startDate, finishDate]
+        )
+
+        # 일기 정보를 DiarySerializer를 사용하여 직렬화
+        diary_list = DiarySerializer(diaries, many=True).data
+
+        # 결과를 JSON 형식으로 반환
+        result = {"diaries": diary_list}
+        return ApiResponse.on_success(
+            result=result,
+            response_status=status.HTTP_200_OK
+        )

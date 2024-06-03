@@ -10,4 +10,5 @@ urlpatterns = [
     path('/user/<int:userId>', GetDiaryByUserView.as_view()),
     path('/checkanswer', CheckAnswerView.as_view()),
     path('/checkdiary', IsExistDiaryView.as_view()),
+    path('/list', GetDiaryByUserAndDateView.as_view()),
 ]

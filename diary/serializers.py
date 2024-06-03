@@ -162,3 +162,9 @@ class IsExistDiaryRequest(serializers.Serializer):
     userId = serializers.IntegerField()
     year = serializers.IntegerField()
     month = serializers.IntegerField()
+
+
+class GetDiaryByUserAndDateRequest(serializers.Serializer):
+    userId = serializers.IntegerField()
+    startDate = serializers.DateField()
+    finishDate = serializers.DateField()
