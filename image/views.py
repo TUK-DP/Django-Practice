@@ -11,6 +11,9 @@ from rest_framework.views import APIView
 from config.basemodel import ApiResponse, validator
 from config.settings import REQUEST_QUERY
 from diary.serializers import *
+from image.gpt import GenerateImage
+from image.gpt.ImageConverter import image_to_file
+from image.gpt.RemoveBackground import remove_background
 from image.s3_modules.s3_handler import upload_file_to_s3
 from image.serializers import *
 
@@ -98,3 +101,34 @@ class ImageView(APIView):
             result=result.data,
             response_status=status.HTTP_201_CREATED
         )
+
+
+class GenerateImageView(APIView):
+    def get(self, request):
+        urls = []
+
+        # prompt 에 맞는 이미지 생성
+        image = GenerateImage.generate_test_image("test")
+
+        # 생성한 이미지를 S3에 업로드
+        url = upload_file_to_s3(image_to_file(image, ''), 'test.png')
+        urls.append(url)
+
+        # 배경 제거
+        removed_image = remove_background(url)
+        file = image_to_file(removed_image, 'removed.png')
+        # 배경 제거한 이미지를 S3에 업로드
+        url = upload_file_to_s3(file, 'test1.png')
+        urls.append(url)
+
+        return ApiResponse.on_success(
+            result={
+                'urls': urls
+            },
+            response_status=status.HTTP_200_OK
+        )
+
+
+def get_file_path(file_path):
+    module_dir = os.path.dirname(__file__)
+    return os.path.join(module_dir, file_path)
