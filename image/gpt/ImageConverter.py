@@ -1,7 +1,7 @@
-import requests
-from PIL import Image
 from io import BytesIO
 
+import requests
+from PIL import Image
 from django.core.files import File
 
 
@@ -16,9 +16,9 @@ def bytes_to_image(byte) -> Image:
     return image
 
 
-def image_to_file(image: Image, filename) -> File:
+def image_to_file(image: Image) -> File:
     byte = image_to_bytes(image)
-    return File(byte, filename)
+    return File(byte, "")
 
 
 def image_to_bytes(image: Image) -> BytesIO:
@@ -26,3 +26,8 @@ def image_to_bytes(image: Image) -> BytesIO:
     image.save(byte, format=image.format)
     byte.seek(0)
     return byte
+
+
+def url_to_file(url) -> File:
+    image = url_to_image(url)
+    return image_to_file(image)

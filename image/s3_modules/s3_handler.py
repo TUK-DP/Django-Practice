@@ -1,4 +1,5 @@
 import os
+import uuid
 
 import boto3
 from django.core.files import File
@@ -17,6 +18,11 @@ s3 = session.resource('s3')
 # get all objects in bucket
 bucket_name = os.getenv('AWS_STORAGE_BUCKET_NAME')
 bucket = s3.Bucket(bucket_name)
+
+
+def upload_random_name_file_to_s3(image: File):
+    file_name = str(uuid.uuid4())
+    return upload_file_to_s3(image, file_name)
 
 
 def upload_file_to_s3(file: File, filename: str):
