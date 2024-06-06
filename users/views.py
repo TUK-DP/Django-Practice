@@ -30,6 +30,26 @@ class UserListView(APIView):
             response_status=status.HTTP_200_OK
         )
 
+    @transaction.atomic
+    @swagger_auto_schema(
+        operation_id="유저 수정", request_body=UserUpdateRequest,
+        responses={status.HTTP_200_OK: ApiResponse.schema(UserSerializer)},
+        security=[{'AccessToken': []}]
+    )
+    @token_permission_validator(where_is_userId=REQUEST_BODY, userIdName='id')
+    @validator(request_serializer=UserUpdateRequest, request_type=REQUEST_BODY, return_key='serializer')
+    def put(self, request):
+        updateSerializer = request.serializer
+        updateRequest = updateSerializer.validated_data
+
+        findUser = User.objects.get(id=updateRequest['id'])
+
+        updateSerializer.update(findUser, updateRequest)
+
+        return ApiResponse.on_success(
+            result=UserSerializer(findUser).data
+        )
+
 
 class UserView(APIView):
     @transaction.atomic
@@ -40,22 +60,6 @@ class UserView(APIView):
     @validator(request_type=REQUEST_PATH, request_serializer=UserIdReqeust, return_key='serializer')
     def get(self, request, userId: int):
         findUser = User.objects.get(id=userId)
-        return ApiResponse.on_success(
-            result=UserSerializer(findUser).data
-        )
-
-    @transaction.atomic
-    @swagger_auto_schema(
-        operation_id="유저 수정", request_body=UserUpdateRequest,
-        responses={status.HTTP_200_OK: ApiResponse.schema(UserSerializer)},
-        security=[{'AccessToken': []}]
-    )
-    @token_permission_validator(where_is_userId=REQUEST_PATH)
-    @validator(request_serializer=UserIdReqeust, request_type=REQUEST_PATH, return_key='serializer')
-    @validator(request_serializer=UserUpdateRequest, request_type=REQUEST_BODY, return_key='serializer')
-    def patch(self, request, userId: int):
-        findUser = User.objects.get(id=userId)
-        request.serializer.update(findUser, request.serializer.validated_data)
         return ApiResponse.on_success(
             result=UserSerializer(findUser).data
         )
@@ -142,6 +146,21 @@ class CheckNicknameView(APIView):
         return ApiResponse.on_success(
             response_status=status.HTTP_200_OK,
             message="사용가능한 닉네임입니다.",
+        )
+
+
+class CheckEmailView(APIView):
+    @transaction.atomic
+    @swagger_auto_schema(
+        operation_id="이메일 중복 확인", request_body=DuplicateEmailRequest,
+        responses={status.HTTP_200_OK: ApiResponse.schema(ApiResponse, description="사용가능한 이메일")},
+        security=[]
+    )
+    @validator(request_serializer=DuplicateEmailRequest)
+    def post(self, request):
+        return ApiResponse.on_success(
+            response_status=status.HTTP_200_OK,
+            message="사용가능한 이메일입니다.",
         )
 
 

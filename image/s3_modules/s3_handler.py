@@ -1,7 +1,8 @@
 import os
+import uuid
 
 import boto3
-from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.files import File
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -19,7 +20,12 @@ bucket_name = os.getenv('AWS_STORAGE_BUCKET_NAME')
 bucket = s3.Bucket(bucket_name)
 
 
-def upload_file_to_s3(file: InMemoryUploadedFile, filename: str):
+def upload_random_name_file_to_s3(image: File):
+    file_name = str(uuid.uuid4())
+    return upload_file_to_s3(image, file_name)
+
+
+def upload_file_to_s3(file: File, filename: str):
     """
     :param file: InMemoryUploadedFile 파일
     :param filename: 파일 이름

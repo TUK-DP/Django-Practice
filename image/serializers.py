@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework import status
 
 from config.paging_handler import PagingSerializer, get_paging_data
+from image.validator import less_than
 
 
 class ImageRequest(serializers.Serializer):
@@ -29,3 +30,13 @@ class KeywordImagePaging(PagingSerializer):
         data = get_paging_data(page, pageSize, object_list, data_name="imgUrls")
 
         super().__init__(data, *args, **kwargs)
+
+
+class GenerateImageRequest(serializers.Serializer):
+    password = serializers.CharField()
+    prompt = serializers.CharField()
+    n = serializers.IntegerField(validators=[less_than(4)])
+
+
+class GenerateImageResponse(serializers.Serializer):
+    urls = serializers.ListField(child=serializers.CharField())

@@ -56,16 +56,25 @@ class DuplicateNicknameRequest(serializers.Serializer):
     nickname = serializers.CharField(max_length=20, validators=[not_exist_user_nickname])
 
 
+class DuplicateEmailRequest(serializers.Serializer):
+    email = serializers.CharField(max_length=100, validators=[not_exist_user_email])
+
+
 class UserDeleteRequest(serializers.Serializer):
     id = serializers.IntegerField(validators=[exist_user_id])
 
 
 class UserUpdateRequest(serializers.Serializer):
-    username = serializers.CharField(max_length=20, required=False)
-    nickname = serializers.CharField(max_length=20, validators=[not_exist_user_nickname], required=False)
-    email = serializers.EmailField(max_length=100, validators=[not_exist_user_email], required=False)
-    password = serializers.CharField(max_length=128, required=False)
-    birth = serializers.DateField(required=False)
+    id = serializers.IntegerField(validators=[exist_user_id])
+    username = serializers.CharField(max_length=20)
+    nickname = serializers.CharField(max_length=20)
+    email = serializers.EmailField(max_length=100)
+    password = serializers.CharField(max_length=128)
+    birth = serializers.DateField()
+
+    def validate(self, attrs):
+        validate_update(attrs['id'], attrs['email'], attrs['nickname'])
+        return attrs
 
     def update(self, instance, validated_data):
         instance.username = validated_data.get('username', instance.username)

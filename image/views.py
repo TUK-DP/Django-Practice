@@ -9,8 +9,9 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.views import APIView
 
 from config.basemodel import ApiResponse, validator
-from config.settings import REQUEST_QUERY
+from config.settings import REQUEST_QUERY, JWT_SECRET, REQUEST_BODY
 from diary.serializers import *
+from image.gpt.GenerateImage import generate_upload_image, test_generate_image_urls
 from image.s3_modules.s3_handler import upload_file_to_s3
 from image.serializers import *
 
@@ -98,3 +99,24 @@ class ImageView(APIView):
             result=result.data,
             response_status=status.HTTP_201_CREATED
         )
+
+
+class GenerateImageView(APIView):
+    @swagger_auto_schema(
+        operation_id="AI 이미지 생성",
+        operation_description="AI 이미지 생성",
+        request_body=GenerateImageRequest,
+        responses={status.HTTP_200_OK: ApiResponse.schema(GenerateImageResponse)}
+    )
+    @validator(request_type=REQUEST_BODY, request_serializer=GenerateImageRequest)
+    def post(self, request):
+        n = request.serializer.validated_data.get('n')
+        prompt = request.serializer.validated_data.get('prompt')
+        password = request.serializer.validated_data.get('password')
+
+        if password != JWT_SECRET:
+            urls = test_generate_image_urls(prompt, n=n)
+        else:
+            urls = generate_upload_image(prompt, n=n)
+
+        return ApiResponse.on_success(result={'urls': urls}, response_status=status.HTTP_200_OK)
