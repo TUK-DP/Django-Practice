@@ -163,9 +163,11 @@ class IsExistDiaryRequest(serializers.Serializer):
     year = serializers.IntegerField()
     month = serializers.IntegerField()
 
+DES_CREATEDATE = 'DES_CREATE_DATE'
+ASC_CREATEDATE = 'ASC_CREATE_DATE'
 
 class GetDiaryByUserAndDateRequest(serializers.Serializer):
     userId = serializers.IntegerField()
     startDate = serializers.DateField()
     finishDate = serializers.DateField()
-    sortBy = serializers.ChoiceField(choices=['createDate', '-createDate'], required=False, default='createDate')
+    sortBy = serializers.ChoiceField(choices=[DES_CREATEDATE, ASC_CREATEDATE], required=False, default=DES_CREATEDATE)

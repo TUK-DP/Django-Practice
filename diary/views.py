@@ -286,7 +286,9 @@ class IsExistDiaryView(APIView):
             result=result,
             response_status=status.HTTP_200_OK
         )
-    
+
+DES_CREATEDATE = 'DES_CREATE_DATE'
+ASC_CREATEDATE = 'ASC_CREATE_DATE'
 
 class GetDiaryByUserAndDateView(APIView):
     @transaction.atomic
@@ -304,11 +306,17 @@ class GetDiaryByUserAndDateView(APIView):
         finishDate = request.query.validated_data.get('finishDate')
         sortBy = request.query.validated_data.get('sortBy')
 
+        sortMapping = {
+            DES_CREATEDATE: '-createDate',
+            ASC_CREATEDATE: 'createDate'
+        }
+        sortField = sortMapping.get(sortBy, 'createDate')  # 기본값은 'createDate'
+
         # 해당 userId, startDate, finishDate에 해당하는 일기를 조회
         diaries = Diary.objects.filter(
             user_id=userId,
             createDate__range=[startDate, finishDate]
-        ).order_by(sortBy)
+        ).order_by(sortField)
 
         # 일기 정보를 DiarySerializer를 사용하여 직렬화
         diaryList = DiarySerializer(diaries, many=True).data
