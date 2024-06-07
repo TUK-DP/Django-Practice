@@ -318,11 +318,16 @@ class GetDiaryByUserAndDateView(APIView):
             createDate__range=[startDate, finishDate]
         ).order_by(sortField)
 
-        # 일기 정보를 DiarySerializer를 사용하여 직렬화
-        diaryList = DiarySerializer(diaries, many=True).data
+        # 해당 userId를 가지고 있는 유저 정보 가져오기
+        user = User.objects.get(id=userId)
+
+        # 유저 정보를 UserSafeSerializer를 사용해서 구조화
+        userInfo = UserSafeSerializer(user).data
+        # 일기 정보를 DiaryResultResponse를 사용하여 직렬화
+        diaryList = DiaryResultResponse(diaries, many=True).data
 
         # 결과를 JSON 형식으로 반환
-        result = {"diaries": diaryList}
+        result = {"user": userInfo, "diaries": diaryList}
         return ApiResponse.on_success(
             result=result,
             response_status=status.HTTP_200_OK
