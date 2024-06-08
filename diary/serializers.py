@@ -161,11 +161,14 @@ class AnswerListRequest(serializers.Serializer):
 
 class CheckDiaryEntriesRequest(serializers.Serializer):
     userId = serializers.IntegerField(validators=[exist_user_id])
-    year = serializers.IntegerField(validators=[positive_year_value])
-    month = serializers.IntegerField(validators=[positive_month_value])
+    year = serializers.IntegerField(validators=[positive_year])
+    month = serializers.IntegerField(validators=[positive_month])
 
 class GetDiaryByUserAndDateRequest(serializers.Serializer):
     userId = serializers.IntegerField(validators=[exist_user_id])
     startDate = serializers.DateField()
     finishDate = serializers.DateField()
-    sortBy = serializers.ChoiceField(choices=[key for key in DATE_SORT_MAPPER.keys()], required=False, default=DES_CREATEDATE)
+    sortBy = serializers.ChoiceField(choices=[key for key in DATE_SORT_MAPPER.keys()],
+                                     required=False,
+                                     default=DES_CREATEDATE,
+                                     validators=[positive_sort_by])
