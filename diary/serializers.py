@@ -159,7 +159,7 @@ class AnswerListRequest(serializers.Serializer):
     answers = AnswerSerializer(many=True)
 
 
-class IsExistDiaryRequest(serializers.Serializer):
+class CheckDiaryEntriesRequest(serializers.Serializer):
     userId = serializers.IntegerField(validators=[exist_user_id])
     year = serializers.IntegerField()
     month = serializers.IntegerField()

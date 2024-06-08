@@ -253,15 +253,15 @@ class GetKeywordView(APIView):
         )
 
 
-class IsExistDiaryView(APIView):
+class CheckDiaryEntriesView(APIView):
     @transaction.atomic
     @swagger_auto_schema(
         operation_id="기간별 일기 유무 리스트 가져오기",
         operation_description="기간별 일기 유무 리스트 가져오기",
-        query_serializer=IsExistDiaryRequest(),
+        query_serializer=CheckDiaryEntriesRequest(),
         responses={status.HTTP_200_OK: ApiResponse.schema(ApiResponse)}
     )
-    @validator(request_type=REQUEST_QUERY, request_serializer=IsExistDiaryRequest, return_key='query')
+    @validator(request_type=REQUEST_QUERY, request_serializer=CheckDiaryEntriesRequest, return_key='query')
     def get(self, request):
         # 요청 데이터에서 userId, year, month 추출
         userId = request.query.validated_data.get('userId')
