@@ -161,8 +161,8 @@ class AnswerListRequest(serializers.Serializer):
 
 class CheckDiaryEntriesRequest(serializers.Serializer):
     userId = serializers.IntegerField(validators=[exist_user_id])
-    year = serializers.IntegerField()
-    month = serializers.IntegerField()
+    year = serializers.IntegerField(validators=[positive_year_value])
+    month = serializers.IntegerField(validators=[positive_month_value])
 
 class GetDiaryByUserAndDateRequest(serializers.Serializer):
     userId = serializers.IntegerField(validators=[exist_user_id])
