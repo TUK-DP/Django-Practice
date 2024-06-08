@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 
 from config.basemodel import ApiResponse, validator
 from config.settings import REQUEST_BODY, REQUEST_PATH, REQUEST_QUERY
+from config.sort_options import DATE_SORT_MAPPER
 from diary.serializers import *
 from users.models import User
 from .graph import GraphDB
@@ -287,9 +288,6 @@ class IsExistDiaryView(APIView):
             response_status=status.HTTP_200_OK
         )
 
-DES_CREATEDATE = 'DES_CREATE_DATE'
-ASC_CREATEDATE = 'ASC_CREATE_DATE'
-
 class GetDiaryByUserAndDateView(APIView):
     @transaction.atomic
     @swagger_auto_schema(
@@ -306,11 +304,7 @@ class GetDiaryByUserAndDateView(APIView):
         finishDate = request.query.validated_data.get('finishDate')
         sortBy = request.query.validated_data.get('sortBy')
 
-        sortMapping = {
-            DES_CREATEDATE: '-createDate',
-            ASC_CREATEDATE: 'createDate'
-        }
-        sortField = sortMapping.get(sortBy, 'createDate')  # 기본값은 'createDate'
+        sortField = DATE_SORT_MAPPER.get(sortBy)
 
         # 해당 userId, startDate, finishDate에 해당하는 일기를 조회
         diaries = Diary.objects.filter(

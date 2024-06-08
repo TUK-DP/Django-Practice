@@ -1,6 +1,7 @@
 from rest_framework import status
 
 from config.validator import positive_value
+from config.sort_options import *
 from users.models import User
 from users.serializers import UserSafeSerializer
 from users.validator import exist_user_id
@@ -163,11 +164,8 @@ class IsExistDiaryRequest(serializers.Serializer):
     year = serializers.IntegerField()
     month = serializers.IntegerField()
 
-DES_CREATEDATE = 'DES_CREATE_DATE'
-ASC_CREATEDATE = 'ASC_CREATE_DATE'
-
 class GetDiaryByUserAndDateRequest(serializers.Serializer):
     userId = serializers.IntegerField(validators=[exist_user_id])
     startDate = serializers.DateField()
     finishDate = serializers.DateField()
-    sortBy = serializers.ChoiceField(choices=[DES_CREATEDATE, ASC_CREATEDATE], required=False, default=DES_CREATEDATE)
+    sortBy = serializers.ChoiceField(choices=[key for key in DATE_SORT_MAPPER.keys()], required=False, default=DES_CREATEDATE)
