@@ -272,17 +272,18 @@ class CheckDiaryEntriesView(APIView):
         _, lastDay = calendar.monthrange(year, month)
 
         # 일기가 존재하는 날짜를 dict으로 초기화
-        Diaries = {day: False for day in range(1, lastDay + 1)}
+        diary_dict = {day: {"isExist": False, "diaryId": None} for day in range(1, lastDay + 1)}
 
         # 해당 userId, year, month에 해당하는 일기를 조회
         diaries = Diary.objects.filter(user_id=userId, createDate__year=year, createDate__month=month)
 
         # 조회된 일기의 날짜를 boolean 배열에 반영
         for diary in diaries:
-            Diaries[diary.createDate.day] = True
+            diary_dict[diary.createDate.day]["isExist"] = True
+            diary_dict[diary.createDate.day]["diaryId"] = diary.id
 
         # 결과를 JSON 형식으로 반환
-        result = {f'{year}-{month}': Diaries}
+        result = {f'{year}-{month}': diary_dict}
         return ApiResponse.on_success(
             result=result,
             response_status=status.HTTP_200_OK
