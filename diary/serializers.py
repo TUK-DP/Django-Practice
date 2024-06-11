@@ -176,3 +176,10 @@ class GetDiaryByUserAndDateRequest(serializers.Serializer):
 class NewResponse(serializers.Serializer):
   user = UserSafeSerializer()
   diaries = DiaryResultResponse(many=True)
+
+  @staticmethod
+  def to_json(user_data, diaries_data):
+      return {
+          'user': user_data,
+          'diaries': diaries_data
+      }
