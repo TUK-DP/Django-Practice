@@ -173,7 +173,7 @@ class GetDiaryByUserAndDateRequest(serializers.Serializer):
                                      default=DES_CREATEDATE,
                                      validators=[positive_sort_by])
 
-class NewResponse(serializers.Serializer):
+class GetDiaryByUserAndDateResponse(serializers.Serializer):
   user = UserSafeSerializer()
   diaries = DiaryResultResponse(many=True)
 
