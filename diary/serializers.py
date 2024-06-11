@@ -1,6 +1,7 @@
 from rest_framework import status
 
 from config.validator import positive_value
+from config.sort_options import *
 from users.models import User
 from users.serializers import UserSafeSerializer
 from users.validator import exist_user_id
@@ -156,3 +157,29 @@ class AnswerSerializer(serializers.Serializer):
 
 class AnswerListRequest(serializers.Serializer):
     answers = AnswerSerializer(many=True)
+
+
+class CheckDiaryEntriesRequest(serializers.Serializer):
+    userId = serializers.IntegerField(validators=[exist_user_id])
+    year = serializers.IntegerField(validators=[positive_year])
+    month = serializers.IntegerField(validators=[positive_month])
+
+class GetDiaryByUserAndDateRequest(serializers.Serializer):
+    userId = serializers.IntegerField(validators=[exist_user_id])
+    startDate = serializers.DateField()
+    finishDate = serializers.DateField()
+    sortBy = serializers.ChoiceField(choices=[key for key in DATE_SORT_MAPPER.keys()],
+                                     required=False,
+                                     default=DES_CREATEDATE,
+                                     validators=[positive_sort_by])
+
+class GetDiaryByUserAndDateResponse(serializers.Serializer):
+  user = UserSafeSerializer()
+  diaries = DiaryResultResponse(many=True)
+
+  @staticmethod
+  def to_json(user_data, diaries_data):
+      return {
+          'user': user_data,
+          'diaries': diaries_data
+      }
