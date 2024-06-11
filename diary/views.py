@@ -320,9 +320,18 @@ class GetDiaryByUserAndDateView(APIView):
         # 일기 정보를 DiaryResultResponse를 사용하여 직렬화
         diaryList = DiaryResultResponse(diaries, many=True).data
 
-        # 결과를 JSON 형식으로 반환
-        result = {"user": userInfo, "diaries": diaryList}
-        return ApiResponse.on_success(
-            result=result,
-            response_status=status.HTTP_200_OK
-        )
+        response_data = {"user": userInfo, "diaries": diaryList}
+        result = NewResponse(data=response_data)
+
+        # NewResponse의 유효성 검사 및 응답 생성
+        if result.is_valid():
+            valid_data = result.validated_data
+            return ApiResponse.on_success(
+                result=valid_data,
+                response_status=status.HTTP_200_OK
+            )
+        else:
+            return ApiResponse.on_fail(
+                message="Invalid data provided",
+                response_status=status.HTTP_400_BAD_REQUEST
+            )

@@ -172,3 +172,7 @@ class GetDiaryByUserAndDateRequest(serializers.Serializer):
                                      required=False,
                                      default=DES_CREATEDATE,
                                      validators=[positive_sort_by])
+
+class NewResponse(serializers.Serializer):
+  user = UserSafeSerializer()
+  diaries = DiaryResultResponse(many=True)
