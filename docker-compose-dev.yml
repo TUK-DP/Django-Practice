@@ -12,7 +12,7 @@ services:
       - JWT_SECRET=secret
     env_file:
       - .env-s3
-      - .env-dev
+      - .env-deepl
     command:
       - /bin/bash
       - -c
@@ -21,7 +21,6 @@ services:
         ./wait-for-services.sh python3 manage.py makemigrations
         python3 manage.py migrate 
         python3 manage.py runserver 0.0.0.0:8000
-  
 
   neo4j:
     ports:
