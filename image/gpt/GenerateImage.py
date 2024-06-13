@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from googletrans import Translator
 
 from image.gpt.ImageConverter import url_to_file
-from image.s3_modules.s3_handler import upload_random_name_file_to_s3
+from image.s3_modules.s3_handler import upload_file_random_name_to_s3
 
 load_dotenv()
 
@@ -21,7 +21,7 @@ def generate_upload_image(prompt, n=1):
 
     for url in gpt_generate_image_urls(english_prompt=english_prompt, n=n):
         file = url_to_file(url)
-        uploaded_image_url = upload_random_name_file_to_s3(file)
+        uploaded_image_url = upload_file_random_name_to_s3(file)
         urls.append(uploaded_image_url)
 
     return urls

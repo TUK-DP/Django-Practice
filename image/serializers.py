@@ -16,8 +16,14 @@ class ImageRequest(serializers.Serializer):
         return True, status.HTTP_200_OK
 
 
-class ImageResponse(serializers.Serializer):
+class ImageUploadResponse(serializers.Serializer):
     imageUrl = serializers.CharField()
+
+    @staticmethod
+    def to_json(url: str):
+        return {
+            'imageUrl': url
+        }
 
 
 class KeywordImagePaging(PagingSerializer):
