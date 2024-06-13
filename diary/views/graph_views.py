@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 
 from config.basemodel import ApiResponse, validator
 from config.settings import REQUEST_PATH
-from diary.serialziers.diary_serializers import *
+from diary.serialziers.diray_request_serializers import *
 from diary.serialziers.graph_serializers import GraphDataSerializer
 from diary.utils.graph.graph import GraphDB
 
@@ -17,7 +17,7 @@ class GetNodeData(APIView):
         operation_description="노드데이터 가져오기",
         responses={status.HTTP_200_OK: ApiResponse.schema(GraphDataSerializer)}
     )
-    @validator(request_type=REQUEST_PATH, request_serializer=GetDiaryRequest)
+    @validator(request_type=REQUEST_PATH, request_serializer=GetDiaryByIdRequest)
     def get(self, request, diaryId):
         findDiary = Diary.objects.get(id=diaryId)
         # 그래프 데이터 가져오기

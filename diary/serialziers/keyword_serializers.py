@@ -1,29 +1,19 @@
-from rest_framework import status
-
 from config.validator import positive_value
-from config.sort_options import *
-from diary.serialziers.diary_serializers import DiarySerializer
-from users.models import User
-from users.serializers import UserSafeSerializer
-from users.validator import exist_user_id
-from diary.models import Questions
 from diary.validator import *
 
 
-class KeywordSerializer(serializers.ModelSerializer):
-    sentence = DiarySerializer(read_only=True)
-
-    class Meta:
-        model = Keywords
-        fields = '__all__'
-
-
-class KeywordResultSerializer(serializers.ModelSerializer):
+class KeywordResponse(serializers.Serializer):
     keywordId = serializers.IntegerField(source="id")
+    keyword = serializers.CharField()
+    imgUrl = serializers.CharField()
 
-    class Meta:
-        model = Keywords
-        fields = ['keywordId', 'keyword', 'imgUrl']
+    @staticmethod
+    def to_json(keyword: Keywords):
+        return {
+            'keywordId': keyword.id,
+            'keyword': keyword.keyword,
+            'imgUrl': keyword.imgUrl
+        }
 
 
 class KeywordIdRequest(serializers.Serializer):

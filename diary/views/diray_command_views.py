@@ -6,7 +6,8 @@ from rest_framework.views import APIView
 
 from config.basemodel import ApiResponse, validator
 from config.settings import REQUEST_BODY, REQUEST_PATH
-from diary.serialziers.diary_serializers import *
+from diary.serialziers.diary_response_serializers import *
+from diary.serialziers.diray_request_serializers import *
 from diary.serialziers.image_serializers import ImageUrlRequest
 from users.models import User
 
@@ -19,7 +20,7 @@ class DiaryCRUDView(APIView):
         request_body=DiaryUpdateRequest,
         responses={status.HTTP_200_OK: ApiResponse.schema(DiaryResultResponse, description='수정 성공')}
     )
-    @validator(request_type=REQUEST_PATH, request_serializer=GetDiaryRequest, return_key='dump')
+    @validator(request_type=REQUEST_PATH, request_serializer=GetDiaryByIdRequest, return_key='dump')
     @validator(request_type=REQUEST_BODY, request_serializer=DiaryUpdateRequest, return_key='serializer')
     def patch(self, request, diaryId):
         requestSerializer: DiaryUpdateRequest = request.serializer
@@ -41,7 +42,7 @@ class DiaryCRUDView(APIView):
         operation_description="일기 삭제",
         responses={status.HTTP_200_OK: ApiResponse.schema(DiaryResultResponse, description='삭제 완료')}
     )
-    @validator(request_type=REQUEST_PATH, request_serializer=GetDiaryRequest)
+    @validator(request_type=REQUEST_PATH, request_serializer=GetDiaryByIdRequest)
     def delete(self, request, diaryId: int):
         findDiary = Diary.objects.get(id=diaryId)
 
@@ -85,7 +86,7 @@ class DiaryImgSaveView(APIView):
         request_body=ImageUrlRequest,
         responses={status.HTTP_201_CREATED: ApiResponse.schema(DiaryResultResponse, description='저장 성공')}
     )
-    @validator(request_type=REQUEST_PATH, request_serializer=GetDiaryRequest, return_key='dump')
+    @validator(request_type=REQUEST_PATH, request_serializer=GetDiaryByIdRequest, return_key='dump')
     @validator(request_type=REQUEST_BODY, request_serializer=ImageUrlRequest, return_key='serializer')
     def post(self, request, diaryId: int):
         # keyword 객체 가져오기

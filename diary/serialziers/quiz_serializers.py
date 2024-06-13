@@ -1,14 +1,19 @@
 from diary.models import Questions
-from diary.serialziers.keyword_serializers import KeywordSerializer
 from diary.validator import *
 
 
-class QuestionSerializer(serializers.ModelSerializer):
-    keyword = KeywordSerializer(read_only=True)
+class QuestionSerializer(serializers.Serializer):
+    questionId = serializers.IntegerField()
+    question = serializers.CharField()
+    keywordId = serializers.IntegerField()
 
-    class Meta:
-        model = Questions
-        fields = '__all__'
+    @staticmethod
+    def to_json(question: Questions):
+        return {
+            'questionId': question.id,
+            'question': question.question,
+            'keywordId': question.keyword.id
+        }
 
 
 class AnswerSerializer(serializers.Serializer):

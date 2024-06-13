@@ -1,12 +1,12 @@
 from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
 from rest_framework.views import APIView
 
 from config.basemodel import ApiResponse, validator
 from config.settings import REQUEST_BODY, REQUEST_QUERY
-from diary.serialziers.diary_serializers import *
-from diary.serialziers.quiz_serializers import AnswerListRequest
-from rest_framework import status
+from diary.serialziers.diray_request_serializers import *
+from diary.serialziers.quiz_serializers import AnswerListRequest, QuestionSerializer
 
 
 class GetQuizView(APIView):
@@ -14,10 +14,10 @@ class GetQuizView(APIView):
     @swagger_auto_schema(
         operation_id="일기회상 퀴즈",
         operation_description="일기회상 퀴즈",
-        query_serializer=GetDiaryRequest(),
+        query_serializer=GetDiaryByIdRequest(),
         # responses={status.HTTP_200_OK: ApiResponse.schema(QuizResultResponse, description="퀴즈")}
     )
-    @validator(request_type=REQUEST_QUERY, request_serializer=GetDiaryRequest, return_key='query')
+    @validator(request_type=REQUEST_QUERY, request_serializer=GetDiaryByIdRequest, return_key='query')
     def get(self, request):
         # Diary 가져오기
         findDiary = Diary.objects.get(id=request.query.validated_data.get('diaryId'))
@@ -26,14 +26,9 @@ class GetQuizView(APIView):
 
         # 모든 Sentence 와 연관된 Question 가져오기
         result = []
-
         for keyword in keywords:
             question = keyword.questions.first()
-            result.append({
-                "questionId": question.pk,
-                "question": question.question,
-                "keywordId": keyword.id
-            })
+            result.append(QuestionSerializer.to_json(question))
 
         return ApiResponse.on_success(
             result=result,

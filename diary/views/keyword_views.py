@@ -1,10 +1,11 @@
 from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.views import APIView
+from rest_framework import status
 
 from config.basemodel import ApiResponse, validator
 from config.settings import REQUEST_BODY, REQUEST_PATH
-from diary.serialziers.diary_serializers import *
+from diary.serialziers.diray_request_serializers import *
 from diary.serialziers.image_serializers import ImageUrlRequest
 from diary.serialziers.keyword_serializers import *
 
@@ -14,9 +15,9 @@ class GetKeywordView(APIView):
     @swagger_auto_schema(
         operation_id="일기별 키워드 조회",
         operation_description="일기별 키워드 조회",
-        response={status.HTTP_200_OK: ApiResponse.schema(KeywordResultSerializer, many=True)}
+        response={status.HTTP_200_OK: ApiResponse.schema(KeywordResponse, many=True)}
     )
-    @validator(request_type=REQUEST_PATH, request_serializer=GetDiaryRequest)
+    @validator(request_type=REQUEST_PATH, request_serializer=GetDiaryByIdRequest)
     def get(self, request, diaryId: int):
         # Diary 가져오기
         diary = Diary.objects.get(id=diaryId)
@@ -25,7 +26,7 @@ class GetKeywordView(APIView):
         findKeywords = Keywords.objects.filter(diary=diary)
 
         return ApiResponse.on_success(
-            result=KeywordResultSerializer(findKeywords, many=True).data,
+            result=KeywordResponse(findKeywords, many=True).data,
             response_status=status.HTTP_200_OK
         )
 
@@ -36,7 +37,7 @@ class KeywordImgSaveView(APIView):
         operation_id="키워드별 이미지 저장",
         operation_description="키워드별 이미지 저장",
         request_body=ImageUrlRequest,
-        responses={status.HTTP_201_CREATED: ApiResponse.schema(KeywordSerializer, description='저장 성공')}
+        responses={status.HTTP_201_CREATED: ApiResponse.schema(KeywordResponse, description='저장 성공')}
     )
     @validator(request_type=REQUEST_PATH, request_serializer=KeywordIdRequest, request_body='dump')
     @validator(request_type=REQUEST_BODY, request_serializer=ImageUrlRequest, return_key='image_url_request')
@@ -49,6 +50,6 @@ class KeywordImgSaveView(APIView):
         keyword.save()
 
         return ApiResponse.on_success(
-            result=KeywordSerializer(keyword).data,
+            result=KeywordResponse.to_json(keyword),
             response_status=status.HTTP_201_CREATED
         )

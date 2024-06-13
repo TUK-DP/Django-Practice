@@ -7,8 +7,10 @@ from rest_framework.views import APIView
 
 from config.basemodel import ApiResponse, validator
 from config.settings import REQUEST_PATH, REQUEST_QUERY
-from diary.serialziers.diary_serializers import *
+from diary.serialziers.diary_response_serializers import *
+from diary.serialziers.diray_request_serializers import *
 from users.models import User
+from users.serializers import UserIdReqeust
 
 
 class GetDiaryByUserView(APIView):
@@ -19,7 +21,7 @@ class GetDiaryByUserView(APIView):
         query_serializer=GetDiaryByDateRequest(),
         responses={status.HTTP_200_OK: ApiResponse.schema(DiaryResultResponse, many=True)}
     )
-    @validator(request_type=REQUEST_PATH, request_serializer=GetUserRequest, return_key='serializer')
+    @validator(request_type=REQUEST_PATH, request_serializer=UserIdReqeust, return_key='serializer')
     @validator(request_type=REQUEST_QUERY, request_serializer=GetDiaryByDateRequest, return_key='query')
     def get(self, request, userId: int):
         # User 가져오기
@@ -31,8 +33,9 @@ class GetDiaryByUserView(APIView):
         else:
             findDiaries = Diary.objects.filter(user=findUser)
 
+        # 직렬화
         return ApiResponse.on_success(
-            result=DiaryResultResponse(findDiaries, many=True).data,
+            result=[GetDiaryByIdResponse.to_json(diary=diary) for diary in findDiaries],
             response_status=status.HTTP_200_OK
         )
 
@@ -101,14 +104,7 @@ class GetDiaryByUserAndDateView(APIView):
         # 해당 userId를 가지고 있는 유저 정보 가져오기
         user = User.objects.get(id=userId)
 
-        # 유저 정보를 UserSafeSerializer를 사용해서 구조화
-        user_info = UserSafeSerializer(user).data
-        # 일기 정보를 DiaryResultResponse를 사용하여 직렬화
-        diary_list = DiaryResultResponse(diaries, many=True).data
-
-        result = GetDiaryByUserAndDateResponse.to_json(user_data=user_info, diaries_data=diary_list)
-
         return ApiResponse.on_success(
-            result=result,
+            result=GetDiariesByUserAndDateResponse.to_json(user=user, diaries=diaries),
             response_status=status.HTTP_200_OK
         )
