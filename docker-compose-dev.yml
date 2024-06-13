@@ -12,6 +12,7 @@ services:
       - JWT_SECRET=secret
     env_file:
       - .env-s3
+      - .env-dev
     command:
       - /bin/bash
       - -c
@@ -40,4 +41,4 @@ services:
       - MYSQL_ROOT_PASSWORD=1234
       - MYSQL_DATABASE=dp
     ports:
-      - "3306:3306"
+      - "3305:3306"
