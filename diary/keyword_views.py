@@ -37,16 +37,14 @@ class KeywordImgSaveView(APIView):
         request_body=ImageUrlRequest,
         responses={status.HTTP_201_CREATED: ApiResponse.schema(KeywordSerializer, description='저장 성공')}
     )
-    @validator(request_type=REQUEST_PATH, request_serializer=GetDiaryRequest, return_key='dump')
-    @validator(request_type=REQUEST_BODY, request_serializer=ImageUrlRequest, return_key='serializer')
+    @validator(request_type=REQUEST_PATH, request_serializer=KeywordIdRequest, request_body='dump')
+    @validator(request_type=REQUEST_BODY, request_serializer=ImageUrlRequest, return_key='image_url_request')
     def post(self, request, keywordId: int):
-        request: ReturnDict = request.serializer.validated_data
-
         # keyword 객체 가져오기
         keyword = Keywords.objects.get(id=keywordId)
 
         # imgUrl 저장
-        keyword.imgUrl = request.get('imgUrl')
+        keyword.imgUrl = request.image_url_request.validated_data.get('imgUrl')
         keyword.save()
 
         return ApiResponse.on_success(
