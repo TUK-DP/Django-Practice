@@ -1,6 +1,7 @@
 from django.urls import path
 
-from .views import *
+from diary.views.diary_views import *
+from diary.views.quiz_views import CheckAnswerView
 
 urlpatterns = [
     path('', DiaryCreateView.as_view()),

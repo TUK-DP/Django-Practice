@@ -1,11 +1,12 @@
 from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework.utils.serializer_helpers import ReturnDict
 from rest_framework.views import APIView
 
 from config.basemodel import ApiResponse, validator
 from config.settings import REQUEST_BODY, REQUEST_PATH
-from diary.serializers import *
+from diary.serialziers.diary_serializers import *
+from diary.serialziers.image_serializers import ImageUrlRequest
+from diary.serialziers.keyword_serializers import *
 
 
 class GetKeywordView(APIView):

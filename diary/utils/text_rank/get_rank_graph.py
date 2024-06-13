@@ -2,8 +2,8 @@ import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.preprocessing import normalize
 
-from diary.text_rank_modules.stop_words import stop_words
-from diary.text_rank_modules.string_handler import map_to_nouns_join
+from diary.utils.text_rank.stop_words import stop_words
+from diary.utils.text_rank.string_handler import map_to_nouns_join
 
 
 def get_graph_matrix(normalized_sentence_list: list):
