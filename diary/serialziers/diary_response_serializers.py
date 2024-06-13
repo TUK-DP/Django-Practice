@@ -40,6 +40,22 @@ class GetDiaryByIdResponse(serializers.Serializer):
         }
 
 
+class GetDiaryPreviewResponse(serializers.Serializer):
+    diaryId = serializers.IntegerField(source='id')
+    title = serializers.CharField()
+    createDate = serializers.DateField()
+    content = serializers.CharField()
+
+    @staticmethod
+    def to_json(diary: Diary):
+        return {
+            'diaryId': diary.id,
+            'title': diary.title,
+            'createDate': diary.createDate,
+            'content': diary.content
+        }
+
+
 class GetDiariesByUserAndDateResponse(serializers.Serializer):
     user = UserSafeSerializer()
     diaries = GetDiaryByIdResponse(many=True)
@@ -48,5 +64,5 @@ class GetDiariesByUserAndDateResponse(serializers.Serializer):
     def to_json(user: User, diaries: QuerySet):
         return {
             'user': UserSafeSerializer(user).data,
-            'diaries': [GetDiaryByIdResponse.to_json(diary) for diary in diaries]
+            'diaries': [GetDiaryPreviewResponse.to_json(diary) for diary in diaries]
         }

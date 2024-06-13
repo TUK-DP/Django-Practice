@@ -8,7 +8,7 @@ from config.basemodel import ApiResponse, validator
 from config.settings import REQUEST_BODY, REQUEST_PATH
 from diary.serialziers.diary_response_serializers import *
 from diary.serialziers.diray_request_serializers import *
-from diary.serialziers.image_serializers import ImageUrlRequest
+from image.serializers import ImageUrlRequest
 from users.models import User
 
 

@@ -6,8 +6,8 @@ from rest_framework import status
 from config.basemodel import ApiResponse, validator
 from config.settings import REQUEST_BODY, REQUEST_PATH
 from diary.serialziers.diray_request_serializers import *
-from diary.serialziers.image_serializers import ImageUrlRequest
 from diary.serialziers.keyword_serializers import *
+from image.serializers import ImageUrlRequest
 
 
 class GetKeywordView(APIView):

@@ -1,6 +1,7 @@
 from django.db import transaction
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
 from rest_framework.parsers import MultiPartParser
 from rest_framework.views import APIView
 
@@ -36,7 +37,7 @@ class ImageView(APIView):
             status.HTTP_200_OK: ApiResponse.schema(ImageUploadResponse, description='이미지 업로드 성공')
         },
     )
-    @validator(request_type=REQUEST_BODY, request_serializer=ImageRequest, return_serializer="serializer")
+    @validator(request_type=REQUEST_BODY, request_serializer=ImageFileRequest, return_serializer="serializer")
     def post(self, request):
         image_file = request.serializer.validated_data.get('image')
 
