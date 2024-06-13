@@ -5,11 +5,13 @@ from rest_framework.views import APIView
 
 from config.basemodel import ApiResponse, validator
 from config.settings import REQUEST_BODY, REQUEST_PATH, REQUEST_QUERY
+from config.sort_options import DATE_SORT_MAPPER
 from diary.serializers import *
 from users.models import User
 from .graph import GraphDB
 from .graph_serializer import GraphDataSerializer
 
+import calendar
 
 class DiaryCRUDView(APIView):
     @transaction.atomic
@@ -247,5 +249,81 @@ class GetKeywordView(APIView):
 
         return ApiResponse.on_success(
             result=KeywordResultSerializer(findKeywords, many=True).data,
+            response_status=status.HTTP_200_OK
+        )
+
+
+class CheckDiaryEntriesView(APIView):
+    @transaction.atomic
+    @swagger_auto_schema(
+        operation_id="기간별 일기 유무 리스트 가져오기",
+        operation_description="기간별 일기 유무 리스트 가져오기",
+        query_serializer=CheckDiaryEntriesRequest(),
+        responses={status.HTTP_200_OK: ApiResponse.schema(ApiResponse)}
+    )
+    @validator(request_type=REQUEST_QUERY, request_serializer=CheckDiaryEntriesRequest, return_key='query')
+    def get(self, request):
+        # 요청 데이터에서 userId, year, month 추출
+        userId = request.query.validated_data.get('userId')
+        year = request.query.validated_data.get('year')
+        month = request.query.validated_data.get('month')
+
+        # 해당 월의 일수를 가져옴
+        _, lastDay = calendar.monthrange(year, month)
+
+        # 일기가 존재하는 날짜를 dict으로 초기화
+        diary_dict = {day: {"isExist": False, "diaryId": None} for day in range(1, lastDay + 1)}
+
+        # 해당 userId, year, month에 해당하는 일기를 조회
+        diaries = Diary.objects.filter(user_id=userId, createDate__year=year, createDate__month=month)
+
+        # 조회된 일기의 날짜를 boolean 배열에 반영
+        for diary in diaries:
+            diary_dict[diary.createDate.day]["isExist"] = True
+            diary_dict[diary.createDate.day]["diaryId"] = diary.id
+
+        # 결과를 JSON 형식으로 반환
+        result = {f'{year}-{month}': diary_dict}
+        return ApiResponse.on_success(
+            result=result,
+            response_status=status.HTTP_200_OK
+        )
+
+class GetDiaryByUserAndDateView(APIView):
+    @transaction.atomic
+    @swagger_auto_schema(
+        operation_id="기간별 일기 리스트 가져오기",
+        operation_description="기간별 일기 리스트 가져오기",
+        query_serializer=GetDiaryByUserAndDateRequest(),
+        responses={status.HTTP_200_OK: ApiResponse.schema(ApiResponse)}
+    )
+    @validator(request_type=REQUEST_QUERY, request_serializer=GetDiaryByUserAndDateRequest, return_key='query')
+    def get(self, request):
+        # 요청 데이터에서 userId, year, month 추출
+        userId = request.query.validated_data.get('userId')
+        startDate = request.query.validated_data.get('startDate')
+        finishDate = request.query.validated_data.get('finishDate')
+        sortBy = request.query.validated_data.get('sortBy')
+
+        sortField = DATE_SORT_MAPPER.get(sortBy)
+
+        # 해당 userId, startDate, finishDate에 해당하는 일기를 조회
+        diaries = Diary.objects.filter(
+            user_id=userId,
+            createDate__range=[startDate, finishDate]
+        ).order_by(sortField)
+
+        # 해당 userId를 가지고 있는 유저 정보 가져오기
+        user = User.objects.get(id=userId)
+
+        # 유저 정보를 UserSafeSerializer를 사용해서 구조화
+        user_info = UserSafeSerializer(user).data
+        # 일기 정보를 DiaryResultResponse를 사용하여 직렬화
+        diary_list = DiaryResultResponse(diaries, many=True).data
+
+        result = GetDiaryByUserAndDateResponse.to_json(user_data=user_info, diaries_data=diary_list)
+
+        return ApiResponse.on_success(
+            result=result,
             response_status=status.HTTP_200_OK
         )
