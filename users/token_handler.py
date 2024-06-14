@@ -117,7 +117,7 @@ def validate_user_id_token(decoded_token: dict, userId: int = None):
         is_valid = False
         message = "userId 가 없습니다."
 
-    if userId != int(decoded_token['userId']):
+    if str(userId) != str(decoded_token['userId']):
         is_valid = False
         message = "userId가 유효 하지 않은 토큰입니다."
 

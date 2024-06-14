@@ -20,6 +20,7 @@ test_user_data = {
 class TestUserAutoLogin(APITestCase):
     def setUp(self):
         new_user = User.objects.create(**test_user_data)
+        self.new_user_id = new_user.id
         self.token_serializer = create_token(userId=new_user.id)
         new_user.refresh_token = self.token_serializer.data.get("RefreshToken")
         new_user.save()
@@ -44,10 +45,8 @@ class TestUserAutoLogin(APITestCase):
         )
 
     def test_when_fail_user_auto_login(self):
-        find_user = User.objects.first()
-
         response = self.client.get(
-            f'/api/users/{find_user.id}/auto/login',
+            f'/api/users/{self.new_user_id}/auto/login',
             headers={
                 "AccessToken": self.token_serializer.data.get("AccessToken"),
                 "RefreshToken": "wrong_refresh_token"
