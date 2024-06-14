@@ -1,23 +1,25 @@
 from rest_framework import serializers
-from rest_framework import status
 
 from config.paging_handler import PagingSerializer, get_paging_data
 from image.validator import less_than
 
 
-class ImageRequest(serializers.Serializer):
+class ImageUrlRequest(serializers.Serializer):
+    imgUrl = serializers.CharField()
+
+
+class ImageFileRequest(serializers.Serializer):
     image = serializers.ImageField()
 
-    def is_valid(self, *, raise_exception=False):
-        super_valid = super().is_valid()
-        if not super_valid:
-            return False, status.HTTP_400_BAD_REQUEST
 
-        return True, status.HTTP_200_OK
-
-
-class ImageResponse(serializers.Serializer):
+class ImageUploadResponse(serializers.Serializer):
     imageUrl = serializers.CharField()
+
+    @staticmethod
+    def to_json(url: str):
+        return {
+            'imageUrl': url
+        }
 
 
 class KeywordImagePaging(PagingSerializer):

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .keyword_views import *
+from diary.views.keyword_views import *
 
 urlpatterns = [
     path('/diary/<int:diaryId>', GetKeywordView.as_view()),

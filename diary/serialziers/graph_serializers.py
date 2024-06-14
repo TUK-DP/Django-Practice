@@ -1,4 +1,4 @@
-from rest_framework import serializers
+from diary.validator import *
 
 
 class UserNode(serializers.Serializer):

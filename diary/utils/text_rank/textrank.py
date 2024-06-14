@@ -1,7 +1,7 @@
 import numpy as np
 
-from diary.text_rank_modules.get_rank_graph import get_graph_matrix, get_ranks
-from diary.text_rank_modules.string_handler import sentence_normalize_tokenizer, map_to_noun_list
+from diary.utils.text_rank.get_rank_graph import get_graph_matrix, get_ranks
+from diary.utils.text_rank.string_handler import sentence_normalize_tokenizer
 
 
 class TextRank:

@@ -1,8 +1,8 @@
 from django.db import models
 
 from config.basemodel import BaseModel
-from diary.graph import GraphDB
-from diary.text_rank_modules.textrank import TextRank, make_quiz
+from diary.utils.graph.graph import GraphDB
+from diary.utils.text_rank.textrank import TextRank, make_quiz
 
 
 class Diary(BaseModel):
