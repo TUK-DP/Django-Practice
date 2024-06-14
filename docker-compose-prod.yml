@@ -7,6 +7,7 @@ services:
     env_file:
       - .env-django
       - .env-s3
+      - .env-deepl
     command:
       - /bin/bash
       - -c
