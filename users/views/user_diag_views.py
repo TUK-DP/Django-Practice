@@ -26,23 +26,27 @@ class RecordSaveView(APIView):
         )
 
         return ApiResponse.on_success(
-            result=DiagRecordSerializer(diagRecord).data,
+            result=DiagRecordSerializer.to_json(diagRecord),
             response_status=status.HTTP_200_OK
         )
 
 
 class GetDiagRecordView(APIView):
     @transaction.atomic
-    @swagger_auto_schema(operation_description="유저의 이전 진단 기록 조회", query_serializer=UserIdReqeust,
-                         response={"200": DiagRecordSerializer})
+    @swagger_auto_schema(
+        operation_id="최근 진단 기록 조회",
+        operation_description="유저의 이전 진단 기록 조회", query_serializer=UserIdReqeust,
+        responses={status.HTTP_200_OK: ApiResponse.schema(DiagRecordSerializer)}
+    )
     @validator(request_serializer=UserIdReqeust, request_type=REQUEST_QUERY, return_key='serializer')
     def get(self, request):
         request = request.serializer.validated_data
 
         diagRecord = DiagRecord.objects.filter(
-            user=User.objects.get(id=request.get('userId'))).order_by('-created_at').first()
+            user=User.objects.get(id=request.get('userId'))
+        ).order_by('-created_at').first()
 
         return ApiResponse.on_success(
-            result=DiagRecordSerializer(diagRecord).data,
+            result=DiagRecordSerializer.to_json(diagRecord),
             response_status=status.HTTP_200_OK
         )

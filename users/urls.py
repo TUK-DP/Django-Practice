@@ -1,7 +1,8 @@
 from django.urls import path
 
 from users.views.user_check_views import *
-from users.views.user_diag_record_views import *
+
+from users.views.user_diag_views import *
 from users.views.user_get_update_delete_views import *
 from users.views.user_login_views import *
 from users.views.user_sign_up_views import SignupView
