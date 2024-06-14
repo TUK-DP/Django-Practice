@@ -28,6 +28,7 @@ class GetDiaryByIdResponse(serializers.Serializer):
     createDate = serializers.DateField()
     content = serializers.CharField()
     keywords = KeywordResponse(many=True)
+    imgUrl = serializers.CharField()
 
     @staticmethod
     def to_json(diary: Diary):
@@ -36,7 +37,8 @@ class GetDiaryByIdResponse(serializers.Serializer):
             'title': diary.title,
             'createDate': diary.createDate,
             'content': diary.content,
-            'keywords': [KeywordResponse.to_json(keyword) for keyword in diary.keywords.all()]
+            'keywords': [KeywordResponse.to_json(keyword) for keyword in diary.keywords.all()],
+            'imgUrl': diary.imgUrl
         }
 
 
