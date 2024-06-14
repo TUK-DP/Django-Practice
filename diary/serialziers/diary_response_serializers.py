@@ -2,8 +2,7 @@ from django.db.models import QuerySet
 
 from diary.serialziers.keyword_serializers import KeywordResponse
 from diary.validator import *
-from users.models import User
-from users.serializers import UserSafeSerializer
+from users.serializers.user_get_post_put_delete_serializers import *
 
 
 class DiarySerializer(serializers.ModelSerializer):

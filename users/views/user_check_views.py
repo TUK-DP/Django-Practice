@@ -1,10 +1,11 @@
 from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
 from rest_framework.views import APIView
 
 from config.basemodel import ApiResponse
 from config.basemodel import validator
-from users.serializers import *
+from users.serializers.user_check_serializers import *
 
 
 class CheckNicknameView(APIView):

@@ -10,7 +10,6 @@ from config.settings import REQUEST_PATH, REQUEST_QUERY
 from diary.serialziers.diary_response_serializers import *
 from diary.serialziers.diray_request_serializers import *
 from users.models import User
-from users.serializers import UserIdReqeust
 
 
 class GetDiaryByUserView(APIView):
