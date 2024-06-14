@@ -36,6 +36,6 @@ jobs:
           sudo echo "${{ secrets.DOT_ENT_MYSQL }}" > .env-mysql
           sudo echo "${{ secrets.DOT_ENT_NEO4J }}" > .env-neo4j
           sudo echo "${{ secrets.DOT_ENT_S3 }}" > .env-s3
-          sudo echo "${{ secrets.DOT_ENT_DEEPL }}" > .env-s3
+          sudo echo "${{ secrets.DOT_ENT_DEEPL }}" > .env-deepl
           docker-compose -f docker-compose.yml -f docker-compose-dev.yml -p dp up -d --build
           docker exec django python manage.py test
