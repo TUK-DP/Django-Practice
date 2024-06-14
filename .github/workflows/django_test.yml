@@ -9,7 +9,7 @@ on:
       - opened
 
 jobs:
-  deploy:
+  django_test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
