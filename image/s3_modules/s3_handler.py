@@ -20,9 +20,13 @@ bucket_name = os.getenv('AWS_STORAGE_BUCKET_NAME')
 bucket = s3.Bucket(bucket_name)
 
 
-def upload_random_name_file_to_s3(image: File):
-    file_name = str(uuid.uuid4())
-    return upload_file_to_s3(image, file_name)
+def make_random_filename():
+    # uuid 생성
+    return str(uuid.uuid4())
+
+
+def upload_file_random_name_to_s3(image: File):
+    return upload_file_to_s3(image, make_random_filename())
 
 
 def upload_file_to_s3(file: File, filename: str):
