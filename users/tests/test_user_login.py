@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from users.models import User
-from users.token_handler import create_token
+from users.token_handler import decode_token
 
 # Create your tests here.
 
@@ -17,9 +17,9 @@ test_user_data = {
 
 class TestUserLogin(APITestCase):
     def setUp(self):
-        User.objects.create(**test_user_data)
+        self.new_user = User.objects.create(**test_user_data)
 
-    def test_user_login(self):
+    def test_when_success_user_login(self):
         response = self.client.post('/api/users/login', {
             "email": test_user_data['email'],
             "password": test_user_data['password']
@@ -28,7 +28,15 @@ class TestUserLogin(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data['isSuccess'])
 
-        self.assertTrue(
-            response.data['result']['token'],
-            create_token(userId=response.data['result']['user']['id']).data
-        )
+        is_valid, message, access_token = decode_token(response.data['result']['token']['AccessToken'])
+        self.assertTrue(is_valid)
+        self.assertEqual(access_token['userId'], str(self.new_user.id))
+
+    def test_when_fail_user_login(self):
+        response = self.client.post('/api/users/login', {
+            "email": test_user_data['email'],
+            "password": "wrong_password"
+        })
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(response.data['isSuccess'])

@@ -2,7 +2,7 @@ from django.test import TestCase
 from rest_framework.exceptions import ValidationError
 
 from users.models import User
-from users.validator import not_exist_user_nickname, not_exist_user_email, validate_login
+from users.validator import not_exist_user_nickname, not_exist_user_email, validate_login, exist_user_email
 
 test_user_data = {
     "username": "test1",
@@ -25,7 +25,10 @@ class ValidatorTest(TestCase):
         self.assertIsNone(not_exist_user_email(email='unique_email'))
         self.assertRaises(ValidationError, not_exist_user_email, email=test_user_data['email'])
 
+    def test_exist_user_email(self):
+        self.assertIsNone(exist_user_email(email=test_user_data['email']))
+        self.assertRaises(ValidationError, exist_user_email, email='unique_email')
+
     def test_validate_login(self):
         self.assertIsNone(validate_login(test_user_data['email'], test_user_data['password']))
         self.assertRaises(ValidationError, validate_login, 'unique_email', 'unique_password')
-        
