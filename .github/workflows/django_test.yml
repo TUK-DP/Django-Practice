@@ -1,0 +1,36 @@
+name: Test Django Before Merge
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+    types:
+      - opened
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: |
+            ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+              ${{ runner.os }}-pip-
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Set up Docker Compose
+        uses: docker/compose-cli-action@v2
+
+      - name: Build and test Django
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose-dev.yml -p dp up -d --build
+          docker exec django python manage.py test
