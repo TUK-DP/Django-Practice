@@ -34,7 +34,7 @@ class GetDiaryByUserView(APIView):
 
         # 직렬화
         return ApiResponse.on_success(
-            result=[GetDiaryByIdResponse.to_json(diary=diary) for diary in findDiaries],
+            result=[GetDiaryDetailResponse.to_json(diary=diary) for diary in findDiaries],
             response_status=status.HTTP_200_OK
         )
 

@@ -21,26 +21,6 @@ class DiaryResultResponse(serializers.ModelSerializer):
         fields = ['diaryId', 'title', 'createDate', 'content', 'imgUrl']
 
 
-class GetDiaryByIdResponse(serializers.Serializer):
-    diaryId = serializers.IntegerField(source='id')
-    title = serializers.CharField()
-    createDate = serializers.DateField()
-    content = serializers.CharField()
-    keywords = KeywordResponse(many=True)
-    imgUrl = serializers.CharField()
-
-    @staticmethod
-    def to_json(diary: Diary):
-        return {
-            'diaryId': diary.id,
-            'title': diary.title,
-            'createDate': diary.createDate,
-            'content': diary.content,
-            'keywords': [KeywordResponse.to_json(keyword) for keyword in diary.keywords.all()],
-            'imgUrl': diary.imgUrl
-        }
-
-
 class GetDiaryPreviewResponse(serializers.Serializer):
     diaryId = serializers.IntegerField(source='id')
     title = serializers.CharField()
@@ -57,9 +37,21 @@ class GetDiaryPreviewResponse(serializers.Serializer):
         }
 
 
+class GetDiaryDetailResponse(GetDiaryPreviewResponse):
+    keywords = KeywordResponse(many=True)
+    imgUrl = serializers.CharField()
+
+    @staticmethod
+    def to_json(diary: Diary):
+        r = GetDiaryPreviewResponse.to_json(diary)
+        r['keywords'] = [KeywordResponse.to_json(keyword) for keyword in diary.keywords.all()]
+        r['imgUrl'] = diary.imgUrl
+        return r
+
+
 class GetDiariesByUserAndDateResponse(serializers.Serializer):
     user = UserSafeSerializer()
-    diaries = GetDiaryByIdResponse(many=True)
+    diaries = GetDiaryDetailResponse(many=True)
 
     @staticmethod
     def to_json(user: User, diaries: QuerySet):
