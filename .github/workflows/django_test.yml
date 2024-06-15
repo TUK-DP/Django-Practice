@@ -5,8 +5,6 @@ on:
     branches:
       - develop
       - main
-    types:
-      - opened
 
 jobs:
   django_test:
@@ -15,22 +13,41 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Cache pip
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/pip
-          key: |
-            ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
+        with:
+          version: latest
 
       - name: Set up Docker Compose
-        uses: docker/compose-cli-action@v2
+        uses: ndeloof/install-compose-action@v0.0.1
+        with:
+          legacy: true
 
-      - name: Build and test Django
+      - name: Set Environment Variables
         run: |
-          docker-compose -f docker-compose.yml -f docker-compose-dev.yml -p dp up -d --build
-          docker exec django python manage.py test
+          sudo echo "${{ secrets.DOT_ENT_DJANGO }}" > .env-django
+          sudo echo "${{ secrets.DOT_ENT_MYSQL }}" > .env-mysql
+          sudo echo "${{ secrets.DOT_ENT_NEO4J }}" > .env-neo4j
+          sudo echo "${{ secrets.DOT_ENT_S3 }}" > .env-s3
+          sudo echo "${{ secrets.DOT_ENT_DEEPL }}" > .env-deepl
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: |
+            ${{ runner.os }}-buildx-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build Containers
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose-dev.yml -p dp build --build-arg BUILDKIT_INLINE_CACHE=1
+
+      - name: Run Containers
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose-dev.yml -p dp up -d
+
+      - name: Test Django
+        run: |
+          docker exec dp ./docker-entrypoint.sh python3 manage.py test

@@ -16,6 +16,7 @@ def token_permission_validator(where_is_userId: str = REQUEST_PATH, userIdName: 
     :param where_is_userId: userId가 어디에 있는지 명세
     :param userIdName: userId가 어떤 이름으로 들어있는지 명세
     """
+
     def decorator(fuc):
         def decorated_func(self, request: Request, *args, **kwargs):
 
@@ -83,14 +84,10 @@ def create_token(userId: int = None) -> TokenSerializer:
     if not userId:
         raise ValueError("userId 가 없습니다.")
 
-    token = TokenSerializer(data={
-        "AccessToken": create_access_token(userId=userId),
-        "RefreshToken": create_refresh_token(userId=userId)
-    })
-
-    token.is_valid()
-
-    return token
+    return TokenSerializer.to_validated_serializer(
+        access_token=create_access_token(userId=userId),
+        refresh_token=create_refresh_token(userId=userId)
+    )
 
 
 def create_access_token(userId: int = None):
@@ -120,7 +117,7 @@ def validate_user_id_token(decoded_token: dict, userId: int = None):
         is_valid = False
         message = "userId 가 없습니다."
 
-    if userId != int(decoded_token['userId']):
+    if str(userId) != str(decoded_token['userId']):
         is_valid = False
         message = "userId가 유효 하지 않은 토큰입니다."
 
@@ -163,10 +160,9 @@ def auto_login(userId: int, token: TokenSerializer):
         print("재발급")
         access_token = create_access_token(userId)
 
-    token = TokenSerializer(data={
-        "AccessToken": access_token,
-        "RefreshToken": refresh_token
-    })
-    token.is_valid()
+    token = TokenSerializer.to_validated_serializer(
+        access_token=access_token,
+        refresh_token=refresh_token
+    )
 
     return is_valid, message, token
