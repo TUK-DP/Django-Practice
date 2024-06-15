@@ -10,7 +10,6 @@ from config.settings import REQUEST_PATH, REQUEST_QUERY
 from diary.serialziers.diary_response_serializers import *
 from diary.serialziers.diray_request_serializers import *
 from users.models import User
-from users.serializers import UserIdReqeust
 
 
 class GetDiaryByUserView(APIView):
@@ -35,7 +34,7 @@ class GetDiaryByUserView(APIView):
 
         # 직렬화
         return ApiResponse.on_success(
-            result=[GetDiaryByIdResponse.to_json(diary=diary) for diary in findDiaries],
+            result=[GetDiaryDetailResponse.to_json(diary=diary) for diary in findDiaries],
             response_status=status.HTTP_200_OK
         )
 

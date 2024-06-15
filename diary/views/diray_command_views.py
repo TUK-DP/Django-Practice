@@ -18,7 +18,7 @@ class DiaryCRUDView(APIView):
         operation_id="일기 수정",
         operation_description="일기 수정",
         request_body=DiaryUpdateRequest,
-        responses={status.HTTP_200_OK: ApiResponse.schema(DiaryResultResponse, description='수정 성공')}
+        responses={status.HTTP_200_OK: ApiResponse.schema(GetDiaryDetailResponse, description='수정 성공')}
     )
     @validator(request_type=REQUEST_PATH, request_serializer=GetDiaryByIdRequest, return_key='dump')
     @validator(request_type=REQUEST_BODY, request_serializer=DiaryUpdateRequest, return_key='serializer')
@@ -32,7 +32,7 @@ class DiaryCRUDView(APIView):
         newDiary = requestSerializer.update(findDiary, request)
 
         return ApiResponse.on_success(
-            result=DiaryResultResponse(newDiary).data,
+            result=GetDiaryDetailResponse.to_json(newDiary),
             response_status=status.HTTP_201_CREATED
         )
 
@@ -40,7 +40,7 @@ class DiaryCRUDView(APIView):
     @swagger_auto_schema(
         operation_id="일기 삭제",
         operation_description="일기 삭제",
-        responses={status.HTTP_200_OK: ApiResponse.schema(DiaryResultResponse, description='삭제 완료')}
+        responses={status.HTTP_200_OK: ApiResponse.schema(ApiResponse)}
     )
     @validator(request_type=REQUEST_PATH, request_serializer=GetDiaryByIdRequest)
     def delete(self, request, diaryId: int):
@@ -61,7 +61,7 @@ class DiaryCreateView(APIView):
         operation_id="일기 작성",
         operation_description="일기 작성",
         request_body=DiaryCreateRequest,
-        responses={status.HTTP_200_OK: ApiResponse.schema(DiaryResultResponse)}
+        responses={status.HTTP_200_OK: ApiResponse.schema(GetDiaryDetailResponse)}
     )
     @validator(request_type=REQUEST_BODY, request_serializer=DiaryCreateRequest)
     def post(self, request):
@@ -73,7 +73,7 @@ class DiaryCreateView(APIView):
         )
 
         return ApiResponse.on_success(
-            result=DiaryResultResponse(newDiary).data,
+            result=GetDiaryDetailResponse.to_json(newDiary),
             response_status=status.HTTP_201_CREATED
         )
 

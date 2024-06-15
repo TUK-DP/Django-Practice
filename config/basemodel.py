@@ -1,10 +1,8 @@
-from datetime import datetime
-
 from django.db import models
-from django.http import JsonResponse
 from drf_yasg import openapi
 from rest_framework import status, serializers
 from rest_framework.request import Request
+from rest_framework.response import Response
 
 from config.settings import REQUEST_BODY, REQUEST_QUERY, REQUEST_HEADER, REQUEST_PATH
 
@@ -29,12 +27,12 @@ class ApiResponse(serializers.Serializer):
     @staticmethod
     def on_success(result=None, message="OK", response_status=status.HTTP_200_OK):
         if result is None:
-            return JsonResponse({'isSuccess': True, "message": message}, status=response_status)
-        return JsonResponse({'isSuccess': True, "message": message, 'result': result}, status=response_status)
+            return Response({'isSuccess': True, "message": message}, status=response_status)
+        return Response({'isSuccess': True, "message": message, 'result': result}, status=response_status)
 
     @staticmethod
     def on_fail(message, response_status=status.HTTP_400_BAD_REQUEST):
-        return JsonResponse({'isSuccess': False, 'message': message}, status=response_status)
+        return Response({'isSuccess': False, 'message': message}, status=response_status)
 
     @staticmethod
     def get_dynamic_class(result_class, many=False):

@@ -1,8 +1,6 @@
-from rest_framework import serializers, status
+from rest_framework import serializers
 
-from .models import DiagRecord
-from .token_serializer import TokenSerializer
-from .validator import *
+from users.validator import *
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -15,12 +13,6 @@ class UserSafeSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'nickname', 'birth', 'created_at', 'updated_at']
-
-
-class DiagRecordSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DiagRecord
-        fields = ['id', 'user', 'totalQuestionSize', 'yesCount', 'created_at', 'updated_at']
 
 
 class UserIdReqeust(serializers.Serializer):
@@ -36,32 +28,6 @@ class UserCreateRequest(serializers.Serializer):
 
     def create(self, validated_data):
         return User.objects.create(**validated_data)
-
-
-class LoginRequest(serializers.Serializer):
-    email = serializers.CharField(max_length=20, validators=[exist_user_email])
-    password = serializers.CharField(max_length=128)
-
-    def validate(self, attrs):
-        validate_login(attrs['email'], attrs['password'])
-        return attrs
-
-
-class LoginResponse(serializers.Serializer):
-    user = UserSerializer()
-    token = TokenSerializer()
-
-
-class DuplicateNicknameRequest(serializers.Serializer):
-    nickname = serializers.CharField(max_length=20, validators=[not_exist_user_nickname])
-
-
-class DuplicateEmailRequest(serializers.Serializer):
-    email = serializers.CharField(max_length=100, validators=[not_exist_user_email])
-
-
-class UserDeleteRequest(serializers.Serializer):
-    id = serializers.IntegerField(validators=[exist_user_id])
 
 
 class UserUpdateRequest(serializers.Serializer):
@@ -86,7 +52,5 @@ class UserUpdateRequest(serializers.Serializer):
         return instance
 
 
-class RecordSaveRequest(serializers.Serializer):
-    userId = serializers.IntegerField(validators=[exist_user_id])
-    totalQuestionSize = serializers.IntegerField()
-    yesCount = serializers.IntegerField()
+class UserDeleteRequest(serializers.Serializer):
+    id = serializers.IntegerField(validators=[exist_user_id])

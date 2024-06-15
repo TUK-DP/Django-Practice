@@ -7,14 +7,8 @@ services:
     env_file:
       - .env-django
       - .env-s3
-    command:
-      - /bin/bash
-      - -c
-      - |
-        dos2unix /app/wait-for-services.sh
-        ./wait-for-services.sh python3 manage.py makemigrations
-        python3 manage.py migrate
-        gunicorn config.wsgi:application --bind 0.0.0.0:8000
+      - .env-deepl
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000
 
   neo4j:
     ports:
