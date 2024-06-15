@@ -38,10 +38,15 @@ class TestUserAutoLogin(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data['isSuccess'])
+        self.assertTrue('token' in response.data['result'])
 
+        expect_token = self.token_serializer.data
+        actual_token = response.data['result']['token']
+
+        self.assertDictEqual(expect_token, actual_token)
         self.assertJSONEqual(
-            json.dumps(response.data['result']['token']),
-            json.dumps(create_token(userId=response.data['result']['user']['id']).data)
+            json.dumps(expect_token),
+            json.dumps(actual_token)
         )
 
     def test_when_fail_user_auto_login(self):

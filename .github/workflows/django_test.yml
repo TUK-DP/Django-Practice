@@ -38,7 +38,10 @@ jobs:
           sudo echo "${{ secrets.DOT_ENT_S3 }}" > .env-s3
           sudo echo "${{ secrets.DOT_ENT_DEEPL }}" > .env-deepl
 
-      - name: Test Django
+      - name: Build Containers
         run: |
           docker-compose -f docker-compose.yml -f docker-compose-dev.yml -p dp up -d --build
+
+      - name: Test Django
+        run: |
           docker exec dp ./wait-for-services.sh python3 manage.py test
