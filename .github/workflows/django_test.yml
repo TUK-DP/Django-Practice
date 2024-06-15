@@ -30,12 +30,15 @@ jobs:
         with:
           legacy: true
 
-      - name: Build and test Django
+      - name: Set Environment Variables
         run: |
           sudo echo "${{ secrets.DOT_ENT_DJANGO }}" > .env-django
           sudo echo "${{ secrets.DOT_ENT_MYSQL }}" > .env-mysql
           sudo echo "${{ secrets.DOT_ENT_NEO4J }}" > .env-neo4j
           sudo echo "${{ secrets.DOT_ENT_S3 }}" > .env-s3
           sudo echo "${{ secrets.DOT_ENT_DEEPL }}" > .env-deepl
+
+      - name: Test Django
+        run: |
           docker-compose -f docker-compose.yml -f docker-compose-dev.yml -p dp up -d --build
-          ./wait-for-services.sh docker exec dp python3 manage.py test
+          docker exec dp ./wait-for-services.sh python3 manage.py test
