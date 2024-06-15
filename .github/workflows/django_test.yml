@@ -38,4 +38,4 @@ jobs:
           sudo echo "${{ secrets.DOT_ENT_S3 }}" > .env-s3
           sudo echo "${{ secrets.DOT_ENT_DEEPL }}" > .env-deepl
           docker-compose -f docker-compose.yml -f docker-compose-dev.yml -p dp up -d --build
-          docker exec dp python3 manage.py test
+          ./wait-for-services.sh docker exec dp python3 manage.py test
