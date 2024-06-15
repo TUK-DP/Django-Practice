@@ -40,15 +40,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
-      #      - name: Set Docker compose Cache
-      #        uses: satackey/action-docker-layer-caching@v0.0.11
-      #        continue-on-error: true
-      #        with:
-      #          key: |
-      #            ${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-      #          restore-keys: |
-      #            ${{ runner.os }}-
-
       - name: Build Containers
         run: |
           docker-compose -f docker-compose.yml -f docker-compose-dev.yml -p dp build --build-arg BUILDKIT_INLINE_CACHE=1
@@ -59,4 +50,4 @@ jobs:
 
       - name: Test Django
         run: |
-          docker exec dp ./wait-for-services.sh python3 manage.py test
+          docker exec dp ./docker-entrypoint.sh python3 manage.py test
