@@ -13,18 +13,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Cache Docker layers
-        uses: actions/cache@v2
-        with:
-          path: /tmp/.buildx-cache
-          key: |
-            ${{ runner.os }}-buildx-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
       - name: Set up Docker Compose
         uses: ndeloof/install-compose-action@v0.0.1
         with:
@@ -38,10 +26,18 @@ jobs:
           sudo echo "${{ secrets.DOT_ENT_S3 }}" > .env-s3
           sudo echo "${{ secrets.DOT_ENT_DEEPL }}" > .env-deepl
 
+      - name: Set Docker compose Cache
+        uses: satackey/action-docker-layer-caching@v0.0.11
+        continue-on-error: true
+        with:
+          key: |
+            ${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-
+
       - name: Build Containers
         run: |
-          docker-compose -f docker-compose.yml -f docker-compose-dev.yml -p dp build --build-arg BUILDKIT_INLINE_CACHE=1
-
+          docker-compose -f docker-compose.yml -f docker-compose-dev.yml -p dp up -d --build
 
       - name: Test Django
         run: |
