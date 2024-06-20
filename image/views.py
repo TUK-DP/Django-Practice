@@ -92,9 +92,13 @@ class GenerateImageView(APIView):
         prompt = request.serializer.validated_data.get('prompt')
         password = request.serializer.validated_data.get('password')
 
-        if password != JWT_SECRET:
-            urls = test_generate_image_urls(prompt, n=n)
-        else:
-            urls = generate_upload_image(prompt, n=n)
+        try:
+            if password != JWT_SECRET:
+                urls = test_generate_image_urls(prompt, n=n)
+            else:
+                urls = generate_upload_image(prompt, n=n)
+        except Exception as e:
+            print(e)
+            return ApiResponse.on_fail(message=str(e), response_status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return ApiResponse.on_success(result={'urls': urls}, response_status=status.HTTP_200_OK)
