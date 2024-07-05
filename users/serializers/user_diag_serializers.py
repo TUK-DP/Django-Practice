@@ -7,8 +7,8 @@ from users.validator import *
 class DiagRecordSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     user = serializers.IntegerField()
-    totalQuestionSize = serializers.IntegerField()
-    yesCount = serializers.IntegerField()
+    total_question_size = serializers.IntegerField()
+    yes_count = serializers.IntegerField()
     created_at = serializers.DateTimeField()
     updated_at = serializers.DateTimeField()
 
@@ -33,6 +33,6 @@ class DiagRecordSerializer(serializers.Serializer):
 
 
 class RecordSaveRequest(serializers.Serializer):
-    userId = serializers.IntegerField(validators=[exist_user_id])
-    totalQuestionSize = serializers.IntegerField()
-    yesCount = serializers.IntegerField()
+    user_id = serializers.IntegerField(validators=[exist_user_id])
+    total_question_size = serializers.IntegerField()
+    yes_count = serializers.IntegerField()

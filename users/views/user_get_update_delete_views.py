@@ -23,9 +23,9 @@ class GetUsersAndUpdateView(APIView):
         }
     )
     def get(self, request: Request) -> HttpResponse:
-        findUsers = User.objects.all()
+        find_users = User.objects.all()
         return ApiResponse.on_success(
-            UserSerializer(findUsers, many=True).data,
+            UserSerializer(find_users, many=True).data,
             response_status=status.HTTP_200_OK
         )
 
@@ -38,15 +38,15 @@ class GetUsersAndUpdateView(APIView):
     @token_permission_validator(where_is_userId=REQUEST_BODY, userIdName='id')
     @validator(request_serializer=UserUpdateRequest, request_type=REQUEST_BODY, return_key='serializer')
     def put(self, request):
-        updateSerializer = request.serializer
-        updateRequest = updateSerializer.validated_data
+        update_serializer = request.serializer
+        update_request = update_serializer.validated_data
 
-        findUser = User.objects.get(id=updateRequest['id'])
+        find_user = User.objects.get(id=update_request['id'])
 
-        updateSerializer.update(findUser, updateRequest)
+        update_serializer.update(find_user, update_request)
 
         return ApiResponse.on_success(
-            result=UserSerializer(findUser).data
+            result=UserSerializer(find_user).data
         )
 
 
@@ -57,10 +57,10 @@ class GetUserAndDeleteView(APIView):
                          security=[{'AccessToken': []}])
     @token_permission_validator(where_is_userId=REQUEST_PATH)
     @validator(request_type=REQUEST_PATH, request_serializer=UserIdReqeust, return_key='serializer')
-    def get(self, request, userId: int):
-        findUser = User.objects.get(id=userId)
+    def get(self, request, user_id: int):
+        find_user = User.objects.get(id=user_id)
         return ApiResponse.on_success(
-            result=UserSerializer(findUser).data
+            result=UserSerializer(find_user).data
         )
 
     @transaction.atomic
@@ -71,8 +71,8 @@ class GetUserAndDeleteView(APIView):
     )
     @token_permission_validator(where_is_userId=REQUEST_PATH)
     @validator(request_serializer=UserIdReqeust, request_type=REQUEST_PATH, return_key='serializer')
-    def delete(self, request, userId: int):
-        User.objects.get(id=userId).delete()
+    def delete(self, request, user_id: int):
+        User.objects.get(id=user_id).delete()
         return ApiResponse.on_success(
             message="삭제 완료"
         )
