@@ -19,14 +19,14 @@ class RecordSaveView(APIView):
         request = request.serializer.validated_data
 
         # DiagRecord 객체 생성
-        diagRecord = DiagRecord.objects.create(
+        diag_record = DiagRecord.objects.create(
             totalQuestionSize=request.get('totalQuestionSize'),
             yesCount=request.get('yesCount'),
             user=User.objects.get(id=request.get('userId'), isDeleted='False')
         )
 
         return ApiResponse.on_success(
-            result=DiagRecordSerializer.to_json(diagRecord),
+            result=DiagRecordSerializer.to_json(diag_record),
             response_status=status.HTTP_200_OK
         )
 
@@ -42,11 +42,11 @@ class GetDiagRecordView(APIView):
     def get(self, request):
         request = request.serializer.validated_data
 
-        diagRecord = DiagRecord.objects.filter(
+        diag_record = DiagRecord.objects.filter(
             user=User.objects.get(id=request.get('userId'))
         ).order_by('-created_at').first()
 
         return ApiResponse.on_success(
-            result=DiagRecordSerializer.to_json(diagRecord),
+            result=DiagRecordSerializer.to_json(diag_record),
             response_status=status.HTTP_200_OK
         )

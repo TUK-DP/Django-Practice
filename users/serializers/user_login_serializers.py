@@ -6,7 +6,7 @@ from users.validator import *
 
 
 class LoginRequest(serializers.Serializer):
-    email = serializers.CharField(max_length=20, validators=[exist_user_email])
+    email = serializers.CharField(max_length=100, validators=[exist_user_email])
     password = serializers.CharField(max_length=128)
 
     def validate(self, attrs):
