@@ -20,9 +20,9 @@ class RecordSaveView(APIView):
 
         # DiagRecord 객체 생성
         diag_record = DiagRecord.objects.create(
-            total_question_size=request.get('total_question_size'),
-            yes_count=request.get('yes_count'),
-            user=User.objects.get(id=request.get('user_id'), isDeleted='False')
+            totalQuestionSize=request.get('totalQuestionSize'),
+            yesCount=request.get('yesCount'),
+            user=User.objects.get(id=request.get('userId'), isDeleted='False')
         )
 
         return ApiResponse.on_success(
@@ -43,7 +43,7 @@ class GetDiagRecordView(APIView):
         request = request.serializer.validated_data
 
         diag_record = DiagRecord.objects.filter(
-            user=User.objects.get(id=request.get('user_id'))
+            user=User.objects.get(id=request.get('userId'))
         ).order_by('-created_at').first()
 
         return ApiResponse.on_success(

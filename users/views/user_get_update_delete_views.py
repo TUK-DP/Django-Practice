@@ -57,8 +57,8 @@ class GetUserAndDeleteView(APIView):
                          security=[{'AccessToken': []}])
     @token_permission_validator(where_is_userId=REQUEST_PATH)
     @validator(request_type=REQUEST_PATH, request_serializer=UserIdReqeust, return_key='serializer')
-    def get(self, request, user_id: int):
-        find_user = User.objects.get(id=user_id)
+    def get(self, request, userId: int):
+        find_user = User.objects.get(id=userId)
         return ApiResponse.on_success(
             result=UserSerializer(find_user).data
         )
@@ -71,8 +71,8 @@ class GetUserAndDeleteView(APIView):
     )
     @token_permission_validator(where_is_userId=REQUEST_PATH)
     @validator(request_serializer=UserIdReqeust, request_type=REQUEST_PATH, return_key='serializer')
-    def delete(self, request, user_id: int):
-        User.objects.get(id=user_id).delete()
+    def delete(self, request, userId: int):
+        User.objects.get(id=userId).delete()
         return ApiResponse.on_success(
             message="삭제 완료"
         )
