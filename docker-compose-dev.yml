@@ -34,3 +34,15 @@ services:
       - MYSQL_DATABASE=dp
     ports:
       - "3306:3306"
+
+  redis:
+    ports:
+      - "6379:6379"
+    
+  redis-insight:
+    ports:
+      - "8001:8001"
+      - "5540:5540"
+    environment:
+      - HTTP_PORT=8001
+      - REDIS_URL=redis://redis:6379
