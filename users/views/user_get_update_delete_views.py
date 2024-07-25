@@ -25,7 +25,7 @@ class GetUsersAndUpdateView(APIView):
     def get(self, request: Request) -> HttpResponse:
         find_users = User.objects.all()
         return ApiResponse.on_success(
-            UserSerializer(find_users, many=True).data,
+            result=UserSerializer(find_users, many=True).data,
             response_status=status.HTTP_200_OK
         )
 

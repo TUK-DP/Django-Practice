@@ -9,7 +9,7 @@ from config.settings import REQUEST_BODY
 from users.serializers.user_get_post_put_delete_serializers import *
 
 
-class SignupView(APIView):
+class JoinView(APIView):
     # transaction
     @transaction.atomic
     @swagger_auto_schema(
@@ -23,6 +23,6 @@ class SignupView(APIView):
     def post(self, request):
         # User 객체 생성
         return ApiResponse.on_success(
-            result=UserSafeSerializer(request.serializer.save()).data,
+            result=UserSerializer(request.serializer.save()).data,
             response_status=status.HTTP_201_CREATED
         )

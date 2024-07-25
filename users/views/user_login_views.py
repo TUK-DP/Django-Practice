@@ -22,8 +22,8 @@ class LoginView(APIView):
     @validator(request_serializer=LoginRequest, request_type=REQUEST_BODY, return_key="serializer")
     def post(self, request):
         find_user = User.objects.get(
-            email=request.serializer.data.get('email'),
-            password=request.serializer.data.get('password')
+            account_id=request.serializer.data.get('accountId'),
+            pass_word=request.serializer.data.get('passWord')
         )
 
         # 토큰 생성
