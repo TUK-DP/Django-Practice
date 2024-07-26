@@ -1,10 +1,8 @@
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from users.models import User
+from users.models import User, TEST_USER_DATA
 from users.token_handler import decode_token
-
-from config.test_data import TEST_USER_DATA
 
 # Create your tests here.
 

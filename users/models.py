@@ -20,9 +20,19 @@ class User(BaseModel):
         self.is_deleted = True
         self.save()
 
+TEST_USER_DATA = {
+    "account_id": "test",
+    "password": "test",
+    "username": "test"
+}
 
 class DiagRecord(BaseModel):
     totalQuestionSize = models.IntegerField()
     yesCount = models.IntegerField()
 
     user = models.ForeignKey('users.User', related_name='diagrecord', on_delete=models.CASCADE)
+
+TEST_DIAG_DATA = {
+    "totalQuestionSize": 12,
+    "yesCount": 3,
+}

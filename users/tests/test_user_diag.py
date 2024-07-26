@@ -1,8 +1,6 @@
 from rest_framework.test import APITestCase
 
-from users.models import User, DiagRecord
-
-from config.test_data import TEST_USER_DATA, TEST_DIAG_DATA
+from users.models import *
 
 
 class TestUserDiag(APITestCase):

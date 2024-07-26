@@ -1,7 +1,7 @@
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from config.test_data import TEST_USER_DATA
+from users.models import TEST_USER_DATA
 
 
 class TestUserSignUp(APITestCase):
