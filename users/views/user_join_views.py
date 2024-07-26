@@ -9,7 +9,7 @@ from config.settings import REQUEST_BODY
 from users.serializers.user_get_post_put_delete_serializers import *
 
 
-class JoinView(APIView):
+class SignupView(APIView):
     # transaction
     @transaction.atomic
     @swagger_auto_schema(

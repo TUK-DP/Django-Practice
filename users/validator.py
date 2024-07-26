@@ -18,8 +18,8 @@ def not_exist_user_account_id(account_id: str = 'account_id'):
         raise ValidationError('이미 존재하는 아이디입니다.')
 
 
-def validate_login(account_id: str, pass_word: str):
-    if not User.objects.filter(account_id=account_id, pass_word=pass_word, is_deleted=False).exists():
+def validate_login(account_id: str, password: str):
+    if not User.objects.filter(account_id=account_id, password=password, is_deleted=False).exists():
         raise ValidationError('존재하지 않는 사용자입니다.')
 
 

@@ -7,10 +7,10 @@ from users.validator import *
 
 class LoginRequest(serializers.Serializer):
     accountId = serializers.CharField(max_length=100, validators=[exist_user_account_id])
-    passWord = serializers.CharField(max_length=128)
+    password = serializers.CharField(max_length=128)
 
     def validate(self, attrs):
-        validate_login(attrs['accountId'], attrs['passWord'])
+        validate_login(attrs['accountId'], attrs['password'])
         return attrs
 
 

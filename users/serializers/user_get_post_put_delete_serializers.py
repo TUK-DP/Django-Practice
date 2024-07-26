@@ -17,15 +17,11 @@ class UserSerializer(serializers.ModelSerializer):
         }
         return camel_case_representation
 
-    @property
-    def transfer_camel_case(self):
-        return self.data
-
 
 class UserSafeSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'account_id', 'user_name', 'created_at', 'updated_at']
+        fields = ['id', 'account_id', 'username', 'created_at', 'updated_at']
 
 
 class UserIdReqeust(serializers.Serializer):
@@ -34,14 +30,14 @@ class UserIdReqeust(serializers.Serializer):
 
 class UserCreateRequest(serializers.Serializer):
     accountId = serializers.CharField(max_length=128, validators=[not_exist_user_account_id])
-    passWord = serializers.CharField(max_length=128)
-    userName = serializers.CharField(max_length=20)
+    password = serializers.CharField(max_length=128)
+    username = serializers.CharField(max_length=20)
 
     def create(self, validated_data):
         user_data = {
             'account_id': validated_data['accountId'],
-            'pass_word': validated_data['passWord'],
-            'user_name': validated_data['userName'],
+            'password': validated_data['password'],
+            'username': validated_data['username'],
         }
         return User.objects.create(**user_data)
 
@@ -49,8 +45,8 @@ class UserCreateRequest(serializers.Serializer):
 class UserUpdateRequest(serializers.Serializer):
     id = serializers.IntegerField(validators=[exist_user_id])
     accountId = serializers.CharField(max_length=128)
-    passWord = serializers.CharField(max_length=128)
-    userName = serializers.CharField(max_length=20)
+    password = serializers.CharField(max_length=128)
+    username = serializers.CharField(max_length=20)
 
     def validate(self, attrs):
         validate_update(attrs['id'], attrs['accountId'])
@@ -58,8 +54,8 @@ class UserUpdateRequest(serializers.Serializer):
 
     def update(self, instance, validated_data):
         instance.account_id = validated_data.get('accountId', instance.account_id)
-        instance.password = validated_data.get('passWord', instance.pass_word)
-        instance.user_name = validated_data.get('userName', instance.user_name)
+        instance.password = validated_data.get('password', instance.password)
+        instance.username = validated_data.get('username', instance.username)
         instance.save()
         return instance
 

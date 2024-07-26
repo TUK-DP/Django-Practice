@@ -9,7 +9,7 @@ from users.views.user_join_views import *
 
 urlpatterns = [
     path('', GetUsersAndUpdateView.as_view()),
-    path('/join', JoinView.as_view()),
+    path('/signup', SignupView.as_view()),
     path('/login', LoginView.as_view()),
     path('/<int:userId>/auto/login', AutoLoginView.as_view()),
     path('/<int:userId>', GetUserAndDeleteView.as_view()),

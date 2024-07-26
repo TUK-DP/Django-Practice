@@ -23,7 +23,7 @@ class LoginView(APIView):
     def post(self, request):
         find_user = User.objects.get(
             account_id=request.serializer.data.get('accountId'),
-            pass_word=request.serializer.data.get('passWord')
+            password=request.serializer.data.get('password')
         )
 
         # 토큰 생성

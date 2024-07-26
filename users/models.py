@@ -6,8 +6,8 @@ from config.basemodel import BaseModel
 # Create your models here.
 class User(BaseModel):
     account_id = models.CharField(max_length=128, unique=True)
-    pass_word = models.CharField(max_length=128, null=True)
-    user_name = models.CharField(max_length=20, null=True)
+    password = models.CharField(max_length=128, null=True)
+    username = models.CharField(max_length=20, null=True)
     refresh_token = models.CharField(max_length=128, null=True)
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
