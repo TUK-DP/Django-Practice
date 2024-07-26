@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from users.validator import *
-import inflection
+from config.utils import transfer_camel_case
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -11,10 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
     
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        # 필드 이름을 CamelCase로 변경
-        camel_case_representation = {
-            inflection.camelize(key, False): value for key, value in representation.items()
-        }
+        camel_case_representation = transfer_camel_case(representation)
         return camel_case_representation
 
 
