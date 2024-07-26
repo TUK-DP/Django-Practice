@@ -6,20 +6,14 @@ from rest_framework.test import APITestCase
 from users.models import User
 from users.token_handler import create_token
 
-# Create your tests here.
+from config.test_data import TEST_USER_DATA
 
-test_user_data = {
-    "username": "test1",
-    "nickname": "test1",
-    "email": "test1@test1.com",
-    "password": "test1",
-    "birth": "2021-01-01"
-}
+# Create your tests here.
 
 
 class TestUserAutoLogin(APITestCase):
     def setUp(self):
-        new_user = User.objects.create(**test_user_data)
+        new_user = User.objects.create(**TEST_USER_DATA)
         self.new_user_id = new_user.id
         self.token_serializer = create_token(userId=new_user.id)
         new_user.refresh_token = self.token_serializer.data.get("RefreshToken")

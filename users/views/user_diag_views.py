@@ -22,7 +22,7 @@ class RecordSaveView(APIView):
         diag_record = DiagRecord.objects.create(
             totalQuestionSize=request.get('totalQuestionSize'),
             yesCount=request.get('yesCount'),
-            user=User.objects.get(id=request.get('userId'), isDeleted='False')
+            user=User.objects.get(id=request.get('userId'), is_deleted=False)
         )
 
         return ApiResponse.on_success(

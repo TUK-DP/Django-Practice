@@ -3,38 +3,23 @@ from rest_framework.exceptions import ValidationError
 
 from users.models import User
 from users.token_handler import validate_user_id_token, create_token, decode_token
-from users.token_serializer import TokenSerializer
 from users.validator import *
 
-test_user_data = {
-    "username": "test1",
-    "nickname": "test1",
-    "email": "test1@test1.com",
-    "password": "test1",
-    "birth": "2021-01-01"
-}
+from config.test_data import TEST_USER_DATA
 
 
 class ValidatorTest(TestCase):
     def setUp(self):
-        self.new_user = User.objects.create(**test_user_data)
+        self.new_user = User.objects.create(**TEST_USER_DATA)
         self.token = create_token(userId=self.new_user.id)
 
-    def test_not_exist_nickname(self):
-        self.assertIsNone(not_exist_user_nickname(nickname='unique_nickname'))
-        self.assertRaises(ValidationError, not_exist_user_nickname, nickname=test_user_data['nickname'])
-
-    def test_not_exist_user_email(self):
-        self.assertIsNone(not_exist_user_email(email='unique_email'))
-        self.assertRaises(ValidationError, not_exist_user_email, email=test_user_data['email'])
-
-    def test_exist_user_email(self):
-        self.assertIsNone(exist_user_email(email=test_user_data['email']))
-        self.assertRaises(ValidationError, exist_user_email, email='unique_email')
+    def test_not_exist_user_account_id(self):
+        self.assertIsNone(not_exist_user_account_id(account_id='unique_accunt_id'))
+        self.assertRaises(ValidationError, not_exist_user_account_id, account_id=TEST_USER_DATA['account_id'])
 
     def test_validate_login(self):
-        self.assertIsNone(validate_login(test_user_data['email'], test_user_data['password']))
-        self.assertRaises(ValidationError, validate_login, 'unique_email', 'unique_password')
+        self.assertIsNone(validate_login(TEST_USER_DATA['account_id'], TEST_USER_DATA['password']))
+        self.assertRaises(ValidationError, validate_login, 'unique_accunt_id', 'unique_password')
 
     def test_exist_user_id(self):
         self.assertIsNone(exist_user_id(user_id=User.objects.first().id))
