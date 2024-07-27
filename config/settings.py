@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "users.apps.UsersConfig",
     "diary.apps.DiaryConfig",
+    "diag.apps.DiagConfig",
     # Django 의 RestAPI 를 쉽게 만들어주는 라이브러리
     "rest_framework",
     # Django 의 Swagger 를 쉽게 만들어주는 라이브러리
