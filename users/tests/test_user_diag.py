@@ -1,32 +1,19 @@
 from rest_framework.test import APITestCase
 
-from users.models import User, DiagRecord
-
-test_user_data = {
-    "username": "test1",
-    "nickname": "test1",
-    "email": "test1@test1.com",
-    "password": "test1",
-    "birth": "2021-01-01"
-}
-
-test_diag_data = {
-    "totalQuestionSize": 12,
-    "yesCount": 3,
-}
+from users.models import *
 
 
 class TestUserDiag(APITestCase):
     def setUp(self):
-        new_user = User.objects.create(**test_user_data)
+        new_user = User.objects.create(**TEST_USER_DATA)
         self.new_user_id = new_user.id
 
-        test_diag_data['user'] = new_user
+        TEST_DIAG_DATA['user'] = new_user
 
-        self.new_diag_record = DiagRecord.objects.create(**test_diag_data)
+        self.new_diag_record = DiagRecord.objects.create(**TEST_DIAG_DATA)
 
     def test_diag_create(self):
-        new_test_data = {k: v for k, v in test_diag_data.items()}
+        new_test_data = {k: v for k, v in TEST_DIAG_DATA.items()}
         new_test_data['userId'] = self.new_user_id
         response = self.client.post(
             f'/api/users/recordsave',

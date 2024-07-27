@@ -8,31 +8,16 @@ from config.basemodel import validator
 from users.serializers.user_check_serializers import *
 
 
-class CheckNicknameView(APIView):
+class CheckAccountIdView(APIView):
     @transaction.atomic
     @swagger_auto_schema(
-        operation_id="닉네임 중복 확인", request_body=DuplicateNicknameRequest,
-        responses={status.HTTP_200_OK: ApiResponse.schema(ApiResponse, description="사용가능한 닉네임")},
+        operation_id="회원가입시 아이디 중복 확인", request_body=DuplicateAccountIdRequest,
+        responses={status.HTTP_200_OK: ApiResponse.schema(ApiResponse, description="사용가능한 아이디")},
         security=[]
     )
-    @validator(request_serializer=DuplicateNicknameRequest)
+    @validator(request_serializer=DuplicateAccountIdRequest)
     def post(self, request):
         return ApiResponse.on_success(
             response_status=status.HTTP_200_OK,
-            message="사용가능한 닉네임입니다.",
-        )
-
-
-class CheckEmailView(APIView):
-    @transaction.atomic
-    @swagger_auto_schema(
-        operation_id="이메일 중복 확인", request_body=DuplicateEmailRequest,
-        responses={status.HTTP_200_OK: ApiResponse.schema(ApiResponse, description="사용가능한 이메일")},
-        security=[]
-    )
-    @validator(request_serializer=DuplicateEmailRequest)
-    def post(self, request):
-        return ApiResponse.on_success(
-            response_status=status.HTTP_200_OK,
-            message="사용가능한 이메일입니다.",
+            message="사용가능한 아이디입니다.",
         )

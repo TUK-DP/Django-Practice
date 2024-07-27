@@ -1,18 +1,29 @@
 from rest_framework import serializers
 
 from users.validator import *
+from config.utils import transfer_dict_key_to_camel_case
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'nickname', 'birth', 'isDeleted', 'created_at', 'updated_at']
+        fields = '__all__'
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        camel_case_representation = transfer_dict_key_to_camel_case(representation)
+        return camel_case_representation
 
 
 class UserSafeSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'nickname', 'birth', 'created_at', 'updated_at']
+        fields = ['id', 'account_id', 'username', 'created_at', 'updated_at']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        camel_case_representation = transfer_dict_key_to_camel_case(representation)
+        return camel_case_representation
 
 
 class UserIdReqeust(serializers.Serializer):
@@ -20,34 +31,33 @@ class UserIdReqeust(serializers.Serializer):
 
 
 class UserCreateRequest(serializers.Serializer):
-    username = serializers.CharField(max_length=20)
-    nickname = serializers.CharField(max_length=20, validators=[not_exist_user_nickname])
-    email = serializers.EmailField(max_length=100, validators=[not_exist_user_email])
+    accountId = serializers.CharField(max_length=128, validators=[not_exist_user_account_id])
     password = serializers.CharField(max_length=128)
-    birth = serializers.DateField()
+    username = serializers.CharField(max_length=20)
 
     def create(self, validated_data):
-        return User.objects.create(**validated_data)
+        user_data = {
+            'account_id': validated_data['accountId'],
+            'password': validated_data['password'],
+            'username': validated_data['username'],
+        }
+        return User.objects.create(**user_data)
 
 
 class UserUpdateRequest(serializers.Serializer):
     id = serializers.IntegerField(validators=[exist_user_id])
-    username = serializers.CharField(max_length=20)
-    nickname = serializers.CharField(max_length=20)
-    email = serializers.EmailField(max_length=100)
+    accountId = serializers.CharField(max_length=128)
     password = serializers.CharField(max_length=128)
-    birth = serializers.DateField()
+    username = serializers.CharField(max_length=20)
 
     def validate(self, attrs):
-        validate_update(attrs['id'], attrs['email'], attrs['nickname'])
+        validate_update(attrs['id'], attrs['accountId'])
         return attrs
 
     def update(self, instance, validated_data):
-        instance.username = validated_data.get('username', instance.username)
-        instance.nickname = validated_data.get('nickname', instance.nickname)
-        instance.email = validated_data.get('email', instance.email)
+        instance.account_id = validated_data.get('accountId', instance.account_id)
         instance.password = validated_data.get('password', instance.password)
-        instance.birth = validated_data.get('birth', instance.birth)
+        instance.username = validated_data.get('username', instance.username)
         instance.save()
         return instance
 
