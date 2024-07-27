@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from users.validator import *
-from config.utils import transfer_camel_case
+from config.utils import transfer_dict_key_to_camel_case
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -11,7 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
     
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        camel_case_representation = transfer_camel_case(representation)
+        camel_case_representation = transfer_dict_key_to_camel_case(representation)
         return camel_case_representation
 
 
@@ -19,6 +19,11 @@ class UserSafeSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'account_id', 'username', 'created_at', 'updated_at']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        camel_case_representation = transfer_dict_key_to_camel_case(representation)
+        return camel_case_representation
 
 
 class UserIdReqeust(serializers.Serializer):

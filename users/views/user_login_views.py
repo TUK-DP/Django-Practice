@@ -7,6 +7,7 @@ from config.basemodel import ApiResponse
 from config.basemodel import validator
 from config.settings import REQUEST_BODY, REQUEST_HEADER, REQUEST_PATH
 from users.serializers.user_login_serializers import *
+from users.serializers.user_get_post_put_delete_serializers import *
 from users.token_handler import create_token, token_permission_validator, auto_login
 from users.token_serializer import AutoLoginRequest
 
@@ -35,7 +36,7 @@ class LoginView(APIView):
 
         # 응답 생성
         response = LoginResponse(data={
-            "user": UserSerializer(find_user).data,
+            "user": UserSafeSerializer(find_user).data,
             "token": token_serial.data
         })
 
@@ -69,7 +70,7 @@ class AutoLoginView(APIView):
 
         find_user = User.objects.get(id=userId)
         response = LoginResponse(data={
-            "user": UserSerializer(find_user).data,
+            "user": UserSafeSerializer(find_user).data,
             "token": token.data
         })
 

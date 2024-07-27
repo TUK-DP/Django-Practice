@@ -23,6 +23,6 @@ class SignupView(APIView):
     def post(self, request):
         # User 객체 생성
         return ApiResponse.on_success(
-            result=UserSerializer(request.serializer.save()).data,
+            result=UserSafeSerializer(request.serializer.save()).data,
             response_status=status.HTTP_201_CREATED
         )

@@ -32,7 +32,7 @@ class GetUsersAndUpdateView(APIView):
     @transaction.atomic
     @swagger_auto_schema(
         operation_id="유저 수정", request_body=UserUpdateRequest,
-        responses={status.HTTP_200_OK: ApiResponse.schema(UserSerializer)},
+        responses={status.HTTP_200_OK: ApiResponse.schema(UserSafeSerializer)},
         security=[{'AccessToken': []}]
     )
     @token_permission_validator(where_is_userId=REQUEST_BODY, userIdName='id')
@@ -46,21 +46,21 @@ class GetUsersAndUpdateView(APIView):
         update_serializer.update(find_user, update_request)
 
         return ApiResponse.on_success(
-            result=UserSerializer(find_user).data
+            result=UserSafeSerializer(find_user).data
         )
 
 
 class GetUserAndDeleteView(APIView):
     @transaction.atomic
     @swagger_auto_schema(operation_id="유저 조회",
-                         responses={status.HTTP_200_OK: ApiResponse.schema(UserSerializer, description="유저 조회")},
+                         responses={status.HTTP_200_OK: ApiResponse.schema(UserSafeSerializer, description="유저 조회")},
                          security=[{'AccessToken': []}])
     @token_permission_validator(where_is_userId=REQUEST_PATH)
     @validator(request_type=REQUEST_PATH, request_serializer=UserIdReqeust, return_key='serializer')
     def get(self, request, userId: int):
         find_user = User.objects.get(id=userId)
         return ApiResponse.on_success(
-            result=UserSerializer(find_user).data
+            result=UserSafeSerializer(find_user).data
         )
 
     @transaction.atomic
