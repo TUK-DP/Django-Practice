@@ -1,7 +1,11 @@
 import inflection
 
-def transfer_camel_case(data):
-    if isinstance(data, dict):
-        return {inflection.camelize(key, False): transfer_camel_case(value) for key, value in data.items()}
-    else:
-        return data
+def transfer_dict_key_to_camel_case(obj: dict):
+    return {
+        inflection.camelize(key, False):
+            (
+                value if not isinstance(value, dict) else
+                transfer_dict_key_to_camel_case(value)
+            )
+        for key, value in obj.items()
+    }
