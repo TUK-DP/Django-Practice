@@ -7,10 +7,23 @@ from config.basemodel import ApiResponse
 from config.basemodel import validator
 from config.settings import REQUEST_BODY, REQUEST_QUERY
 from diag.serializers import *
+from diag.questions import QUESTION_LIST
 from users.serializers.user_get_post_put_delete_serializers import UserIdReqeust
 
 
-class RecordView(APIView):
+class DiagView(APIView):
+    @swagger_auto_schema(
+        operation_id="치매 설문 문항 조회",
+        operation_description="유저의 치매 설문지의 문항을 조회",
+        responses={status.HTTP_200_OK: QuestionResponse(many=True)}
+    )
+    def get(self, request):
+        questions = [{"question": question} for question in QUESTION_LIST]
+        return ApiResponse.on_success(
+            result=questions, 
+            response_status=status.HTTP_200_OK
+        )
+    
     @transaction.atomic 
     @swagger_auto_schema(
         operation_id="치매진단 결과 저장",
@@ -24,15 +37,17 @@ class RecordView(APIView):
         # DiagRecord 객체 생성
         diag_record = DiagRecord.objects.create(
             total_question_size=request.get('totalQuestionSize'),
-            yes_count=request.get('yesCount'),
+            total_score=sum(request.get('diagAnswer')),
             user=User.objects.get(id=request.get('userId'), is_deleted=False)
         )
 
         return ApiResponse.on_success(
-            result=DiagRecordSerializer(diag_record),
+            result=DiagRecordSerializer(diag_record).data,
             response_status=status.HTTP_200_OK
         )
-    
+
+
+class DiagRecordView(APIView):
     @transaction.atomic
     @swagger_auto_schema(
         operation_id="최근 진단 기록 조회",
@@ -43,11 +58,21 @@ class RecordView(APIView):
     def get(self, request):
         request = request.serializer.validated_data
 
-        diag_record = DiagRecord.objects.filter(
-            user=User.objects.get(id=request.get('userId'))
-        ).order_by('-created_at').first()
+        user_id = request.get('userId')
+        user = User.objects.get(id=user_id)
+
+        diag_records = DiagRecord.objects.filter(user=user).order_by('-created_at')[:2]
+        serialized_records = DiagRecordSerializer(diag_records, many=True).data
+
+        for record in serialized_records:
+            record.pop('user', None)
+
+        response_data = {
+            "user": UserSafeSerializer(user).data,
+            "records": serialized_records
+        }
 
         return ApiResponse.on_success(
-            result=DiagRecordSerializer(diag_record),
+            result=response_data,
             response_status=status.HTTP_200_OK
         )

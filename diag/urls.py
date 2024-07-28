@@ -3,5 +3,6 @@ from django.urls import path
 from diag.views import *
 
 urlpatterns = [
-    path('/record', RecordView.as_view()),
+    path('', DiagView.as_view()),
+    path('/record', DiagRecordView.as_view())
 ]
