@@ -3,16 +3,15 @@ from rest_framework import serializers
 from config.utils import transfer_dict_key_to_camel_case
 
 from diag.models import DiagRecord
+from diag.questions import QUESTION_LIST
 from users.validator import *
 from users.serializers.user_get_post_put_delete_serializers import UserSafeSerializer
 
 
 class DiagRecordSerializer(serializers.ModelSerializer):
-    user = UserSafeSerializer(read_only=True)
-
     class Meta:
         model = DiagRecord
-        fields = '__all__'
+        fields = ['id', 'total_score']
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -22,14 +21,12 @@ class DiagRecordSerializer(serializers.ModelSerializer):
 
 class RecordSaveRequest(serializers.Serializer):
     userId = serializers.IntegerField(validators=[exist_user_id])
-    totalQuestionSize = serializers.IntegerField()
     diagAnswer = serializers.ListField(child=serializers.IntegerField())
 
     def validate(self, data):
-        total_question_size = data.get('totalQuestionSize')
         diag_answer = data.get('diagAnswer')
 
-        if total_question_size != len(diag_answer):
+        if len(QUESTION_LIST) != len(diag_answer):
             raise ValidationError("답안의 길이와 질문의 길이가 일치하지 않습니다.")
 
         return data

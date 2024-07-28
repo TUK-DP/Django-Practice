@@ -36,7 +36,6 @@ class DiagView(APIView):
 
         # DiagRecord 객체 생성
         diag_record = DiagRecord.objects.create(
-            total_question_size=request.get('totalQuestionSize'),
             total_score=sum(request.get('diagAnswer')),
             user=User.objects.get(id=request.get('userId'), is_deleted=False)
         )
@@ -58,21 +57,11 @@ class DiagRecordView(APIView):
     def get(self, request):
         request = request.serializer.validated_data
 
-        user_id = request.get('userId')
-        user = User.objects.get(id=user_id)
+        user = User.objects.get(id=request.get('userId'))
 
         diag_records = DiagRecord.objects.filter(user=user).order_by('-created_at')[:2]
-        serialized_records = DiagRecordSerializer(diag_records, many=True).data
-
-        for record in serialized_records:
-            record.pop('user', None)
-
-        response_data = {
-            "user": UserSafeSerializer(user).data,
-            "records": serialized_records
-        }
 
         return ApiResponse.on_success(
-            result=response_data,
+            result=DiagRecordSerializer(diag_records, many=True).data,
             response_status=status.HTTP_200_OK
         )
