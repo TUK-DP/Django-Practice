@@ -7,13 +7,12 @@ from users.validator import *
 from users.serializers.user_get_post_put_delete_serializers import UserSafeSerializer
 
 
-class DiagRecordSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
+class DiagRecordSerializer(serializers.ModelSerializer):
     user = UserSafeSerializer(read_only=True)
-    total_question_size = serializers.IntegerField()
-    total_score = serializers.IntegerField()
-    created_at = serializers.DateTimeField()
-    updated_at = serializers.DateTimeField()
+
+    class Meta:
+        model = DiagRecord
+        fields = '__all__'
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -25,6 +24,15 @@ class RecordSaveRequest(serializers.Serializer):
     userId = serializers.IntegerField(validators=[exist_user_id])
     totalQuestionSize = serializers.IntegerField()
     diagAnswer = serializers.ListField(child=serializers.IntegerField())
+
+    def validate(self, data):
+        total_question_size = data.get('totalQuestionSize')
+        diag_answer = data.get('diagAnswer')
+
+        if total_question_size != len(diag_answer):
+            raise ValidationError("답안의 길이와 질문의 길이가 일치하지 않습니다.")
+
+        return data
 
 
 class QuestionResponse(serializers.Serializer):
