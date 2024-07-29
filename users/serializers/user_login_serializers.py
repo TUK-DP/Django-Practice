@@ -6,11 +6,11 @@ from users.validator import *
 
 
 class LoginRequest(serializers.Serializer):
-    email = serializers.CharField(max_length=20, validators=[exist_user_email])
+    accountId = serializers.CharField(max_length=100, validators=[exist_user_account_id])
     password = serializers.CharField(max_length=128)
 
     def validate(self, attrs):
-        validate_login(attrs['email'], attrs['password'])
+        validate_login(attrs['accountId'], attrs['password'])
         return attrs
 
 

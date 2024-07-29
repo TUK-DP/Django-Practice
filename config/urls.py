@@ -23,6 +23,7 @@ urlpatterns = [
     path('api/users', include('users.urls')),
     path('api/image', include('image.urls')),
     path('api/center', include('center.urls')),
+    path('api/diag', include('diag.urls')),
 
     re_path(r'^api/swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='api2/schema-swagger-ui'),
 ]

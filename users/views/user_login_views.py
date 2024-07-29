@@ -7,6 +7,7 @@ from config.basemodel import ApiResponse
 from config.basemodel import validator
 from config.settings import REQUEST_BODY, REQUEST_HEADER, REQUEST_PATH
 from users.serializers.user_login_serializers import *
+from users.serializers.user_get_post_put_delete_serializers import *
 from users.token_handler import create_token, token_permission_validator, auto_login
 from users.token_serializer import AutoLoginRequest
 
@@ -21,21 +22,21 @@ class LoginView(APIView):
     )
     @validator(request_serializer=LoginRequest, request_type=REQUEST_BODY, return_key="serializer")
     def post(self, request):
-        findUser = User.objects.get(
-            email=request.serializer.data.get('email'),
+        find_user = User.objects.get(
+            account_id=request.serializer.data.get('accountId'),
             password=request.serializer.data.get('password')
         )
 
         # 토큰 생성
-        token_serial = create_token(findUser.id)
+        token_serial = create_token(find_user.id)
 
         # 토큰 저장
-        findUser.refresh_token = token_serial.data.get('RefreshToken')
-        findUser.save()
+        find_user.refresh_token = token_serial.data.get('RefreshToken')
+        find_user.save()
 
         # 응답 생성
         response = LoginResponse(data={
-            "user": UserSerializer(findUser).data,
+            "user": UserSafeSerializer(find_user).data,
             "token": token_serial.data
         })
 
@@ -67,9 +68,9 @@ class AutoLoginView(APIView):
                 response_status=status.HTTP_403_FORBIDDEN
             )
 
-        findUser = User.objects.get(id=userId)
+        find_user = User.objects.get(id=userId)
         response = LoginResponse(data={
-            "user": UserSerializer(findUser).data,
+            "user": UserSafeSerializer(find_user).data,
             "token": token.data
         })
 
