@@ -29,6 +29,10 @@ class RecordSaveRequest(serializers.Serializer):
         if len(QUESTION_LIST) != len(diag_answer):
             raise ValidationError("답안의 길이와 질문의 길이가 일치하지 않습니다.")
 
+        for answer in diag_answer:
+            if not (0 <= answer <= 2):
+                raise ValidationError("답안의 각 요소는 0에서 2 사이의 정수여야 합니다.")
+
         return data
 
 
