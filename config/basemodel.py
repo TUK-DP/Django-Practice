@@ -20,6 +20,10 @@ class BaseModel(models.Model):
 hashcode = [0]
 
 
+def to_camel_case(word):
+    components = word.split('_')
+    return components[0] + ''.join(x.title() for x in components[1:])
+
 class ApiResponse(serializers.Serializer):
     isSuccess = serializers.BooleanField()
     message = serializers.CharField(max_length=100)
@@ -44,9 +48,17 @@ class ApiResponse(serializers.Serializer):
 
         hashcode[0] += 1
 
+        camel_case_fields = {}
+        for field_name, field_instance in result_class().get_fields().items():
+            camel_case_name = to_camel_case(field_name)
+            camel_case_fields[camel_case_name] = field_instance
+
+        camel_case_serializer = type(result_class.__name__ + 'CamelCase' + str(hashcode[0]), (serializers.Serializer,),
+                                     camel_case_fields)
+
         d_class = type(class_name, (ApiResponse,), {
             'Meta': meta_class,
-            'result': result_class(many=many)
+            'result': camel_case_serializer(many=many)
         })
 
         return d_class
