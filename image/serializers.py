@@ -40,5 +40,17 @@ class GenerateImageRequest(serializers.Serializer):
     n = serializers.IntegerField(validators=[less_than(4)])
 
 
+class GenerateImageStatusRequest(serializers.Serializer):
+    password = serializers.CharField()
+    taskId = serializers.CharField()
+
+
 class GenerateImageResponse(serializers.Serializer):
     urls = serializers.ListField(child=serializers.CharField())
+
+    
+class GenerateImageStatusResponse(serializers.Serializer):
+    state = serializers.CharField()
+    status = serializers.CharField()
+    result = serializers.ListField(child=serializers.URLField(), required=False)
+    error = serializers.CharField(required=False)

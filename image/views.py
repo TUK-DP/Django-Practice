@@ -8,11 +8,9 @@ from rest_framework.views import APIView
 from config.basemodel import ApiResponse, validator
 from config.settings import REQUEST_QUERY, JWT_SECRET, REQUEST_BODY
 from diary.serialziers.keyword_serializers import *
-from image.gpt.GenerateImage import generate_upload_image, test_generate_image_urls
 from image.s3_modules.s3_handler import upload_file_random_name_to_s3
 from image.serializers import *
 
-from celery.result import AsyncResult
 from tasks import *
 
 # Create your views here.
@@ -83,8 +81,8 @@ class ImageView(APIView):
 
 class GenerateImageView(APIView):
     @swagger_auto_schema(
-        operation_id="AI 이미지 생성",
-        operation_description="AI 이미지 생성",
+        operation_id="AI 이미지 생성 요청",
+        operation_description="AI 이미지 생성 요청",
         request_body=GenerateImageRequest,
         responses={status.HTTP_200_OK: ApiResponse.schema(GenerateImageResponse)}
     )
@@ -94,41 +92,51 @@ class GenerateImageView(APIView):
         prompt = request.serializer.validated_data.get('prompt')
         password = request.serializer.validated_data.get('password')
 
-        # if password != JWT_SECRET:
-        #     urls = test_generate_image_urls(prompt, n=n)
-        # else:
-        #     urls = generate_upload_image(prompt, n=n)
         if password != JWT_SECRET:
             task = test_generate_image.delay(prompt, n=n)
-            pass
         else:
             task = generate_image.delay(prompt, n=n)
 
         return ApiResponse.on_success(result={'taskId': task.id}, response_status=status.HTTP_200_OK)
+    
+    @swagger_auto_schema(
+        operation_id="AI 이미지 생성 상태 확인",
+        operation_description="AI 이미지 생성 상태 확인",
+        query_serializer=GenerateImageStatusRequest(),
+        responses={
+            status.HTTP_200_OK: ApiResponse.schema(GenerateImageStatusResponse),
+            status.HTTP_404_NOT_FOUND: "Task not found"
+        }
+    )
+    @validator(request_type=REQUEST_QUERY, request_serializer=GenerateImageStatusRequest)
+    def get(self, request):
+        task_id = request.query_params.get('taskId')
+        if not task_id: 
+            return ApiResponse.on_error("Task ID is required", status.HTTP_400_BAD_REQUEST)
 
-class TestView(APIView):
-    def post(self, request):
-        for i in range(10):
-            result: AsyncResult = working.delay(i)
-            print(type(result))
-            print(result)
+        password = request.query_params.get('password')
+
+        if password != JWT_SECRET:
+            task = test_generate_image.AsyncResult(task_id)
+        else:
+            task = generate_image.AsyncResult(task_id) 
+
+        if task.state == 'PENDING':
+            response = {
+                'state': task.state,
+                'status': 'Task is pending'
+            }
+        elif task.state != 'FAILURE':
+            response = {
+                'state': task.state,
+                'status': 'Task is in progress' if task.state == 'PROCESSING' else 'Task completed',
+                'result': task.result if task.state == 'SUCCESS' else None
+            }
+        else:
+            response = {
+                'state': task.state,
+                'status': 'Task failed',
+                'error': str(task.result)
+            }
         
-        return ApiResponse.on_success(response_status=status.HTTP_200_OK)
-    
-class TestView2(APIView):
-    def post(self, request):
-        for i in range(10):
-            result: AsyncResult = working2.delay(i)
-            print(type(result))
-            print(result)
-        
-        return ApiResponse.on_success(response_status=status.HTTP_200_OK)
-    
-class TestView3(APIView):
-    def post(self, request):
-        for i in range(10):
-            result: AsyncResult = working3.delay(i)
-            print(type(result))
-            print(result)
-        
-        return ApiResponse.on_success(response_status=status.HTTP_200_OK)
+        return ApiResponse.on_success(result=GenerateImageStatusResponse(response).data, response_status=status.HTTP_200_OK)
