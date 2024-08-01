@@ -35,7 +35,7 @@ class KeywordImagePaging(PagingSerializer):
 
 
 class GenerateImageRequest(serializers.Serializer):
-    password = serializers.CharField()
+    password = serializers.CharField(required=False)
     prompt = serializers.CharField()
     n = serializers.IntegerField(validators=[less_than(4)])
 
