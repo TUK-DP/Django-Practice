@@ -27,4 +27,15 @@ services:
     env_file:
       - .env-mysql
     ports:
-      - "3305:3306"
+      - "3306:3306"
+  
+  redis:
+    ports:
+      - "6379:6379"
+    
+  redis-insight:
+    ports:
+      - "5540:5540"
+    environment:
+      - HTTP_PORT=8001
+      - REDIS_URL=redis://redis:6379
