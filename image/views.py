@@ -12,6 +12,7 @@ from image.s3_modules.s3_handler import upload_file_random_name_to_s3
 from image.serializers import *
 
 from tasks import *
+from celery.result import AsyncResult
 
 # Create your views here.
 
@@ -114,12 +115,7 @@ class GenerateImageView(APIView):
         if not task_id: 
             return ApiResponse.on_error("Task ID is required", status.HTTP_400_BAD_REQUEST)
 
-        password = request.query_params.get('password')
-
-        if password != JWT_SECRET:
-            task = test_generate_image.AsyncResult(task_id)
-        else:
-            task = generate_image.AsyncResult(task_id) 
+        task = AsyncResult(task_id) 
 
         if task.state == 'PENDING':
             response = {

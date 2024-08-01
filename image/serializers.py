@@ -41,7 +41,6 @@ class GenerateImageRequest(serializers.Serializer):
 
 
 class GenerateImageStatusRequest(serializers.Serializer):
-    password = serializers.CharField()
     taskId = serializers.CharField()
 
 
