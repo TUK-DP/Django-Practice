@@ -1,4 +1,5 @@
 from config.sort_options import *
+from config.validator import positive_value
 from diary.validator import *
 from users.models import User
 from users.validator import exist_user_id
@@ -76,3 +77,9 @@ class DiaryUpdateRequest(serializers.Serializer):
             content=content,
             createDate=createDate
         )
+    
+
+class GetDiaryPagingRequset(serializers.Serializer):
+    userId = serializers.IntegerField(validators=[exist_user_id])
+    page = serializers.IntegerField(validators=[positive_value])
+    pageSize = serializers.IntegerField(validators=[positive_value])
