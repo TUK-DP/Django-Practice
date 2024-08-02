@@ -53,6 +53,7 @@ def gpt_generate_image_urls(english_prompt: str, model="dall-e-2", n=1, size="25
     }
 
     response = requests.post(request_url, json=data, headers=headers)
+    print(response)
 
     return [i['url'] for i in response.json()['data']]
 
