@@ -1,5 +1,6 @@
 from django.db.models import QuerySet
 
+from config.paging_handler import PagingSerializer, get_paging_data
 from diary.serialziers.keyword_serializers import KeywordResponse
 from diary.validator import *
 from users.serializers.user_get_post_put_delete_serializers import *
@@ -59,3 +60,15 @@ class GetDiariesByUserAndDateResponse(serializers.Serializer):
             'user': UserSafeSerializer(user).data,
             'diaries': [GetDiaryPreviewResponse.to_json(diary) for diary in diaries]
         }
+
+
+class DiaryPagingResponse(PagingSerializer):
+    diaryList = serializers.ListField(child=DiaryResultResponse())
+
+    def __init__(self, *args, page=1, pageSize=1, object_list=None, **kwargs):
+        if object_list is None:
+            object_list = []
+
+        data = get_paging_data(page, pageSize, object_list, data_name="diaryList")
+
+        super().__init__(data, *args, **kwargs)
