@@ -107,3 +107,31 @@ class GetDiaryByUserAndDateView(APIView):
             result=GetDiariesByUserAndDateResponse.to_json(user=user, diaries=diaries),
             response_status=status.HTTP_200_OK
         )
+
+
+class GetDiaryPagingView(APIView):
+    @transaction.atomic
+    @swagger_auto_schema(
+        operation_id="유저별 일기 페이징",
+        operation_description="유저별 일기 페이징",
+        query_serializer=GetDiaryPagingRequset(),
+        responses={status.HTTP_200_OK: ApiResponse.schema(DiaryPagingResponse)}
+    )
+    @validator(request_type=REQUEST_QUERY, request_serializer=GetDiaryPagingRequset, return_serializer="serializer")
+    def get(self, request):
+        request = request.serializer.validated_data
+
+        # 최신순으로 정렬
+        diaryList = Diary.objects.filter(
+            user=User.objects.get(id=request.get('userId'))
+        ).order_by('-createDate')
+
+        requestPage = request.get('page')
+        pageSize = request.get('pageSize')
+
+        result = DiaryPagingResponse(page=requestPage, pageSize=pageSize, object_list=diaryList)
+
+        return ApiResponse.on_success(
+            result=result.data,
+            response_status=status.HTTP_200_OK
+        )

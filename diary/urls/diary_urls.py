@@ -14,4 +14,5 @@ urlpatterns = [
     path('/checkanswer', CheckAnswerView.as_view()),
     path('/check', CheckDiaryEntriesView.as_view()),
     path('/list', GetDiaryByUserAndDateView.as_view()),
+    path('/user', GetDiaryPagingView.as_view()),
 ]
