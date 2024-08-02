@@ -42,6 +42,6 @@ services:
 
   celery:
     env_file:
-    - .env-django
-    - .env-s3
-    - .env-deepl
+      - .env-django
+      - .env-s3
+      - .env-deepl
