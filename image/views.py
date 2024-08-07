@@ -42,8 +42,15 @@ class ImageView(APIView):
     def post(self, request):
         image_file = request.serializer.validated_data.get('image')
 
-        # S3에 이미지 업로드
-        url = upload_file_random_name_to_s3(image_file)
+        try:
+            # S3에 이미지 업로드
+            url = upload_file_random_name_to_s3(image_file)
+        except Exception as e:
+            return ApiResponse.on_fail(
+                message=str(e),
+                response_status=status.HTTP_404_NOT_FOUND
+            )
+
 
         return ApiResponse.on_success(
             result=ImageUploadResponse.to_json(url),
