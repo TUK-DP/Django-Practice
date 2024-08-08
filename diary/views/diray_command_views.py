@@ -89,7 +89,7 @@ class DiaryImgSaveView(APIView):
     @validator(request_type=REQUEST_PATH, request_serializer=GetDiaryByIdRequest, return_key='dump')
     @validator(request_type=REQUEST_BODY, request_serializer=ImageUrlRequest, return_key='serializer')
     def post(self, request, diaryId: int):
-        # keyword 객체 가져오기
+        # Diary 객체 가져오기
         diary = Diary.objects.get(id=diaryId)
 
         # imgUrl 저장

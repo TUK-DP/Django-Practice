@@ -12,6 +12,10 @@ class ImageFileRequest(serializers.Serializer):
     image = serializers.ImageField()
 
 
+class ImageFilesReqeust(serializers.Serializer):
+    images = serializers.ListField(child=serializers.ImageField())
+
+
 class ImageUploadResponse(serializers.Serializer):
     imageUrl = serializers.CharField()
 
@@ -19,6 +23,16 @@ class ImageUploadResponse(serializers.Serializer):
     def to_json(url: str):
         return {
             'imageUrl': url
+        }
+    
+
+class ImageBulkUploadResponse(serializers.Serializer):
+    imageUrls = serializers.ListField(child=serializers.CharField())
+
+    @staticmethod
+    def to_json(urls: list):
+        return {
+            'imageUrls': urls
         }
 
 
