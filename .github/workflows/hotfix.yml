@@ -29,5 +29,5 @@ jobs:
             sudo echo "${{ secrets.DOT_ENT_NEO4J }}" > .env-neo4j
             sudo echo "${{ secrets.DOT_ENT_S3 }}" > .env-s3
             sudo echo "${{ secrets.DOT_ENT_DEEPL }}" > .env-deepl
-            sudo docker rm -f ${{ secrets.REPOSITORY_NAME }} || true
-            sudo docker-compose -f docker-compose.yml -f docker-compose-prod.yml -p dp up -d --build
+            sudo docker compose -f docker-compose.yml -f docker-compose-prod.yml -p dp up -d --build --force-recreate
+            sudo docker image prune -af

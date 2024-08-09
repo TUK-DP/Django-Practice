@@ -12,7 +12,7 @@ from celery import Celery
 
 app = Celery('image', broker='redis://redis:6379', backend='redis://redis:6379')
 
-load_dotenv('/app/.env-django')
+load_dotenv()
 TRANSLATOR_API_KEY = os.getenv("TRANSLATOR_AUTH_KEY")
 PROJECT_ID = os.getenv("PROJECT_ID")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")

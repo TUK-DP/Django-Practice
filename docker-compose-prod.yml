@@ -39,3 +39,9 @@ services:
     environment:
       - HTTP_PORT=8001
       - REDIS_URL=redis://redis:6379
+
+  celery:
+    env_file:
+      - .env-django
+      - .env-s3
+      - .env-deepl
