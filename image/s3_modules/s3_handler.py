@@ -4,6 +4,7 @@ import uuid
 import boto3
 from django.core.files import File
 from dotenv import load_dotenv
+from concurrent.futures import ThreadPoolExecutor
 
 load_dotenv()
 
@@ -41,6 +42,17 @@ def upload_file_to_s3(file: File, filename: str):
     bucket.upload_fileobj(file, filename, ExtraArgs={"ContentType": "image/jpeg"})
 
     return f"https://{bucket_name}.s3.amazonaws.com/{filename}"
+
+
+def bulk_upload_file_to_s3(files: list):
+    """
+    :param files: File 객체 리스트
+    """
+
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = [executor.submit(upload_file_random_name_to_s3, file) for file in files]
+        results = [future.result() for future in futures]
+    return results
 
 
 def delete_file_from_s3(filename):

@@ -8,7 +8,8 @@ from rest_framework.views import APIView
 from config.basemodel import ApiResponse, validator
 from config.settings import REQUEST_QUERY, JWT_SECRET, REQUEST_BODY
 from diary.serialziers.keyword_serializers import *
-from image.s3_modules.s3_handler import upload_file_random_name_to_s3
+
+from image.s3_modules.s3_handler import upload_file_random_name_to_s3, bulk_upload_file_to_s3
 from image.serializers import *
 
 from tasks import *
@@ -42,8 +43,15 @@ class ImageView(APIView):
     def post(self, request):
         image_file = request.serializer.validated_data.get('image')
 
-        # S3에 이미지 업로드
-        url = upload_file_random_name_to_s3(image_file)
+        try:
+            # S3에 이미지 업로드
+            url = upload_file_random_name_to_s3(image_file)
+        except Exception as e:
+            return ApiResponse.on_fail(
+                message=str(e),
+                response_status=status.HTTP_404_NOT_FOUND
+            )
+
 
         return ApiResponse.on_success(
             result=ImageUploadResponse.to_json(url),
@@ -77,6 +85,48 @@ class ImageView(APIView):
         return ApiResponse.on_success(
             result=result.data,
             response_status=status.HTTP_201_CREATED
+        )
+
+
+class ImageBulkUploadView(APIView):
+    parser_classes = [MultiPartParser]
+
+    @transaction.atomic
+    @swagger_auto_schema(
+        operation_id="여러 이미지 업로드",
+        operation_description="여러 이미지 업로드",
+        manual_parameters=[
+            # image
+            openapi.Parameter(
+                name='images',
+                in_=openapi.IN_FORM,
+                type=openapi.TYPE_FILE,
+                required=True,
+                description='이미지 파일들',
+            ),
+            #
+        ],
+        responses={
+            status.HTTP_200_OK: ApiResponse.schema(ImageBulkUploadResponse, description='이미지 업로드 성공')
+        },
+    )
+    @validator(request_type=REQUEST_BODY, request_serializer=ImageFilesReqeust, return_serializer="serializer")
+    def post(self, request):
+        image_files = request.serializer.validated_data.get('images')
+
+        try:
+            # S3에 이미지 업로드
+            urls = bulk_upload_file_to_s3(image_files)
+        except Exception as e:
+            return ApiResponse.on_fail(
+                message=str(e),
+                response_status=status.HTTP_404_NOT_FOUND
+            )
+
+
+        return ApiResponse.on_success(
+            result=ImageBulkUploadResponse.to_json(urls),
+            response_status=status.HTTP_200_OK
         )
 
 
