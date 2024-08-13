@@ -58,7 +58,7 @@ class CheckDiaryEntriesView(APIView):
         _, lastDay = calendar.monthrange(year, month)
 
         # 일기가 존재하는 날짜를 dict으로 초기화
-        diary_dict = {day: {"isExist": False, "diaryId": None} for day in range(1, lastDay + 1)}
+        diary_dict = {day: {"isExist": False, "diaryId": None, "imgExist": False} for day in range(1, lastDay + 1)}
 
         # 해당 userId, year, month에 해당하는 일기를 조회
         diaries = Diary.objects.filter(user_id=userId, createDate__year=year, createDate__month=month)
@@ -67,6 +67,18 @@ class CheckDiaryEntriesView(APIView):
         for diary in diaries:
             diary_dict[diary.createDate.day]["isExist"] = True
             diary_dict[diary.createDate.day]["diaryId"] = diary.id
+
+            img_exist = False
+
+            # diary와 연결된 keyword들에서 imgUrl이 None이 아닌 경우 확인
+            if all(keyword.imgUrl is not None for keyword in diary.keywords.all()):
+                img_exist = True
+
+            # diary 자체에 imgUrl이 존재하는 경우 확인
+            if diary.imgUrl is not None:
+                img_exist = True
+
+            diary_dict[diary.createDate.day]["imgExist"] = img_exist
 
         # 결과를 JSON 형식으로 반환
         result = {f'{year}-{month}': diary_dict}
