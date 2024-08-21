@@ -70,12 +70,13 @@ class CheckDiaryEntriesView(APIView):
 
             img_exist = False
 
-            # diary와 연결된 keyword들에서 imgUrl이 None이 아닌 경우 확인
-            if all(keyword.imgUrl is not None for keyword in diary.keywords.all()):
-                img_exist = True
-
             # diary 자체에 imgUrl이 존재하는 경우 확인
             if diary.imgUrl is not None:
+                img_exist = True
+
+            # diary와 연결된 keyword들에서 imgUrl이 None이 아닌 경우 확인
+            keywords = diary.keywords.all()
+            if len(keywords) != 0 and all(keyword.imgUrl is None for keyword in keywords):
                 img_exist = True
 
             diary_dict[diary.createDate.day]["imgExist"] = img_exist
